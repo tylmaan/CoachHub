@@ -484,3 +484,6 @@ $RECYCLE.BIN/
 # Node / React
 frontend/node_modules/
 frontend/dist/
+
+#SQL database (local, not committed)
+backend/CoachHub.Api/*.db

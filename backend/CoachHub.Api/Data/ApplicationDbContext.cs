@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using CoachHub.Api.Models;
 
 namespace CoachHub.Api.Data;
 
@@ -8,4 +9,6 @@ public class ApplicationDbContext : DbContext
 base(options)
     {
     }
+
+    public DbSet<Team> Teams { get; set; }
 }
