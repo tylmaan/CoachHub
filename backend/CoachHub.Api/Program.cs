@@ -1,5 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,10 +11,30 @@ builder.Services.AddDbContext<CoachHub.Api.Data.ApplicationDbContext>(options =>
 
 builder.Services.AddScoped<CoachHub.Api.Services.ITeamService, CoachHub.Api.Services.TeamService>();
 builder.Services.AddScoped<CoachHub.Api.Services.IPlayerService, CoachHub.Api.Services.PlayerService>();
+builder.Services.AddScoped<CoachHub.Api.Services.ITokenService, CoachHub.Api.Services.TokenService>();
 
 builder.Services.AddIdentity<CoachHub.Api.Models.ApplicationUser, Microsoft.AspNetCore.Identity.IdentityRole>()
     .AddEntityFrameworkStores<CoachHub.Api.Data.ApplicationDbContext>()
     .AddDefaultTokenProviders();
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+.AddJwtBearer(options =>
+{
+    options.TokenValidationParameters = new TokenValidationParameters
+    {
+        ValidateIssuer = true,
+        ValidIssuer = builder.Configuration["Jwt:Issuer"],
+        ValidateAudience = true,
+        ValidAudience = builder.Configuration["Jwt:Audience"],
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+    };
+});
 
 builder.Services.AddControllers(); 
 builder.Services.AddOpenApi();
@@ -23,6 +46,8 @@ using (var scope = app.Services.CreateScope())
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<Microsoft.AspNetCore.Identity.IdentityRole>>();
     await CoachHub.Api.Data.DbSeeder.SeedRolesAsync(roleManager);
 
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<CoachHub.Api.Models.ApplicationUser>>();
+    await CoachHub.Api.Data.DbSeeder.SeedAdminUserAsync(userManager);
 }
 
 if (app.Environment.IsDevelopment())
