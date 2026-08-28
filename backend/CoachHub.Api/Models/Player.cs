@@ -9,4 +9,7 @@ public class Player
     public required string Position { get; set; }
     public int TeamId { get; set; }
     public Team? Team { get; set; }
+
+    public ICollection<PlayerSeasonStat> SeasonStats { get; set; } = new List<PlayerSeasonStat>();
+    public ICollection<CareerHistoryEntry> CareerHistory { get; set; } = new List<CareerHistoryEntry>();
 }

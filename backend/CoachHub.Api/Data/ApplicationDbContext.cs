@@ -13,4 +13,6 @@ base(options)
     }
     public DbSet<Team> Teams { get; set; }
     public DbSet<Player> Players { get; set; }
+    public DbSet<PlayerSeasonStat> PlayerSeasonStats { get; set; }
+    public DbSet<CareerHistoryEntry> CareerHistoryEntries { get; set; }
 }

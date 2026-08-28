@@ -12,6 +12,8 @@ builder.Services.AddDbContext<CoachHub.Api.Data.ApplicationDbContext>(options =>
 builder.Services.AddScoped<CoachHub.Api.Services.ITeamService, CoachHub.Api.Services.TeamService>();
 builder.Services.AddScoped<CoachHub.Api.Services.IPlayerService, CoachHub.Api.Services.PlayerService>();
 builder.Services.AddScoped<CoachHub.Api.Services.ITokenService, CoachHub.Api.Services.TokenService>();
+builder.Services.AddScoped<CoachHub.Api.Services.IPlayerSeasonStatService, CoachHub.Api.Services.PlayerSeasonStatService>();
+builder.Services.AddScoped<CoachHub.Api.Services.ICareerHistoryEntryService, CoachHub.Api.Services.CareerHistoryEntryService>();
 
 builder.Services.AddIdentity<CoachHub.Api.Models.ApplicationUser, Microsoft.AspNetCore.Identity.IdentityRole>()
     .AddEntityFrameworkStores<CoachHub.Api.Data.ApplicationDbContext>()
