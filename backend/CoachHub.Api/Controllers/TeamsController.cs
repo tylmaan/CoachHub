@@ -1,11 +1,14 @@
 using CoachHub.Api.Models;
 using CoachHub.Api.Services;
+using CoachHub.Api.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CoachHub.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize(Roles = $"{Roles.Coach}, {Roles.AssistantCoach}, {Roles.Analyst}")]
 public class TeamsController : ControllerBase
 {
     private readonly ITeamService _teamService;
@@ -30,6 +33,7 @@ public class TeamsController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = $"{Roles.Coach}, {Roles.AssistantCoach}")]
     public async Task<ActionResult<Team>> Create(Team team)
     {
         var created = await _teamService.CreateAsync(team);
@@ -37,6 +41,7 @@ public class TeamsController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Roles = $"{Roles.Coach}, {Roles.AssistantCoach}")]
     public async Task<IActionResult> Update(int id, Team team)
     {
         var success = await _teamService.UpdateAsync(id, team);
@@ -45,6 +50,7 @@ public class TeamsController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = Roles.Coach)]
     public async Task<IActionResult> Delete(int id)
     {
         var success = await _teamService.DeleteAsync(id);
