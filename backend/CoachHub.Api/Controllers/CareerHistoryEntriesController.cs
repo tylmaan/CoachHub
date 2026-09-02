@@ -1,11 +1,14 @@
 using CoachHub.Api.Models;
 using CoachHub.Api.Services;
+using CoachHub.Api.Data;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace CoachHub.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize(Roles = $"{Roles.Coach}, {Roles.AssistantCoach}, {Roles.Analyst}")]
 public class CareerHistoryEntriesController : ControllerBase
 {
     private readonly ICareerHistoryEntryService _careerHistoryEntryService;
@@ -30,6 +33,7 @@ public class CareerHistoryEntriesController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = $"{Roles.Coach}, {Roles.AssistantCoach}")]
     public async Task<ActionResult<CareerHistoryEntry>> Create(CareerHistoryEntry entry)
     {
         var created = await _careerHistoryEntryService.CreateAsync(entry);
@@ -37,6 +41,7 @@ public class CareerHistoryEntriesController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Roles = $"{Roles.Coach}, {Roles.AssistantCoach}")]
     public async Task<IActionResult> Update(int id, CareerHistoryEntry entry)
     {
         var success = await _careerHistoryEntryService.UpdateAsync(id, entry);
@@ -45,6 +50,7 @@ public class CareerHistoryEntriesController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = Roles.Coach)]
     public async Task<IActionResult> Delete(int id)
     {
         var success = await _careerHistoryEntryService.DeleteAsync(id);
