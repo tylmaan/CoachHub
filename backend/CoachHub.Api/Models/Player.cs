@@ -12,4 +12,5 @@ public class Player
 
     public ICollection<PlayerSeasonStat> SeasonStats { get; set; } = new List<PlayerSeasonStat>();
     public ICollection<CareerHistoryEntry> CareerHistory { get; set; } = new List<CareerHistoryEntry>();
+    public ICollection<Report> Reports { get; set; } = new List<Report>();
 }
