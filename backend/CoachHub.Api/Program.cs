@@ -9,6 +9,16 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<CoachHub.Api.Data.ApplicationDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173") 
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+    });
+});
+
 builder.Services.AddScoped<CoachHub.Api.Services.ITeamService, CoachHub.Api.Services.TeamService>();
 builder.Services.AddScoped<CoachHub.Api.Services.IPlayerService, CoachHub.Api.Services.PlayerService>();
 builder.Services.AddScoped<CoachHub.Api.Services.ITokenService, CoachHub.Api.Services.TokenService>();
@@ -65,6 +75,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
+app.UseCors("AllowFrontend");
 
 app.UseAuthentication();
 app.UseAuthorization();
