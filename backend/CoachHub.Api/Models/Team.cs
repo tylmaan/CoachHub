@@ -7,4 +7,6 @@ public class Team
     public DateOnly FoundedDate { get; set; }
 
     public ICollection<Player> Players { get; set; } = new List<Player>();
+    public ICollection<TacticalScheme> TacticalSchemes { get; set; } = new List<TacticalScheme>();
+    public ICollection<Report> Reports { get; set; } = new List<Report>();
 }

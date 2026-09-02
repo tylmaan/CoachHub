@@ -14,6 +14,8 @@ builder.Services.AddScoped<CoachHub.Api.Services.IPlayerService, CoachHub.Api.Se
 builder.Services.AddScoped<CoachHub.Api.Services.ITokenService, CoachHub.Api.Services.TokenService>();
 builder.Services.AddScoped<CoachHub.Api.Services.IPlayerSeasonStatService, CoachHub.Api.Services.PlayerSeasonStatService>();
 builder.Services.AddScoped<CoachHub.Api.Services.ICareerHistoryEntryService, CoachHub.Api.Services.CareerHistoryEntryService>();
+builder.Services.AddScoped<CoachHub.Api.Services.IReportService, CoachHub.Api.Services.ReportService>();
+builder.Services.AddScoped<CoachHub.Api.Services.ITacticalSchemeService, CoachHub.Api.Services.TacticalSchemeService>();
 
 builder.Services.AddIdentity<CoachHub.Api.Models.ApplicationUser, Microsoft.AspNetCore.Identity.IdentityRole>()
     .AddEntityFrameworkStores<CoachHub.Api.Data.ApplicationDbContext>()
@@ -38,7 +40,12 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-builder.Services.AddControllers(); 
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
+    });
+
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
