@@ -487,3 +487,6 @@ frontend/dist/
 
 #SQL database (local, not committed)
 backend/CoachHub.Api/*.db
+
+# Claude Code tooling config (not part of the project)
+.claude/
