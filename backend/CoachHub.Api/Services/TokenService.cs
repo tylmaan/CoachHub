@@ -30,6 +30,11 @@ public class TokenService : ITokenService
         };
         claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
 
+        if (user.TeamId is not null)
+        {
+            claims.Add(new Claim("teamId", user.TeamId.Value.ToString()));
+        }
+
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:Key"]!));
         var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
         var expiryMinutes = int.Parse(_configuration["Jwt:ExpiryMinutes"]!);
