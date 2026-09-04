@@ -14,11 +14,13 @@ public class AuthController : ControllerBase
 {
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly ITokenService _tokenService;
+    private readonly ITeamService _teamService;
 
-    public AuthController(UserManager<ApplicationUser> userManager, ITokenService tokenService)
+    public AuthController(UserManager<ApplicationUser> userManager, ITokenService tokenService, ITeamService teamService)
     {
         _userManager = userManager;
         _tokenService = tokenService;
+        _teamService = teamService;
     }
 
     [HttpPost("login")]
@@ -38,7 +40,8 @@ public class AuthController : ControllerBase
         {
             Token = token,
             Email = user.Email!,
-            Roles = roles.ToList()
+            Roles = roles.ToList(),
+            TeamId = user.TeamId
         };
     }
 
@@ -51,11 +54,26 @@ public class AuthController : ControllerBase
             return BadRequest($"Invalid role. Allowed roles: {string.Join(", ", Roles.All)}");
         }
 
+        if (request.Role != Roles.Admin)
+        {
+            if (request.TeamId is null)
+            {
+                return BadRequest("TeamId is required for this role.");
+            }
+
+            var team = await _teamService.GetByIdAsync(request.TeamId.Value);
+            if (team is null)
+            {
+                return BadRequest("Team not found.");
+            }
+        }
+
         var user = new ApplicationUser
         {
             UserName = request.Email,
             Email = request.Email,
-            EmailConfirmed = true
+            EmailConfirmed = true,
+            TeamId = request.Role == Roles.Admin ? null : request.TeamId
         };
 
         var result = await _userManager.CreateAsync(user, request.Password);
@@ -71,7 +89,8 @@ public class AuthController : ControllerBase
         {
             Token = token,
             Email = user.Email!,
-            Roles = [request.Role]
+            Roles = [request.Role],
+            TeamId = user.TeamId
         };
-    }  
+    }
 } 
