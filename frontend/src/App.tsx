@@ -4,6 +4,7 @@ import { DashboardPage } from './pages/DashboardPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import { Layout } from './components/Layout';
 import { TeamsPage } from './pages/TeamsPage';
+import { PlayersPage } from './pages/PlayersPage';
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
       >
         <Route path="/" element={<DashboardPage />} />
         <Route path="/teams" element={<TeamsPage />} />
+        <Route path="/players" element={<PlayersPage />} />
       </Route>
     </Routes>
   );
