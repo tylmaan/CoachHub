@@ -18,6 +18,9 @@ export function Layout() {
                     <Button color="inherit" component={RouterLink} to="/teams">
                         Drużyny
                     </Button>
+                    <Button color="inherit" component={RouterLink} to="/players">
+                        Zawodnicy
+                    </Button>
                     <Box sx={{ flexGrow: 1 }} />
                     <Typography variant="body2">{email}</Typography>
                     {roles?.map((role) => (
