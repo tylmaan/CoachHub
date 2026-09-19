@@ -10,21 +10,54 @@ import {
     Typography,
     CircularProgress,
     Alert,
+    Box,
+    TextField,
+    Button
 } from '@mui/material';
-import { getTeams } from '../api/teamsApi';
+import axios from "axios";
+import { getTeams, createTeam } from '../api/teamsApi';
 import type { Team } from '../types/team';
+import { useAuth } from "../context/AuthContext";
 
 export function TeamsPage() {
     const [teams, setTeams] = useState<Team[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    useEffect(() => {
+    const [name, setName] = useState("");
+    const [foundedDate, setFoundedDate] = useState("");
+    const [formError, setFormError] = useState<string | null>(null);
+
+    const { roles } = useAuth();
+
+    function loadTeams() {
+        setLoading(true);
         getTeams()
             .then(setTeams)
-            .catch(() => setError('Nie udało się pobrać drużyn.'))
+            .catch(() => setError("Nie udało się pobrać drużyn"))
             .finally(() => setLoading(false));
+    }
+    
+    useEffect(() => {
+        loadTeams();
     }, []);
+
+    async function handleCreate(e: React.SyntheticEvent) {
+        e.preventDefault();
+        setFormError(null);
+        try {
+            await createTeam({ name, foundedDate });
+            setName("");
+            setFoundedDate("");
+            loadTeams();
+        } catch (err) {
+            if (axios.isAxiosError(err) && Array.isArray(err.response?.data)) {
+                setFormError(err.response.data.join(" "));
+            } else {
+                setFormError("Nie udało się utworzyć drużyny.");
+            }
+        }
+    }
 
     if (loading) return <CircularProgress />;
     if (error) return <Alert severity="error">{error}</Alert>;
@@ -34,6 +67,34 @@ export function TeamsPage() {
             <Typography variant="h4" sx={{ mb: 2 }}>
                 Drużyny
             </Typography>
+
+            {roles?.includes("Admin") && (
+                <Box
+                    component="form"
+                    onSubmit={handleCreate}
+                    sx={{ mb: 3, display: "flex", gap: 2, alignItems: "flex-start" }}
+                >
+                    {formError && <Alert severity="error">{formError}</Alert>}
+                    <TextField
+                        label="Nazwa"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        required
+                    />
+                    <TextField
+                        label="Data założenia"
+                        type="date"
+                        slotProps={{ inputLabel: { shrink: true } }}
+                        value={foundedDate}
+                        onChange={(e) => setFoundedDate(e.target.value)}
+                        required
+                    />
+                    <Button type="submit" variant="contained">
+                        Dodaj drużynę
+                    </Button>
+                </Box>
+            )}
+
             <TableContainer component={Paper}>
                 <Table>
                     <TableHead>
