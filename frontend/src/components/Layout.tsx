@@ -29,6 +29,11 @@ export function Layout() {
                     <Button color="inherit" onClick={logout}>
                         Wyloguj się
                     </Button>
+                    {roles?.includes("Admin") && (
+                        <Button color="inherit" component={RouterLink} to="/register">
+                            Nowe konto
+                        </Button>
+                    )}
                 </Toolbar>
             </AppBar>
             <Box sx={{ p: 3 }}>

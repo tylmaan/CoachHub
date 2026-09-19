@@ -9,7 +9,7 @@ namespace CoachHub.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = $"{Roles.Coach}, {Roles.AssistantCoach}, {Roles.Analyst}")]
+[Authorize(Roles = $"{Roles.Admin}, {Roles.Coach}, {Roles.AssistantCoach}, {Roles.Analyst}")]
 public class TeamsController : ControllerBase
 {
     private readonly ITeamService _teamService;
@@ -22,6 +22,11 @@ public class TeamsController : ControllerBase
     [HttpGet]
     public async Task<ActionResult<List<Team>>> GetAll()
     {
+        if (User.IsInRole(Roles.Admin))
+        {
+            return await _teamService.GetAllAsync();
+        }
+        
         var callerTeamId = User.FindFirstValue("teamId");
         if (callerTeamId is null) return Ok(new List<Team>());
 

@@ -11,7 +11,7 @@ export function LoginPage() {
     const { login: loginContext } = useAuth();
     const navigate = useNavigate();
 
-    async function handleSubmit(e: React.FormEvent) {
+    async function handleSubmit(e: React.SyntheticEvent) {
         e.preventDefault();
         setError(null);
         try {
