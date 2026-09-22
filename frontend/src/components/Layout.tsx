@@ -34,6 +34,11 @@ export function Layout() {
                             Nowe konto
                         </Button>
                     )}
+                    {roles?.includes("Admin") && (
+                        <Button color="inherit" component={RouterLink} to="/users">
+                        Użytkownicy
+                        </Button>
+                    )}
                 </Toolbar>
             </AppBar>
             <Box sx={{ p: 3 }}>
