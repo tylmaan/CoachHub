@@ -492,3 +492,5 @@ backend/CoachHub.Api/*.db-wal
 
 # Claude Code tooling config (not part of the project)
 .claude/
+
+to_do.txt
