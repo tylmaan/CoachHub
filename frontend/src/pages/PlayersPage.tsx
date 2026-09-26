@@ -15,7 +15,7 @@ import {
     Button,
 } from '@mui/material';
 import axios from "axios";
-import { getPlayers, createPlayer } from '../api/playersApi';
+import { getPlayers, createPlayer, updatePlayer, deletePlayer } from '../api/playersApi';
 import type { Player } from '../types/player';
 import { useAuth } from "../context/AuthContext";
 
@@ -30,8 +30,17 @@ export function PlayersPage() {
     const [position, setPosition] = useState("");
     const [formError, setFormError] = useState<string | null>(null);
 
+    const [editingId, setEditingId] = useState<number | null>(null);
+    const [editFirstName, setEditFirstName] = useState("");
+    const [editLastName, setEditLastName] = useState("");
+    const [editDateOfBirth, setEditDateOfBirth] = useState("");
+    const [editPosition, setEditPosition] = useState("");
+    const [actionError, setActionError] = useState<string | null>(null);
+
     const { roles, teamId } = useAuth();
     const canCreate = roles?.includes("Coach") || roles?.includes("AssistantCoach");
+    const canEdit = canCreate;
+    const canDelete = roles?.includes("Coach");
 
     function loadPlayers() {
         setLoading(true);
@@ -67,6 +76,42 @@ export function PlayersPage() {
             } else {
                 setFormError("Nie udało się dodać zawodnika.")
             }
+        }
+    }
+
+    function startEdit(player: Player) {
+        setEditingId(player.id);
+        setEditFirstName(player.firstName);
+        setEditLastName(player.lastName);
+        setEditDateOfBirth(player.dateOfBirth);
+        setEditPosition(player.position);
+        setActionError(null);
+    }
+
+    async function saveEdit(id: number) {
+        setActionError(null);
+        try {
+            await updatePlayer(id, {
+                firstName: editFirstName,
+                lastName: editLastName,
+                dateOfBirth: editDateOfBirth,
+                position: editPosition,
+                teamId: teamId as number,
+            });
+            setEditingId(null);
+            loadPlayers();
+        } catch {
+            setActionError("Nie udało się zapisać zmian.");
+        }
+    }
+
+    async function handleDelete(id: number) {
+        setActionError(null);
+        try {
+            await deletePlayer(id);
+            loadPlayers();
+        } catch {
+            setActionError("Nie udało się usunąć zawodnika.")
         }
     }
 
@@ -118,6 +163,8 @@ export function PlayersPage() {
                 </Box>
             )}
 
+            {actionError && <Alert severity="error" sx={{ mb:2 }}>{actionError}</Alert>}
+
             <TableContainer component={Paper}>
                 <Table>
                     <TableHead>
@@ -126,17 +173,55 @@ export function PlayersPage() {
                             <TableCell>Nazwisko</TableCell>
                             <TableCell>Data urodzenia</TableCell>
                             <TableCell>Pozycja</TableCell>
+                            {(canEdit || canDelete) && <TableCell>Akcje</TableCell>}
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {players.map((player) => (
-                            <TableRow key={player.id}>
-                                <TableCell>{player.firstName}</TableCell>
-                                <TableCell>{player.lastName}</TableCell>
-                                <TableCell>{player.dateOfBirth}</TableCell>
-                                <TableCell>{player.position}</TableCell>
-                            </TableRow>
-                        ))}
+                        {players.map((player) => 
+                            editingId === player.id ? (
+                                <TableRow key={player.id}>
+                                    <TableCell>
+                                        <TextField size="small" value={editFirstName} onChange={(e) => setEditFirstName(e.target.value)} />
+                                    </TableCell>
+                                    <TableCell>
+                                        <TextField size="small" value={editLastName} onChange={(e) => setEditLastName(e.target.value)} />
+                                    </TableCell>
+                                    <TableCell>
+                                        <TextField
+                                            size="small"
+                                            type="date"
+                                            slotProps={{ inputLabel: {shrink: true} }}
+                                            value={editDateOfBirth}
+                                            onChange={(e) => setEditDateOfBirth(e.target.value)}
+                                        />
+                                    </TableCell>
+                                    <TableCell>
+                                        <TextField size="small" value={editPosition} onChange={(e) => setEditPosition(e.target.value)} />
+                                    </TableCell>
+                                    <TableCell>
+                                        <Box sx={{ display: "flex", gap: 1 }}>
+                                            <Button size="small" variant="contained" onClick={() => saveEdit(player.id)}>Zapisz</Button>
+                                            <Button size="small" onClick={() => setEditingId(null)}>Anuluj</Button>
+                                        </Box>
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                                <TableRow key={player.id}>
+                                    <TableCell>{player.firstName}</TableCell>
+                                    <TableCell>{player.lastName}</TableCell>
+                                    <TableCell>{player.dateOfBirth}</TableCell>
+                                    <TableCell>{player.position}</TableCell>
+                                    {(canEdit || canDelete) && (
+                                        <TableCell>
+                                            <Box sx={{ display: "flex", gap: 1 }}>
+                                                {canEdit && <Button size="small" onClick={() => startEdit(player)}>Edytuj</Button>}
+                                                {canDelete && <Button size="small" color="error" onClick={() => handleDelete(player.id)}>Usuń</Button>}
+                                            </Box>
+                                        </TableCell>
+                                    )}
+                                </TableRow>
+                            )
+                        )}
                     </TableBody>
                 </Table>
             </TableContainer>

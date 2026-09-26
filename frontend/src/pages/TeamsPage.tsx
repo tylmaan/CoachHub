@@ -15,7 +15,7 @@ import {
     Button
 } from '@mui/material';
 import axios from "axios";
-import { getTeams, createTeam } from '../api/teamsApi';
+import { getTeams, createTeam, updateTeam, deleteTeam } from '../api/teamsApi';
 import type { Team } from '../types/team';
 import { useAuth } from "../context/AuthContext";
 
@@ -28,7 +28,14 @@ export function TeamsPage() {
     const [foundedDate, setFoundedDate] = useState("");
     const [formError, setFormError] = useState<string | null>(null);
 
+    const [editingId, setEditingId] = useState<number | null>(null);
+    const [editName, setEditName] = useState("");
+    const [editFoundedDate, setEditFoundedDate] = useState("");
+    const [actionError, setActionError] = useState<string | null>(null);
+
     const { roles } = useAuth();
+    const canEdit = roles?.includes("Coach") || roles?.includes("AssistantCoach");
+    const canDelete = roles?.includes("Coach");
 
     function loadTeams() {
         setLoading(true);
@@ -56,6 +63,34 @@ export function TeamsPage() {
             } else {
                 setFormError("Nie udało się utworzyć drużyny.");
             }
+        }
+    }
+
+    function startEdit(team: Team) {
+        setEditingId(team.id);
+        setEditName(team.name);
+        setEditFoundedDate(team.foundedDate);
+        setActionError(null);
+    }
+
+    async function saveEdit(id: number) {
+        setActionError(null);
+        try {
+            await updateTeam(id, { name: editName, foundedDate: editFoundedDate });
+            setEditingId(null);
+            loadTeams();
+        } catch {
+            setActionError("Nie udało się zapisać zmian.");
+        }
+    }
+
+    async function handleDelete(id: number) {
+        setActionError(null);
+        try {
+            await deleteTeam(id);
+            loadTeams();
+        } catch {
+            setActionError("Nie udało się usunąć drużyny.")
         }
     }
 
@@ -95,21 +130,59 @@ export function TeamsPage() {
                 </Box>
             )}
 
+            {actionError && <Alert severity="error" sx={{ mb:2 }}>{actionError}</Alert>}
+
             <TableContainer component={Paper}>
                 <Table>
                     <TableHead>
                         <TableRow>
                             <TableCell>Nazwa</TableCell>
                             <TableCell>Data założenia</TableCell>
+                            {(canEdit || canDelete) && <TableCell>Akcje</TableCell>}
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {teams.map((team) => (
-                            <TableRow key={team.id}>
-                                <TableCell>{team.name}</TableCell>
-                                <TableCell>{team.foundedDate}</TableCell>
-                            </TableRow>
-                        ))}
+                        {teams.map((team) => 
+                            editingId == team.id ? (
+                                <TableRow key={team.id}>
+                                    <TableCell>
+                                        <TextField 
+                                            size="small" 
+                                            value={editName} 
+                                            onChange={(e) => setEditName(e.target.value)} 
+                                        />
+                                    </TableCell>
+                                    <TableCell>
+                                        <TextField 
+                                            size="small" 
+                                            type="date" 
+                                            slotProps={{ inputLabel: { shrink: true } }}
+                                            value={editFoundedDate}
+                                            onChange={(e) => setEditFoundedDate(e.target.value)} 
+                                        />
+                                    </TableCell>
+                                    <TableCell>
+                                        <Box sx={{ display: "flex", gap: 1 }}>
+                                            <Button size="small" variant="contained" onClick={() => saveEdit(team.id)}>Zapisz</Button>
+                                            <Button size="small" onClick={() => setEditingId(null)}>Anuluj</Button>
+                                        </Box>
+                                    </TableCell>
+                                </TableRow>
+                            ) : (
+                                <TableRow key={team.id}>
+                                    <TableCell>{team.name}</TableCell>
+                                    <TableCell>{team.foundedDate}</TableCell>
+                                    {(canEdit || canDelete) && (
+                                        <TableCell>
+                                            <Box sx={{ display: "flex", gap: 1}}>
+                                                {canEdit && <Button size="small" onClick={() => startEdit(team)}>Edytuj</Button>}
+                                                {canDelete && <Button size="small" color="error" onClick={() => handleDelete(team.id)}>Usuń</Button>}
+                                            </Box>
+                                        </TableCell>
+                                    )}
+                                </TableRow>
+                            )
+                        )}
                     </TableBody>
                 </Table>
             </TableContainer>

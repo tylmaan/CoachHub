@@ -17,4 +17,21 @@ base(options)
     public DbSet<CareerHistoryEntry> CareerHistoryEntries { get; set; }
     public DbSet<TacticalScheme> TacticalSchemes { get; set; }
     public DbSet<Report> Reports { get; set; }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder)
+    {
+        base.OnModelCreating(modelBuilder);
+
+        modelBuilder.Entity<Report>()
+            .HasOne(r => r.Player)
+            .WithMany(p => p.Reports)
+            .HasForeignKey(r => r.PlayerId)
+            .OnDelete(DeleteBehavior.Cascade);
+        
+        modelBuilder.Entity<Report>()
+            .HasOne(r => r.Team)
+            .WithMany(t => t.Reports)
+            .HasForeignKey(r => r.TeamId)
+            .OnDelete(DeleteBehavior.Cascade);
+    }
 }
