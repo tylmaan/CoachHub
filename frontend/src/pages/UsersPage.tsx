@@ -15,13 +15,15 @@ import {
     MenuItem,
     Select,
     Box,
+    TextField,
 } from "@mui/material";
 import { getUsers, updateUser, deleteUser } from "../api/usersApi";
 import { getTeams } from "../api/teamsApi";
 import type { UserSummary } from "../types/user";
 import type { Team } from "../types/team";
+import { ROLE_LABELS } from "../constants/labels";
 
-type SortField = "email" | "roles" | "teamId";
+type SortField = "email" | "roles" | "teamId" | "fullName";
 const ROLES = ["Coach", "AssistantCoach", "Analyst"];
 
 export function UsersPage() {
@@ -35,6 +37,7 @@ export function UsersPage() {
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editRole, setEditRole] = useState("Coach");
     const [editTeamId, setEditTeamId] = useState<number>(0);
+    const [editFullName, setEditFullName] = useState("");
     const [actionError, setActionError] = useState<string | null>(null);
 
     function loadUsers() {
@@ -63,13 +66,14 @@ export function UsersPage() {
         setEditingId(user.id);
         setEditRole(user.roles[0] ?? "Coach");
         setEditTeamId(user.teamId ?? teams[0]?.id ?? 0);
+        setEditFullName(user.fullName ?? "");
         setActionError(null);
     }
 
     async function saveEdit(id: string) {
         setActionError(null)
         try {
-            await updateUser(id, { role: editRole, teamId: editTeamId });
+            await updateUser(id, { role: editRole, teamId: editTeamId, fullName: editFullName });
             setEditingId(null);
             loadUsers();
         } catch {
@@ -96,6 +100,7 @@ export function UsersPage() {
         if (sortField === "email") result = a.email.localeCompare(b.email);
         if (sortField === "roles") result = a.roles.join(",").localeCompare(b.roles.join(","));
         if (sortField === "teamId") result = (a.teamId ?? 0) - (b.teamId ?? 0);
+        if (sortField === "fullName") result = (a.fullName ?? "").localeCompare(b.fullName ?? "");
         return sortAsc ? result : - result;
     });
 
@@ -119,6 +124,15 @@ export function UsersPage() {
                                     onClick={() => handleSort("email")}
                                 >
                                     Email
+                                </TableSortLabel>
+                            </TableCell>
+                            <TableCell>
+                                <TableSortLabel
+                                    active={sortField === "fullName"}
+                                    direction={sortAsc ? "asc" : "desc"} 
+                                    onClick={() => handleSort("fullName")}
+                                >
+                                    Imię i Nazwisko
                                 </TableSortLabel>
                             </TableCell>
                             <TableCell>
@@ -151,9 +165,12 @@ export function UsersPage() {
                                 {editingId === user.id ? (
                                     <>
                                         <TableCell>
+                                            <TextField size="small" value={editFullName} onChange={(e) => setEditFullName(e.target.value)} />
+                                        </TableCell>
+                                        <TableCell>
                                             <Select value={editRole} onChange={(e) => setEditRole(e.target.value)} size="small">
                                                 {ROLES.map((r) => (
-                                                    <MenuItem key={r} value={r}>{r}</MenuItem>
+                                                    <MenuItem key={r} value={r}>{ROLE_LABELS[r]}</MenuItem>
                                                 ))}
                                             </Select>
                                         </TableCell>
@@ -173,7 +190,8 @@ export function UsersPage() {
                                     </>
                                 ) : (
                                     <>
-                                        <TableCell>{user.roles.join(", ")}</TableCell>
+                                        <TableCell>{user.fullName ?? "-"}</TableCell>
+                                        <TableCell>{user.roles.map((r) => ROLE_LABELS[r] ?? r).join(", ")}</TableCell>
                                         <TableCell>{teamName(user.teamId)}</TableCell>
                                         <TableCell>
                                             <Box sx={{ display: "flex", gap: 1 }}>

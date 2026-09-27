@@ -11,10 +11,12 @@ import { register } from "../api/authApi";
 import { getTeams } from "../api/teamsApi";
 import type { Team } from "../types/team";
 import axios from "axios";
+import { ROLE_LABELS } from "../constants/labels";
 
 const ROLES = ["Admin", "Coach", "AssistantCoach", "Analyst"];
 
 export function RegisterPage() {
+    const [fullName, setFullName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [role, setRole] = useState("Coach");
@@ -33,12 +35,14 @@ export function RegisterPage() {
         setSuccess(null);
         try {
             await register({
+                fullName: fullName || null,
                 email,
                 password,
                 role,
                 teamId: role === "Admin" ? null : (teamId as number),
             });
             setSuccess(`Konto ${email} utworzone pomyślnie.`);
+            setFullName("");
             setEmail("");
             setPassword("");
             setTeamId("");
@@ -61,6 +65,11 @@ export function RegisterPage() {
             {error && <Alert severity="error">{error}</Alert>}
             {success && <Alert severity="success">{success}</Alert>}
             <TextField
+                label="Imię i nazwisko"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+            />
+            <TextField
                 label="Email"
                 type="email"
                 value={email}
@@ -81,9 +90,7 @@ export function RegisterPage() {
                 onChange={(e) => setRole(e.target.value)}    
             >
                 {ROLES.map((r) => (
-                    <MenuItem key={r} value={r}>
-                        {r}
-                    </MenuItem>
+                    <MenuItem key={r} value={r}>{ROLE_LABELS[r]}</MenuItem>
                 ))}
             </TextField>
             {role !== "Admin" && (

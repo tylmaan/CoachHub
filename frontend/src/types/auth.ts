@@ -8,6 +8,7 @@ export interface RegisterRequest {
     password: string;
     role: string;
     teamId: number | null;
+    fullName: string | null;
 }
 
 export interface AuthResponse {

@@ -5,4 +5,8 @@ export interface Player {
     dateOfBirth: string; 
     position: string;
     teamId: number;
+    heightCm: number | null;
+    weightKg: number | null;
+    jerseyNumber: number | null;
+    preferredFoot: string | null;
 }

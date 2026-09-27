@@ -1,6 +1,7 @@
 import { AppBar, Toolbar, Typography, Button, Box, Chip } from "@mui/material";
 import { Outlet, Link as RouterLink } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+import { ROLE_LABELS } from "../constants/labels";
 
 export function Layout() {
     const { email, roles, logout } = useAuth();
@@ -24,7 +25,7 @@ export function Layout() {
                     <Box sx={{ flexGrow: 1 }} />
                     <Typography variant="body2">{email}</Typography>
                     {roles?.map((role) => (
-                        <Chip key={role} label={role} size="small" color="secondary" />
+                        <Chip key={role} label={ROLE_LABELS[role] ?? role} size="small" color="secondary" />
                     ))}
                     <Button color="inherit" onClick={logout}>
                         Wyloguj się
