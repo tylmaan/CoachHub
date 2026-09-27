@@ -40,6 +40,11 @@ public class PlayerService : IPlayerService
         existing.DateOfBirth = player.DateOfBirth;
         existing.Position = player.Position;
         existing.TeamId = player.TeamId;
+        existing.HeightCm = player.HeightCm;
+        existing.WeightKg = player.WeightKg;
+        existing.JerseyNumber = player.JerseyNumber;
+        existing.PreferredFoot = player.PreferredFoot;
+        existing.PhotoUrl = player.PhotoUrl;
         await _context.SaveChangesAsync();
         return true;
     }

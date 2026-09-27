@@ -14,12 +14,15 @@ import {
     TextField,
     Button,
     MenuItem,
+    Avatar
 } from '@mui/material';
 import axios from "axios";
 import { getPlayers, createPlayer, updatePlayer, deletePlayer } from '../api/playersApi';
 import type { Player } from '../types/player';
 import { useAuth } from "../context/AuthContext";
 import { FOOT_LABELS } from '../constants/labels';
+import { uploadFile } from '../api/filesApi';
+import { BACKEND_ORIGIN } from '../api/axiosInstance';
 
 const FEET = ["Left", "Right", "Both"];
 
@@ -40,6 +43,7 @@ export function PlayersPage() {
     const [weightKg, setWeightKg] = useState("");
     const [jerseyNumber, setJerseyNumber] = useState("");
     const [preferredFoot, setPreferredFoot] = useState("");
+    const [photoUrl, setPhotoUrl] = useState<string | null>(null);
     const [formError, setFormError] = useState<string | null>(null);
 
     const [editingId, setEditingId] = useState<number | null>(null);
@@ -51,6 +55,7 @@ export function PlayersPage() {
     const [editWeightKg, setEditWeightKg] =useState("");
     const [editJerseyNumber, setEditJerseyNumber] = useState("");
     const [editPreferredFoot, setEditPreferredFoot] =useState("");
+    const [editPhotoUrl, setEditPhotoUrl] = useState<string | null>(null);
     const [actionError, setActionError] = useState<string | null>(null);
 
     const { roles, teamId } = useAuth();
@@ -70,6 +75,28 @@ export function PlayersPage() {
         loadPlayers();
     }, []);
 
+    async function handlePhotoSelect(e: React.ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        try {
+            const url = await uploadFile(file);
+            setPhotoUrl(url);
+        } catch {
+            setFormError("Nie udało się wgrać zdjęcia.");
+        }
+    }
+
+    async function handleEditPhotoSelect(e: React.ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        try {
+            const url = await uploadFile(file);
+            setEditPhotoUrl(url);
+        } catch {
+            setActionError("Nie udało się wgrać zdjęcia.");
+        }
+    }
+
     async function handleCreate(e: React.SyntheticEvent) {
         e.preventDefault();
         setFormError(null);
@@ -84,6 +111,7 @@ export function PlayersPage() {
                 weightKg: toNullableNumber(weightKg),
                 jerseyNumber: toNullableNumber(jerseyNumber),
                 preferredFoot: preferredFoot || null,
+                photoUrl
             });
             setFirstName("");
             setLastName("");
@@ -93,6 +121,7 @@ export function PlayersPage() {
             setWeightKg("");
             setJerseyNumber("");
             setPreferredFoot("");
+            setPhotoUrl(null);
             loadPlayers();
         } catch (err) {
             if (axios.isAxiosError(err) && Array.isArray(err.response?.data)) {
@@ -113,6 +142,7 @@ export function PlayersPage() {
         setEditWeightKg(player.weightKg?.toString() ?? "");
         setEditJerseyNumber(player.jerseyNumber?.toString() ?? "");
         setEditPreferredFoot(player.preferredFoot ?? "");
+        setEditPhotoUrl(player.photoUrl);
         setActionError(null);
     }
 
@@ -129,6 +159,7 @@ export function PlayersPage() {
                 weightKg: toNullableNumber(editWeightKg),
                 jerseyNumber: toNullableNumber(editJerseyNumber),
                 preferredFoot: editPreferredFoot || null,
+                photoUrl: editPhotoUrl
             });
             setEditingId(null);
             loadPlayers();
@@ -219,6 +250,11 @@ export function PlayersPage() {
                             <MenuItem key={f} value={f}>{FOOT_LABELS[f]}</MenuItem>
                         ))}
                     </TextField>
+                    {photoUrl && <Avatar src={`${BACKEND_ORIGIN}${photoUrl}`} />}
+                    <Button component="label" variant="outlined">
+                        Wybierz zdjęcie
+                        <input type="file" accept="image/png,image/jpeg" hidden onChange={handlePhotoSelect} />
+                    </Button>
                     <Button type="submit" variant="contained">
                         Dodaj zawodnika
                     </Button>
@@ -231,6 +267,7 @@ export function PlayersPage() {
                 <Table>
                     <TableHead>
                         <TableRow>
+                            <TableCell>Zdjęcie</TableCell>
                             <TableCell>Imię</TableCell>
                             <TableCell>Nazwisko</TableCell>
                             <TableCell>Data urodzenia</TableCell>
@@ -246,6 +283,15 @@ export function PlayersPage() {
                         {players.map((player) => 
                             editingId === player.id ? (
                                 <TableRow key={player.id}>
+                                    <TableCell>
+                                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                            {editPhotoUrl && <Avatar src={`${BACKEND_ORIGIN}${editPhotoUrl}`} />}
+                                            <Button component="label" size="small">
+                                                Zmień
+                                                <input type="file" accept="image/png,image/jpeg" hidden onChange={handleEditPhotoSelect} />
+                                            </Button>
+                                        </Box>
+                                    </TableCell>
                                     <TableCell>
                                         <TextField 
                                             size="small" 
@@ -326,6 +372,13 @@ export function PlayersPage() {
                                 </TableRow>
                             ) : (
                                 <TableRow key={player.id}>
+                                    <TableCell>
+                                        {player.photoUrl ? (
+                                            <Avatar src={`${BACKEND_ORIGIN}${player.photoUrl}`} />
+                                        ) :(
+                                            <Avatar>{player.firstName[0]}</Avatar>    
+                                        )}
+                                    </TableCell>
                                     <TableCell>{player.firstName}</TableCell>
                                     <TableCell>{player.lastName}</TableCell>
                                     <TableCell>{player.dateOfBirth}</TableCell>
