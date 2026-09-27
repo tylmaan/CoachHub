@@ -6,4 +6,5 @@ public class UserSummary
     public required string Email { get; set; }
     public required List<string> Roles { get; set; }
     public int? TeamId { get; set; }
+    public string? FullName { get; set; }
 }

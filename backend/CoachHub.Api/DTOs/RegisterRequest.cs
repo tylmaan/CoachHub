@@ -6,4 +6,5 @@ public class RegisterRequest
     public required string Password { get; set; }
     public required string Role { get; set; }
     public int? TeamId { get; set; }
+    public string? FullName { get; set; }
 }

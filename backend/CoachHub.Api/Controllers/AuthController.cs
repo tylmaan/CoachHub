@@ -73,7 +73,8 @@ public class AuthController : ControllerBase
             UserName = request.Email,
             Email = request.Email,
             EmailConfirmed = true,
-            TeamId = request.Role == Roles.Admin ? null : request.TeamId
+            TeamId = request.Role == Roles.Admin ? null : request.TeamId,
+            FullName = request.FullName
         };
 
         var result = await _userManager.CreateAsync(user, request.Password);

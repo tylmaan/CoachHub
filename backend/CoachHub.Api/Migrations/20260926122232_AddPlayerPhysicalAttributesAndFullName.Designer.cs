@@ -3,6 +3,7 @@ using System;
 using CoachHub.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CoachHub.Api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260926122232_AddPlayerPhysicalAttributesAndFullName")]
+    partial class AddPlayerPhysicalAttributesAndFullName
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.11");
@@ -128,10 +131,10 @@ namespace CoachHub.Api.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int?>("HeightCm")
+                    b.Property<int>("HeightCm")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int?>("JerseyNumber")
+                    b.Property<int>("JerseyNumber")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("LastName")
@@ -142,13 +145,13 @@ namespace CoachHub.Api.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("PreferredFoot")
+                    b.Property<string>("PrefferedFoot")
                         .HasColumnType("TEXT");
 
                     b.Property<int>("TeamId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int?>("WeightKg")
+                    b.Property<int>("WeightKg")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");
