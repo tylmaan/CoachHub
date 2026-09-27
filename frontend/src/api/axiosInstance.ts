@@ -13,3 +13,5 @@ axiosInstance.interceptors.request.use((config) => {
 });
 
 export default axiosInstance;
+
+export const BACKEND_ORIGIN = "http://localhost:5006";

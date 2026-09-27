@@ -37,6 +37,7 @@ public class TeamService : ITeamService
 
         existing.Name = team.Name;
         existing.FoundedDate = team.FoundedDate;
+        existing.LogoUrl = team.LogoUrl;
         await _context.SaveChangesAsync();
         return true;
     }
