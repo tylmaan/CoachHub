@@ -7,4 +7,5 @@ public class ApplicationUser : IdentityUser
     public int? TeamId { get; set; }
     public Team? Team { get; set; }
     public string? FullName { get; set; }
+    public string? PhotoUrl { get; set; }
 }

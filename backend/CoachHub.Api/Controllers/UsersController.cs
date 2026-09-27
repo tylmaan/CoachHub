@@ -57,11 +57,11 @@ public class UsersController : ControllerBase
 
         if (!Roles.All.Contains(request.Role) || request.Role == Roles.Admin)
         {
-            return BadRequest("InvalidRole");
+            return BadRequest($"Nieprawidłowa rola. Dozwolone role: {string.Join(", ", Roles.All)}");
         }
 
         var team = await _teamService.GetByIdAsync(request.TeamId);
-        if (team is null) return BadRequest("Team not found.");
+        if (team is null) return BadRequest("Nie znaleziono drużyny.");
 
         await _userManager.RemoveFromRolesAsync(user, currentRoles);
         await _userManager.AddToRoleAsync(user, request.Role);
