@@ -3,6 +3,7 @@ using System;
 using CoachHub.Api.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -10,9 +11,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace CoachHub.Api.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260930084737_RemovePlayerSeasonStat")]
+    partial class RemovePlayerSeasonStat
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.11");
@@ -116,91 +119,6 @@ namespace CoachHub.Api.Migrations
                     b.HasIndex("PlayerId");
 
                     b.ToTable("CareerHistoryEntries");
-                });
-
-            modelBuilder.Entity("CoachHub.Api.Models.Match", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateOnly>("Date")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Opponent")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int?>("ScoreAgainst")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int?>("ScoreFor")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Season")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("TeamId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TeamId");
-
-                    b.ToTable("Matches");
-                });
-
-            modelBuilder.Entity("CoachHub.Api.Models.MatchAppearance", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("MatchId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int?>("MinutesPlayed")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("PlayerId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("MatchId");
-
-                    b.HasIndex("PlayerId");
-
-                    b.ToTable("MatchAppearances");
-                });
-
-            modelBuilder.Entity("CoachHub.Api.Models.MatchEvent", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("EventType")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("MatchId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int?>("Minute")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("PlayerId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("MatchId");
-
-                    b.HasIndex("PlayerId");
-
-                    b.ToTable("MatchEvents");
                 });
 
             modelBuilder.Entity("CoachHub.Api.Models.Player", b =>
@@ -489,55 +407,6 @@ namespace CoachHub.Api.Migrations
                     b.Navigation("Player");
                 });
 
-            modelBuilder.Entity("CoachHub.Api.Models.Match", b =>
-                {
-                    b.HasOne("CoachHub.Api.Models.Team", "Team")
-                        .WithMany("Matches")
-                        .HasForeignKey("TeamId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Team");
-                });
-
-            modelBuilder.Entity("CoachHub.Api.Models.MatchAppearance", b =>
-                {
-                    b.HasOne("CoachHub.Api.Models.Match", "Match")
-                        .WithMany("Appearances")
-                        .HasForeignKey("MatchId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("CoachHub.Api.Models.Player", "Player")
-                        .WithMany("MatchAppearances")
-                        .HasForeignKey("PlayerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Match");
-
-                    b.Navigation("Player");
-                });
-
-            modelBuilder.Entity("CoachHub.Api.Models.MatchEvent", b =>
-                {
-                    b.HasOne("CoachHub.Api.Models.Match", "Match")
-                        .WithMany("Events")
-                        .HasForeignKey("MatchId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("CoachHub.Api.Models.Player", "Player")
-                        .WithMany("MatchEvents")
-                        .HasForeignKey("PlayerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Match");
-
-                    b.Navigation("Player");
-                });
-
             modelBuilder.Entity("CoachHub.Api.Models.Player", b =>
                 {
                     b.HasOne("CoachHub.Api.Models.Team", "Team")
@@ -644,28 +513,15 @@ namespace CoachHub.Api.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("CoachHub.Api.Models.Match", b =>
-                {
-                    b.Navigation("Appearances");
-
-                    b.Navigation("Events");
-                });
-
             modelBuilder.Entity("CoachHub.Api.Models.Player", b =>
                 {
                     b.Navigation("CareerHistory");
-
-                    b.Navigation("MatchAppearances");
-
-                    b.Navigation("MatchEvents");
 
                     b.Navigation("Reports");
                 });
 
             modelBuilder.Entity("CoachHub.Api.Models.Team", b =>
                 {
-                    b.Navigation("Matches");
-
                     b.Navigation("Players");
 
                     b.Navigation("Reports");

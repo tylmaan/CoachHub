@@ -13,9 +13,11 @@ base(options)
     }
     public DbSet<Team> Teams { get; set; }
     public DbSet<Player> Players { get; set; }
-    public DbSet<PlayerSeasonStat> PlayerSeasonStats { get; set; }
     public DbSet<CareerHistoryEntry> CareerHistoryEntries { get; set; }
     public DbSet<TacticalScheme> TacticalSchemes { get; set; }
+    public DbSet<Match> Matches { get; set; }
+    public DbSet<MatchAppearance> MatchAppearances { get; set; }
+    public DbSet<MatchEvent> MatchEvents { get; set; }
     public DbSet<Report> Reports { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
