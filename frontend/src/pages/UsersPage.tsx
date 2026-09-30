@@ -16,12 +16,15 @@ import {
     Select,
     Box,
     TextField,
+    Avatar
 } from "@mui/material";
 import { getUsers, updateUser, deleteUser } from "../api/usersApi";
 import { getTeams } from "../api/teamsApi";
 import type { UserSummary } from "../types/user";
 import type { Team } from "../types/team";
 import { ROLE_LABELS } from "../constants/labels";
+import { uploadFile } from "../api/filesApi";
+import { BACKEND_ORIGIN } from "../api/axiosInstance";
 
 type SortField = "email" | "roles" | "teamId" | "fullName";
 const ROLES = ["Coach", "AssistantCoach", "Analyst"];
@@ -38,6 +41,7 @@ export function UsersPage() {
     const [editRole, setEditRole] = useState("Coach");
     const [editTeamId, setEditTeamId] = useState<number>(0);
     const [editFullName, setEditFullName] = useState("");
+    const [editPhotoUrl, setEditPhotoUrl] = useState<string | null>(null);
     const [actionError, setActionError] = useState<string | null>(null);
 
     function loadUsers() {
@@ -62,18 +66,30 @@ export function UsersPage() {
         }
     }
 
+    async function handleEditPhotoSelect(e: React.ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        try {
+            const url = await uploadFile(file);
+            setEditPhotoUrl(url);
+        } catch {
+            setActionError("Nie udało się wgrać zdjęcia.");
+        }
+    }
+
     function startEdit(user: UserSummary) {
         setEditingId(user.id);
         setEditRole(user.roles[0] ?? "Coach");
         setEditTeamId(user.teamId ?? teams[0]?.id ?? 0);
         setEditFullName(user.fullName ?? "");
+        setEditPhotoUrl(user.photoUrl);
         setActionError(null);
     }
 
     async function saveEdit(id: string) {
         setActionError(null)
         try {
-            await updateUser(id, { role: editRole, teamId: editTeamId, fullName: editFullName });
+            await updateUser(id, { role: editRole, teamId: editTeamId, fullName: editFullName, photoUrl: editPhotoUrl || null });
             setEditingId(null);
             loadUsers();
         } catch {
@@ -117,6 +133,7 @@ export function UsersPage() {
                 <Table>
                     <TableHead>
                         <TableRow>
+                            <TableCell>Zdjęcie</TableCell>
                             <TableCell>
                                 <TableSortLabel
                                     active={sortField === "email"}
@@ -165,6 +182,15 @@ export function UsersPage() {
                                 {editingId === user.id ? (
                                     <>
                                         <TableCell>
+                                            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                                {editPhotoUrl && <Avatar src={`${BACKEND_ORIGIN}${editPhotoUrl}`} />}
+                                                <Button component="label" size="small">
+                                                    Zmień
+                                                    <input type="file" accept="image/png,image/jpeg" hidden onChange={handleEditPhotoSelect} />
+                                                </Button>
+                                            </Box>
+                                        </TableCell>
+                                        <TableCell>
                                             <TextField size="small" value={editFullName} onChange={(e) => setEditFullName(e.target.value)} />
                                         </TableCell>
                                         <TableCell>
@@ -190,6 +216,13 @@ export function UsersPage() {
                                     </>
                                 ) : (
                                     <>
+                                        <TableCell>
+                                            {user.photoUrl ? (
+                                                <Avatar src={`${BACKEND_ORIGIN}${user.photoUrl}`} />
+                                            ) : (
+                                                <Avatar>{(user.fullName ?? user.email)[0]}</Avatar>
+                                            )}
+                                        </TableCell>
                                         <TableCell>{user.fullName ?? "-"}</TableCell>
                                         <TableCell>{user.roles.map((r) => ROLE_LABELS[r] ?? r).join(", ")}</TableCell>
                                         <TableCell>{teamName(user.teamId)}</TableCell>

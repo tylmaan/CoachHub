@@ -51,20 +51,20 @@ public class AuthController : ControllerBase
     {
         if (!Roles.All.Contains(request.Role))
         {
-            return BadRequest($"Invalid role. Allowed roles: {string.Join(", ", Roles.All)}");
+            return BadRequest($"Nieprawidłowa rola. Dozwolone role: {string.Join(", ", Roles.All)}");
         }
 
         if (request.Role != Roles.Admin)
         {
             if (request.TeamId is null)
             {
-                return BadRequest("TeamId is required for this role.");
+                return BadRequest("Drużyna jest wymagana dla tej roli.");
             }
 
             var team = await _teamService.GetByIdAsync(request.TeamId.Value);
             if (team is null)
             {
-                return BadRequest("Team not found.");
+                return BadRequest("Nie znaleziono drużyny.");
             }
         }
 
@@ -74,7 +74,8 @@ public class AuthController : ControllerBase
             Email = request.Email,
             EmailConfirmed = true,
             TeamId = request.Role == Roles.Admin ? null : request.TeamId,
-            FullName = request.FullName
+            FullName = request.FullName,
+            PhotoUrl = request.PhotoUrl
         };
 
         var result = await _userManager.CreateAsync(user, request.Password);

@@ -9,4 +9,5 @@ export interface Player {
     weightKg: number | null;
     jerseyNumber: number | null;
     preferredFoot: string | null;
+    photoUrl: string | null;
 }

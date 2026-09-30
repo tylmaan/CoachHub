@@ -13,6 +13,7 @@ public class Player
     public string? PreferredFoot { get; set; } 
     public int TeamId { get; set; }
     public Team? Team { get; set; }
+    public string? PhotoUrl { get; set; } 
 
     public ICollection<PlayerSeasonStat> SeasonStats { get; set; } = new List<PlayerSeasonStat>();
     public ICollection<CareerHistoryEntry> CareerHistory { get; set; } = new List<CareerHistoryEntry>();

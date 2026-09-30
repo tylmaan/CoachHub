@@ -12,12 +12,15 @@ import {
     Alert,
     Box,
     TextField,
-    Button
+    Button,
+    Avatar
 } from '@mui/material';
 import axios from "axios";
 import { getTeams, createTeam, updateTeam, deleteTeam } from '../api/teamsApi';
 import type { Team } from '../types/team';
 import { useAuth } from "../context/AuthContext";
+import { uploadFile } from '../api/filesApi';
+import { BACKEND_ORIGIN } from '../api/axiosInstance';
 
 export function TeamsPage() {
     const [teams, setTeams] = useState<Team[]>([]);
@@ -26,11 +29,13 @@ export function TeamsPage() {
 
     const [name, setName] = useState("");
     const [foundedDate, setFoundedDate] = useState("");
+    const [logoUrl, setLogoUrl] = useState<string | null>(null);
     const [formError, setFormError] = useState<string | null>(null);
 
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editName, setEditName] = useState("");
     const [editFoundedDate, setEditFoundedDate] = useState("");
+    const [editLogoUrl, setEditLogoUrl] = useState<string | null>(null);
     const [actionError, setActionError] = useState<string | null>(null);
 
     const { roles } = useAuth();
@@ -49,13 +54,36 @@ export function TeamsPage() {
         loadTeams();
     }, []);
 
+    async function handleLogoSelect(e: React.ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        try {
+            const url = await uploadFile(file);
+            setLogoUrl(url);
+        } catch {
+            setFormError("Nie udało się wgrać logo.");
+        }
+    }
+
+    async function handleEditLogoSelect(e: React.ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        try {
+            const url = await uploadFile(file);
+            setEditLogoUrl(url);
+        } catch {
+            setActionError("Nie udało się wgrać logo.");
+        }
+    }
+
     async function handleCreate(e: React.SyntheticEvent) {
         e.preventDefault();
         setFormError(null);
         try {
-            await createTeam({ name, foundedDate });
+            await createTeam({ name, foundedDate, logoUrl });
             setName("");
             setFoundedDate("");
+            setLogoUrl(null);
             loadTeams();
         } catch (err) {
             if (axios.isAxiosError(err) && Array.isArray(err.response?.data)) {
@@ -70,13 +98,14 @@ export function TeamsPage() {
         setEditingId(team.id);
         setEditName(team.name);
         setEditFoundedDate(team.foundedDate);
+        setEditLogoUrl(team.logoUrl);
         setActionError(null);
     }
 
     async function saveEdit(id: number) {
         setActionError(null);
         try {
-            await updateTeam(id, { name: editName, foundedDate: editFoundedDate });
+            await updateTeam(id, { name: editName, foundedDate: editFoundedDate, logoUrl: editLogoUrl });
             setEditingId(null);
             loadTeams();
         } catch {
@@ -124,6 +153,11 @@ export function TeamsPage() {
                         onChange={(e) => setFoundedDate(e.target.value)}
                         required
                     />
+                    {logoUrl && <Avatar src={`${BACKEND_ORIGIN}${logoUrl}`} variant="rounded" />}
+                    <Button component="label" variant="outlined">
+                        Wybierz logo
+                        <input type="file" accept="image/png,image/jpeg" hidden onChange={handleLogoSelect} />
+                    </Button>
                     <Button type="submit" variant="contained">
                         Dodaj drużynę
                     </Button>
@@ -136,6 +170,7 @@ export function TeamsPage() {
                 <Table>
                     <TableHead>
                         <TableRow>
+                            <TableCell>Logo</TableCell>
                             <TableCell>Nazwa</TableCell>
                             <TableCell>Data założenia</TableCell>
                             {(canEdit || canDelete) && <TableCell>Akcje</TableCell>}
@@ -145,6 +180,15 @@ export function TeamsPage() {
                         {teams.map((team) => 
                             editingId == team.id ? (
                                 <TableRow key={team.id}>
+                                    <TableCell>
+                                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                            {editLogoUrl && <Avatar src={`${BACKEND_ORIGIN}${editLogoUrl}`} variant="rounded" />}
+                                            <Button component="label" size="small">
+                                                Zmień
+                                                <input type="file" accept="image/png,image/jpeg" hidden onChange={handleEditLogoSelect} />
+                                            </Button>
+                                        </Box>
+                                    </TableCell>
                                     <TableCell>
                                         <TextField 
                                             size="small" 
@@ -170,6 +214,13 @@ export function TeamsPage() {
                                 </TableRow>
                             ) : (
                                 <TableRow key={team.id}>
+                                    <TableCell>
+                                        {team.logoUrl ? (
+                                            <Avatar src={`${BACKEND_ORIGIN}${team.logoUrl}`} variant="rounded" />
+                                        ) : (
+                                            <Avatar variant="rounded">{team.name[0]}</Avatar>
+                                        )}
+                                    </TableCell>
                                     <TableCell>{team.name}</TableCell>
                                     <TableCell>{team.foundedDate}</TableCell>
                                     {(canEdit || canDelete) && (

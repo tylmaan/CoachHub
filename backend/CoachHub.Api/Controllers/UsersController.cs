@@ -39,7 +39,8 @@ public class UsersController : ControllerBase
                 Email = user.Email!,
                 Roles = roles.ToList(),
                 TeamId = user.TeamId,
-                FullName = user.FullName
+                FullName = user.FullName,
+                PhotoUrl = user.PhotoUrl
             });
         }
 
@@ -57,16 +58,17 @@ public class UsersController : ControllerBase
 
         if (!Roles.All.Contains(request.Role) || request.Role == Roles.Admin)
         {
-            return BadRequest("InvalidRole");
+            return BadRequest($"Nieprawidłowa rola. Dozwolone role: {string.Join(", ", Roles.All)}");
         }
 
         var team = await _teamService.GetByIdAsync(request.TeamId);
-        if (team is null) return BadRequest("Team not found.");
+        if (team is null) return BadRequest("Nie znaleziono drużyny.");
 
         await _userManager.RemoveFromRolesAsync(user, currentRoles);
         await _userManager.AddToRoleAsync(user, request.Role);
         user.TeamId = request.TeamId;
         user.FullName = request.FullName;
+        user.PhotoUrl = request.PhotoUrl;
         await _userManager.UpdateAsync(user);
 
         return NoContent();
