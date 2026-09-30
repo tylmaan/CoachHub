@@ -15,7 +15,8 @@ public class Player
     public Team? Team { get; set; }
     public string? PhotoUrl { get; set; } 
 
-    public ICollection<PlayerSeasonStat> SeasonStats { get; set; } = new List<PlayerSeasonStat>();
     public ICollection<CareerHistoryEntry> CareerHistory { get; set; } = new List<CareerHistoryEntry>();
+    public ICollection<MatchAppearance> MatchAppearances { get; set; } = new List<MatchAppearance>();
+    public ICollection<MatchEvent> MatchEvents { get; set; } = new List<MatchEvent>();
     public ICollection<Report> Reports { get; set; } = new List<Report>();
 }

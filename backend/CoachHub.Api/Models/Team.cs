@@ -11,4 +11,5 @@ public class Team
     public ICollection<TacticalScheme> TacticalSchemes { get; set; } = new List<TacticalScheme>();
     public ICollection<Report> Reports { get; set; } = new List<Report>();
     public ICollection<ApplicationUser> StaffMembers { get; set; } = new List<ApplicationUser>();
+    public ICollection<Match> Matches { get; set; } = new List<Match>();
 }

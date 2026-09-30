@@ -22,10 +22,10 @@ builder.Services.AddCors(options =>
 builder.Services.AddScoped<CoachHub.Api.Services.ITeamService, CoachHub.Api.Services.TeamService>();
 builder.Services.AddScoped<CoachHub.Api.Services.IPlayerService, CoachHub.Api.Services.PlayerService>();
 builder.Services.AddScoped<CoachHub.Api.Services.ITokenService, CoachHub.Api.Services.TokenService>();
-builder.Services.AddScoped<CoachHub.Api.Services.IPlayerSeasonStatService, CoachHub.Api.Services.PlayerSeasonStatService>();
 builder.Services.AddScoped<CoachHub.Api.Services.ICareerHistoryEntryService, CoachHub.Api.Services.CareerHistoryEntryService>();
 builder.Services.AddScoped<CoachHub.Api.Services.IReportService, CoachHub.Api.Services.ReportService>();
 builder.Services.AddScoped<CoachHub.Api.Services.ITacticalSchemeService, CoachHub.Api.Services.TacticalSchemeService>();
+builder.Services.AddScoped<CoachHub.Api.Services.IMatchService, CoachHub.Api.Services.MatchService>();
 
 builder.Services.AddIdentity<CoachHub.Api.Models.ApplicationUser, Microsoft.AspNetCore.Identity.IdentityRole>()
     .AddEntityFrameworkStores<CoachHub.Api.Data.ApplicationDbContext>()
