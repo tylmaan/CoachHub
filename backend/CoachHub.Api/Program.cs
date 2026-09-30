@@ -27,6 +27,7 @@ builder.Services.AddScoped<CoachHub.Api.Services.IReportService, CoachHub.Api.Se
 builder.Services.AddScoped<CoachHub.Api.Services.ITacticalSchemeService, CoachHub.Api.Services.TacticalSchemeService>();
 builder.Services.AddScoped<CoachHub.Api.Services.IMatchService, CoachHub.Api.Services.MatchService>();
 builder.Services.AddScoped<CoachHub.Api.Services.IMatchAppearanceService, CoachHub.Api.Services.MatchAppearanceService>();
+builder.Services.AddScoped<CoachHub.Api.Services.IMatchEventService, CoachHub.Api.Services.MatchEventService>();
 
 builder.Services.AddIdentity<CoachHub.Api.Models.ApplicationUser, Microsoft.AspNetCore.Identity.IdentityRole>()
     .AddEntityFrameworkStores<CoachHub.Api.Data.ApplicationDbContext>()
