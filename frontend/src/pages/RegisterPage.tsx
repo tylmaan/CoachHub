@@ -5,18 +5,22 @@ import {
     TextField,
     Typography,
     Alert,
-    MenuItem
+    MenuItem,
+    Avatar
 } from "@mui/material";
 import { register } from "../api/authApi";
 import { getTeams } from "../api/teamsApi";
 import type { Team } from "../types/team";
 import axios from "axios";
 import { ROLE_LABELS } from "../constants/labels";
+import { uploadFile } from "../api/filesApi";
+import { BACKEND_ORIGIN } from "../api/axiosInstance";
 
 const ROLES = ["Admin", "Coach", "AssistantCoach", "Analyst"];
 
 export function RegisterPage() {
     const [fullName, setFullName] = useState("");
+    const [photoUrl, setPhotoUrl] = useState<string | null>(null);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [role, setRole] = useState("Coach");
@@ -29,6 +33,17 @@ export function RegisterPage() {
         getTeams().then(setTeams).catch(() => {});
     }, []);
 
+    async function handlePhotoSelect(e: React.ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        try {
+            const url = await uploadFile(file);
+            setPhotoUrl(url);
+        } catch {
+            setError("Nie udało się wgrać zdjęcia.");
+        }
+    }
+
     async function handleSubmit(e: React.SyntheticEvent) {
         e.preventDefault();
         setError(null);
@@ -36,6 +51,7 @@ export function RegisterPage() {
         try {
             await register({
                 fullName: fullName || null,
+                photoUrl,
                 email,
                 password,
                 role,
@@ -43,6 +59,7 @@ export function RegisterPage() {
             });
             setSuccess(`Konto ${email} utworzone pomyślnie.`);
             setFullName("");
+            setPhotoUrl(null);
             setEmail("");
             setPassword("");
             setTeamId("");
@@ -108,6 +125,11 @@ export function RegisterPage() {
                     ))}
                 </TextField>
             )}
+            {photoUrl && <Avatar src={`${BACKEND_ORIGIN}${photoUrl}`} />}
+            <Button component="label" variant="outlined">
+                Wybierz zdjęcie
+                <input type="file" accept="image/png,image/jpeg" hidden onChange={handlePhotoSelect} />
+            </Button>
             <Button type="submit" variant="contained">
                 Utwórz konto
             </Button>

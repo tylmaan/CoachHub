@@ -74,7 +74,8 @@ public class AuthController : ControllerBase
             Email = request.Email,
             EmailConfirmed = true,
             TeamId = request.Role == Roles.Admin ? null : request.TeamId,
-            FullName = request.FullName
+            FullName = request.FullName,
+            PhotoUrl = request.PhotoUrl
         };
 
         var result = await _userManager.CreateAsync(user, request.Password);

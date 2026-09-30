@@ -39,7 +39,8 @@ public class UsersController : ControllerBase
                 Email = user.Email!,
                 Roles = roles.ToList(),
                 TeamId = user.TeamId,
-                FullName = user.FullName
+                FullName = user.FullName,
+                PhotoUrl = user.PhotoUrl
             });
         }
 
@@ -67,6 +68,7 @@ public class UsersController : ControllerBase
         await _userManager.AddToRoleAsync(user, request.Role);
         user.TeamId = request.TeamId;
         user.FullName = request.FullName;
+        user.PhotoUrl = request.PhotoUrl;
         await _userManager.UpdateAsync(user);
 
         return NoContent();

@@ -7,4 +7,5 @@ public class UserSummary
     public required List<string> Roles { get; set; }
     public int? TeamId { get; set; }
     public string? FullName { get; set; }
+    public string? PhotoUrl { get; set; }
 }
