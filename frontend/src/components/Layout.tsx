@@ -1,30 +1,33 @@
 import { AppBar, Toolbar, Typography, Button, Box, Chip } from "@mui/material";
-import { Outlet, Link as RouterLink } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { ROLE_LABELS } from "../constants/labels";
 
+const PAGE_TITLES: Record<string, string> = {
+    "/": "Dashboard",
+    "/teams": "Drużyny",
+    "/players": "Zawodnicy",
+    "/matches": "Mecze",
+    "/users": "Użytkownicy",
+};
+
 export function Layout() {
     const { email, roles, logout } = useAuth();
+    const location = useLocation();
+    const pageTitle = PAGE_TITLES[location.pathname];
 
     return (
         <Box>
             <AppBar position="static">
                 <Toolbar sx={{ gap: 2 }}>
-                    <Typography variant="h6" sx={{ flexGrow: 0 }}>
-                        CoachHub
-                    </Typography>
-                    <Button color="inherit" component={RouterLink} to="/">
-                        Dashboard
-                    </Button>
-                    <Button color="inherit" component={RouterLink} to="/teams">
-                        Drużyny
-                    </Button>
-                    <Button color="inherit" component={RouterLink} to="/players">
-                        Zawodnicy
-                    </Button>
-                    <Button color="inherit" component={RouterLink} to="/matches">
-                        Mecze
-                    </Button>
+                    <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
+                        <Typography variant="h6">CoachHub</Typography>
+                        {pageTitle && (
+                            <Typography variant="body2" sx={{ opacity: 0.8 }}>
+                                {pageTitle}
+                            </Typography>
+                        )}
+                    </Box>
                     <Box sx={{ flexGrow: 1 }} />
                     <Typography variant="body2">{email}</Typography>
                     {roles?.map((role) => (
@@ -33,16 +36,6 @@ export function Layout() {
                     <Button color="inherit" onClick={logout}>
                         Wyloguj się
                     </Button>
-                    {roles?.includes("Admin") && (
-                        <Button color="inherit" component={RouterLink} to="/register">
-                            Nowe konto
-                        </Button>
-                    )}
-                    {roles?.includes("Admin") && (
-                        <Button color="inherit" component={RouterLink} to="/users">
-                        Użytkownicy
-                        </Button>
-                    )}
                 </Toolbar>
             </AppBar>
             <Box sx={{ p: 3 }}>

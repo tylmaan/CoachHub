@@ -5,7 +5,6 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 import { Layout } from './components/Layout';
 import { TeamsPage } from './pages/TeamsPage';
 import { PlayersPage } from './pages/PlayersPage';
-import { RegisterPage } from './pages/RegisterPage';
 import { AdminRoute } from './components/AdminRoute';
 import { UsersPage } from './pages/UsersPage';
 import { MatchesPage } from './pages/MatchesPage';
@@ -24,7 +23,6 @@ function App() {
         <Route path="/" element={<DashboardPage />} />
         <Route path="/teams" element={<TeamsPage />} />
         <Route path="/players" element={<PlayersPage />} />
-        <Route path="/register" element={<AdminRoute><RegisterPage /></AdminRoute>} />
         <Route path="/users" element={<AdminRoute><UsersPage /></AdminRoute>} />
         <Route path="/matches" element={<MatchesPage />} />
       </Route>
