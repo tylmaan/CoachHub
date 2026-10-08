@@ -40,6 +40,10 @@ public class MatchService : IMatchService
         existing.Season = match.Season;
         existing.ScoreFor = match.ScoreFor;
         existing.ScoreAgainst = match.ScoreAgainst;
+        existing.IsHome = match.IsHome;
+        existing.MatchType = match.MatchType;
+        existing.Round = match.Round;
+        existing.OpponentLogoUrl = match.OpponentLogoUrl;
         await _context.SaveChangesAsync();
         return true;
     }
