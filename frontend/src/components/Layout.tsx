@@ -1,5 +1,5 @@
 import { AppBar, Toolbar, Typography, Button, Box, Chip } from "@mui/material";
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet, useLocation, Link as RouterLink } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { ROLE_LABELS } from "../constants/labels";
 
@@ -21,7 +21,14 @@ export function Layout() {
             <AppBar position="static">
                 <Toolbar sx={{ gap: 2 }}>
                     <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
-                        <Typography variant="h6">CoachHub</Typography>
+                        <Typography 
+                            variant="h6"
+                            component={RouterLink}
+                            to="/"
+                            sx={{ textDecoration: "none", color: "inherit" }}
+                            >
+                                CoachHub
+                            </Typography>
                         {pageTitle && (
                             <Typography variant="body2" sx={{ opacity: 0.8 }}>
                                 {pageTitle}
@@ -38,7 +45,7 @@ export function Layout() {
                     </Button>
                 </Toolbar>
             </AppBar>
-            <Box sx={{ p: 3 }}>
+            <Box sx={{ p: 3, maxWidth: "1200px", mx: "auto" }}>
                 <Outlet />
             </Box>
         </Box>
