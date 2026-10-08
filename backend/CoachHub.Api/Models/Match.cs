@@ -8,6 +8,10 @@ public class Match
     public required string Season { get; set; }
     public int? ScoreFor { get; set; }
     public int? ScoreAgainst { get; set; }
+    public bool? IsHome { get; set; }
+    public string? MatchType { get; set; }
+    public int? Round { get; set; }
+    public string? OpponentLogoUrl { get; set; }
 
     public int TeamId { get; set; }
     public Team? Team { get; set; }

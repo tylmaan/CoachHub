@@ -6,4 +6,8 @@ export interface Match {
     teamId: number;
     scoreFor: number | null;
     scoreAgainst: number | null;
+    isHome: boolean | null;
+    matchType: string | null;
+    round: number | null;
+    opponentLogoUrl: string | null;
 }
