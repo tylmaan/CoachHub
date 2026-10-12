@@ -14,6 +14,7 @@ import {
     Button,
     MenuItem,
     Avatar,
+    Chip,
     Dialog,
     DialogTitle,
     DialogContent,
@@ -110,6 +111,14 @@ function renderFoot(foot: string | null) {
             <Box sx={circleSx(right)}>R</Box>
         </Box>
     );
+}
+
+function positionChipStyle(position: string): { bg: string; color: string } {
+    if (position === "GK") return { bg: "#dc2b2b", color: "#fff" };
+    if (["LB", "CB", "RB", "LWB", "RWB"].includes(position)) return { bg: "#d3b323", color: "#fff" };
+    if (["CDM", "CM", "CAM", "LM", "RM"].includes(position)) return { bg: "#0c7934", color: "#fff" };
+    if (["LW", "RW", "CF", "ST"].includes(position)) return { bg: "#3b14c8", color: "#fff" };
+    return { bg: "grey.700", color: "#fff" };
 }
 
 export function PlayersPageView({
@@ -423,7 +432,13 @@ export function PlayersPageView({
                                     ) : "-"}
                                 </TableCell>
                                 <TableCell>{player.dateOfBirth}</TableCell>
-                                <TableCell>{POSITION_LABELS[player.position] ?? player.position}</TableCell>
+                                <TableCell>
+                                    <Chip
+                                        label={POSITION_LABELS[player.position] ?? player.position}
+                                        size="small"
+                                        sx={{ bgcolor: positionChipStyle(player.position).bg, color: positionChipStyle(player.position).color }}
+                                    />                                        
+                                </TableCell>
                                 <TableCell>{player.heightCm ?? "-"}</TableCell>
                                 <TableCell>{player.jerseyNumber ?? "-"}</TableCell>
                                 <TableCell>{renderFoot(player.preferredFoot)}</TableCell>
