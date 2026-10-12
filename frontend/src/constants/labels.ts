@@ -16,3 +16,21 @@ export const MATCH_TYPE_LABELS: Record<string, string> = {
     Cup: "Pucharowy",
     Friendly: "Towarzyski",
 };
+
+export const POSITION_LABELS: Record<string, string> = {
+    GK: "Bramkarz",
+    CB: "Środkowy obrońca",
+    LB: "Lewy obrońca",
+    RB: "Prawy obrońca",
+    LWB: "Lewy wahadłowy",
+    RWB: "Prawy wahadłowy",
+    CDM: "Defensywny pomocnik",
+    CM: "Środkowy pomocnik",
+    CAM: "Ofensywny pomocnik",
+    LM: "Lewy pomocnik",
+    RM: "Prawy pomocnik",
+    LW: "Lewy skrzydłowy",
+    RW: "Prawy skrzydłowy",
+    CF: "Środkowy napastnik",
+    ST: "Napastnik",
+};

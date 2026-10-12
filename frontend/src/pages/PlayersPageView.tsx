@@ -19,10 +19,11 @@ import {
     DialogActions
 } from '@mui/material';
 import type { Player } from '../types/player';
-import { FOOT_LABELS } from '../constants/labels';
+import { FOOT_LABELS, POSITION_LABELS } from '../constants/labels';
 import { BACKEND_ORIGIN } from '../api/axiosInstance';
 
 const FEET = ["Left", "Right", "Both"];
+const POSITIONS = ["GK", "CB", "LB", "RB", "LWB", "RWB", "CDM", "CM", "CAM", "LM", "RM", "LW", "RW", "CF", "ST"];
 
 interface PlayersPageViewProps {
     players: Player[];
@@ -128,7 +129,7 @@ export function PlayersPageView({
     return (
         <>
             <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
-                <Typography variant="h4" sx={{ mb: 2 }}>
+                <Typography variant="h4">
                     Zawodnicy
                 </Typography>
                 {canCreate && (
@@ -164,11 +165,17 @@ export function PlayersPageView({
                             required
                         />
                         <TextField
+                            select
                             label="Pozycja"
                             value={position}
                             onChange={(e) => onPositionChange(e.target.value)}
                             required
-                        />
+                            sx={{ minWidth: 160 }}
+                        >
+                            {POSITIONS.map((p) => (
+                                <MenuItem key={p} value={p}>{POSITION_LABELS[p]}</MenuItem>
+                            ))}
+                        </TextField>
                         <TextField
                             label="Wzrost (cm)"
                             type="number"
@@ -262,11 +269,17 @@ export function PlayersPageView({
                                         />
                                     </TableCell>
                                     <TableCell>
-                                        <TextField 
+                                        <TextField
+                                            select 
                                             size="small" 
                                             value={editPosition} 
                                             onChange={(e) => onEditPositionChange(e.target.value)} 
-                                        />
+                                            sx={{ minWidth: 140 }}
+                                        >
+                                            {POSITIONS.map((p) => (
+                                                <MenuItem key={p} value={p}>{POSITION_LABELS[p]}</MenuItem>
+                                            ))}
+                                        </TextField>
                                     </TableCell>
                                     <TableCell>
                                         <TextField
@@ -319,7 +332,7 @@ export function PlayersPageView({
                                     <TableCell>{player.firstName}</TableCell>
                                     <TableCell>{player.lastName}</TableCell>
                                     <TableCell>{player.dateOfBirth}</TableCell>
-                                    <TableCell>{player.position}</TableCell>
+                                    <TableCell>{POSITION_LABELS[player.position] ?? player.position}</TableCell>
                                     <TableCell>{player.heightCm ?? "-"}</TableCell>
                                     <TableCell>{player.jerseyNumber ?? "-"}</TableCell>
                                     <TableCell>{player.preferredFoot ? FOOT_LABELS[player.preferredFoot] : "-"}</TableCell>
