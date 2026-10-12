@@ -121,6 +121,25 @@ function positionChipStyle(position: string): { bg: string; color: string } {
     return { bg: "grey.700", color: "#fff" };
 }
 
+function JerseyNumber({ number }: { number: number | null }) {
+    if (number === null) return <>-</>;
+    return (
+        <Box sx={{ display: "flex", justifyContent: "center" }}>
+            <svg width="48" height="48" viewBox="0 0 40 40">
+                <path
+                    d="M12 4 L4 10 L8 16 L10 14 L10 34 Q10 36 12 36 L28 36 Q30 36 30 34 L30 14 L32 16 L36 10 L28 4 Q24 8 20 8 Q16 8 12 4 Z"
+                    fill="#7c3aed"
+                    stroke="#a78bfa"
+                    strokeWidth="1"
+                />
+                <text x="20" y="26" textAnchor="middle" fontSize="12" fontWeight="600" fill="#ffffff" fontFamily="sans-serif">
+                    {number}
+                </text>
+            </svg>
+        </Box>
+    );
+}
+
 export function PlayersPageView({
     players,
     canCreate,
@@ -440,7 +459,7 @@ export function PlayersPageView({
                                     />                                        
                                 </TableCell>
                                 <TableCell>{player.heightCm ?? "-"}</TableCell>
-                                <TableCell>{player.jerseyNumber ?? "-"}</TableCell>
+                                <TableCell><JerseyNumber number={player.jerseyNumber} /></TableCell>
                                 <TableCell>{renderFoot(player.preferredFoot)}</TableCell>
                                 {(canEdit || canDelete) && (
                                     <TableCell>
