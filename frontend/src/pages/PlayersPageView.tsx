@@ -271,6 +271,95 @@ export function PlayersPageView({
                 </Box>
             </Dialog>
 
+            <Dialog open={editingId !== null} onClose={onCancelEdit} fullWidth maxWidth="sm">
+                <Box component="form" onSubmit={(e) => { e.preventDefault(); if (editingId !== null) onSaveEdit(editingId); }}>
+                    <DialogTitle>Edytuj zawodnika</DialogTitle>
+                    <DialogContent sx={{ display: "flex", flexWrap: "wrap", gap: 2, pt: 1 }}>
+                        <TextField
+                            label="Imię"
+                            value={editFirstName}
+                            onChange={(e) => onEditFirstNameChange(e.target.value)}
+                            required
+                        />
+                        <TextField
+                            label="Nazwisko"
+                            value={editLastName}
+                            onChange={(e) => onEditLastNameChange(e.target.value)}
+                            required
+                        />
+                        <Autocomplete
+                            options={COUNTRIES}
+                            getOptionLabel={(option) => option.name}
+                            value={COUNTRIES.find((c) => c.code === editNationality) ?? null}
+                            onChange={(_, newValue: Country | null) => onEditNationalityChange(newValue?.code ?? null)}
+                            renderOption={(props, option) => (
+                                <Box component="li" {...props} key={option.code} sx={{ display: "flex", gap: 1}}>
+                                    <span className={`fi fi-${option.code}`} />
+                                    {option.name}
+                                </Box>
+                            )}
+                            renderInput={(params) => <TextField {...params} label="Narodowość" />}
+                            sx={{ minWidth: 220 }}
+                        />
+                        <TextField
+                            label="Data urodzenia"
+                            type="date"
+                            slotProps={{ inputLabel: { shrink: true } }}
+                            value={editDateOfBirth}
+                            onChange={(e) => onEditDateOfBirthChange(e.target.value)}
+                            required
+                        />
+                        <TextField
+                            select
+                            label="Pozycja"
+                            value={editPosition}
+                            onChange={(e) => onEditPositionChange(e.target.value)}
+                            required
+                            sx={{ minWidth: 160 }}
+                        >
+                            {POSITIONS.map((p) => (
+                                <MenuItem key={p} value={p}>{POSITION_LABELS[p]}</MenuItem>
+                            ))}
+                        </TextField>
+                        <TextField
+                            label="Wzrost (cm)"
+                            type="number"
+                            value={editHeightCm}
+                            onChange={(e) => onEditHeightCmChange(e.target.value)}
+                        />
+                        <TextField
+                            label="Numer"
+                            type="number"
+                            value={editJerseyNumber}
+                            onChange={(e) => onEditJerseyNumberChange(e.target.value)}
+                        />
+                        <TextField
+                            select
+                            label="Noga"
+                            value={editPreferredFoot}
+                            onChange={(e) => onEditPreferredFootChange(e.target.value)}
+                            sx={{ minWidth: 120 }}
+                        >
+                            <MenuItem value="">-</MenuItem>
+                            {FEET.map((f) => (
+                                <MenuItem key={f} value={f}>{FOOT_LABELS[f]}</MenuItem>
+                            ))}
+                        </TextField>
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                            {editPhotoUrl && <Avatar src={`${BACKEND_ORIGIN}${editPhotoUrl}`} />}
+                            <Button component="label" variant="outlined" size="small">
+                                Zmień zdjęcie
+                                <input type="file" accept="image/png,image/jpeg" hidden onChange={onEditPhotoSelect} />
+                            </Button>
+                        </Box>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={onCancelEdit}>Anuluj</Button>
+                        <Button type="submit" variant="contained">Zapisz zmiany</Button>
+                    </DialogActions>
+                </Box>
+            </Dialog>
+
             {actionError && <Alert severity="error" sx={{ mb:2 }}>{actionError}</Alert>}
 
             <TableContainer component={Paper}>
@@ -314,145 +403,40 @@ export function PlayersPageView({
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {players.map((player) => 
-                            editingId === player.id ? (
-                                <TableRow key={player.id}>
-                                    <TableCell>
+                        {players.map((player) => (
+                            <TableRow key={player.id}>
+                                <TableCell>
+                                    {player.photoUrl ? (
+                                        <Avatar src={`${BACKEND_ORIGIN}${player.photoUrl}`} />
+                                    ) : (
+                                        <Avatar>{player.firstName[0]}{player.lastName[0]}</Avatar>
+                                    )}
+                                </TableCell>
+                                <TableCell>{player.firstName}</TableCell>
+                                <TableCell>{player.lastName}</TableCell>
+                                <TableCell>
+                                    {player.nationality ? (
                                         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                            {editPhotoUrl && <Avatar src={`${BACKEND_ORIGIN}${editPhotoUrl}`} />}
-                                            <Button component="label" size="small">
-                                                Zmień
-                                                <input type="file" accept="image/png,image/jpeg" hidden onChange={onEditPhotoSelect} />
-                                            </Button>
+                                            <span className={`fi fi-${player.nationality}`} />
+                                            {COUNTRIES.find((c) => c.code === player.nationality)?.name ?? player.nationality}
                                         </Box>
-                                    </TableCell>
-                                    <TableCell>
-                                        <TextField 
-                                            size="small" 
-                                            value={editFirstName} 
-                                            onChange={(e) => onEditFirstNameChange(e.target.value)} 
-                                        />
-                                    </TableCell>
-                                    <TableCell>
-                                        <TextField 
-                                            size="small" 
-                                            value={editLastName} 
-                                            onChange={(e) => onEditLastNameChange(e.target.value)} 
-                                        />
-                                    </TableCell>
-                                    <TableCell>
-                                        <Autocomplete
-                                            size="small"
-                                            options={COUNTRIES}
-                                            getOptionLabel={(option) => option.name}
-                                            value={COUNTRIES.find((c) => c.code === editNationality) ?? null}
-                                            onChange={(_, newValue: Country | null) => onEditNationalityChange(newValue?.code ?? null)}
-                                            renderOption={(props, option) => (
-                                                <Box component="li" {...props} key={option.code} sx={{ display: "flex", gap: 1}}>
-                                                    <span className={`fi fi-${option.code}`} />
-                                                    {option.name}
-                                                </Box>
-                                            )}
-                                            renderInput={(params) => <TextField {...params} />}
-                                            sx={{ minWidth: 160 }}
-                                        />
-                                    </TableCell>
-                                    <TableCell>
-                                        <TextField
-                                            size="small"
-                                            type="date"
-                                            slotProps={{ inputLabel: {shrink: true} }}
-                                            value={editDateOfBirth}
-                                            onChange={(e) => onEditDateOfBirthChange(e.target.value)}
-                                        />
-                                    </TableCell>
-                                    <TableCell>
-                                        <TextField
-                                            select 
-                                            size="small" 
-                                            value={editPosition} 
-                                            onChange={(e) => onEditPositionChange(e.target.value)} 
-                                            sx={{ minWidth: 140 }}
-                                        >
-                                            {POSITIONS.map((p) => (
-                                                <MenuItem key={p} value={p}>{POSITION_LABELS[p]}</MenuItem>
-                                            ))}
-                                        </TextField>
-                                    </TableCell>
-                                    <TableCell>
-                                        <TextField
-                                            size="small"
-                                            type="number"
-                                            value={editHeightCm}
-                                            onChange={(e) => onEditHeightCmChange(e.target.value)}
-                                            sx={{ width: 80 }}
-                                        />
-                                    </TableCell>
-                                    <TableCell>
-                                        <TextField
-                                            size="small"
-                                            type="number"
-                                            value={editJerseyNumber}
-                                            onChange={(e) => onEditJerseyNumberChange(e.target.value)}
-                                            sx={{ width: 70 }}
-                                        />
-                                    </TableCell>
-                                    <TableCell>
-                                        <TextField
-                                            select
-                                            size="small"
-                                            value={editPreferredFoot}
-                                            onChange={(e) => onEditPreferredFootChange(e.target.value)}
-                                            sx={{ minWidth: 100 }}
-                                        >
-                                            <MenuItem value="">-</MenuItem>
-                                            {FEET.map((f) => (
-                                                <MenuItem key={f} value={f}>{FOOT_LABELS[f]}</MenuItem>
-                                            ))}
-                                        </TextField>
-                                    </TableCell>
+                                    ) : "-"}
+                                </TableCell>
+                                <TableCell>{player.dateOfBirth}</TableCell>
+                                <TableCell>{POSITION_LABELS[player.position] ?? player.position}</TableCell>
+                                <TableCell>{player.heightCm ?? "-"}</TableCell>
+                                <TableCell>{player.jerseyNumber ?? "-"}</TableCell>
+                                <TableCell>{renderFoot(player.preferredFoot)}</TableCell>
+                                {(canEdit || canDelete) && (
                                     <TableCell>
                                         <Box sx={{ display: "flex", gap: 1 }}>
-                                            <Button size="small" variant="contained" onClick={() => onSaveEdit(player.id)}>Zapisz</Button>
-                                            <Button size="small" onClick={onCancelEdit}>Anuluj</Button>
+                                            {canEdit && <Button size="small" onClick={() => onStartEdit(player)}>Edytuj</Button>}
+                                            {canDelete && <Button size="small" color="error" onClick={() => onDelete(player.id)}>Usuń</Button>}
                                         </Box>
                                     </TableCell>
-                                </TableRow>
-                            ) : (
-                                <TableRow key={player.id}>
-                                    <TableCell>
-                                        {player.photoUrl ? (
-                                            <Avatar src={`${BACKEND_ORIGIN}${player.photoUrl}`} />
-                                        ) :(
-                                            <Avatar>{player.firstName[0]}</Avatar>    
-                                        )}
-                                    </TableCell>
-                                    <TableCell>{player.firstName}</TableCell>
-                                    <TableCell>{player.lastName}</TableCell>
-                                    <TableCell>
-                                        {player.nationality ? (
-                                            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                                <span className={`fi fi-${player.nationality}`} />
-                                                {COUNTRIES.find((c) => c.code === player.nationality)?.name ?? player.nationality}
-                                            </Box>
-                                        ) : "-"}
-                                    </TableCell>
-                                    <TableCell>{player.dateOfBirth}</TableCell>
-                                    <TableCell>{POSITION_LABELS[player.position] ?? player.position}</TableCell>
-                                    <TableCell>{player.heightCm ?? "-"}</TableCell>
-                                    <TableCell>{player.jerseyNumber ?? "-"}</TableCell>
-                                    <TableCell>{renderFoot(player.preferredFoot)}</TableCell>
-                                    {(canEdit || canDelete) && (
-                                        <TableCell>
-                                            <Box sx={{ display: "flex", gap: 1 }}>
-                                                {canEdit && <Button size="small" onClick={() => onStartEdit(player)}>Edytuj</Button>}
-                                                {canDelete && <Button size="small" color="error" onClick={() => onDelete(player.id)}>Usuń</Button>}
-                                            </Box>
-                                        </TableCell>
-                                    )}
-                                </TableRow>
-                            )
-                        )}
+                                )}
+                            </TableRow>
+                        ))}
                     </TableBody>
                 </Table>
             </TableContainer>
