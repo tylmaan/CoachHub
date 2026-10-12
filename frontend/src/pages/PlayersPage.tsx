@@ -1,30 +1,11 @@
 import { useEffect, useState } from 'react';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    Paper,
-    Typography,
-    CircularProgress,
-    Alert,
-    Box,
-    TextField,
-    Button,
-    MenuItem,
-    Avatar
-} from '@mui/material';
+import { Alert, CircularProgress } from '@mui/material';
 import axios from "axios";
 import { getPlayers, createPlayer, updatePlayer, deletePlayer } from '../api/playersApi';
 import type { Player } from '../types/player';
 import { useAuth } from "../context/AuthContext";
-import { FOOT_LABELS } from '../constants/labels';
 import { uploadFile } from '../api/filesApi';
-import { BACKEND_ORIGIN } from '../api/axiosInstance';
-
-const FEET = ["Left", "Right", "Both"];
+import { PlayersPageView } from './PlayersPageView';
 
 function toNullableNumber(value: string): number | null {
     return value === "" ? null : Number(value);
@@ -182,225 +163,55 @@ export function PlayersPage() {
     if (error) return <Alert severity="error">{error}</Alert>;
 
     return (
-        <>
-            <Typography variant="h4" sx={{ mb: 2 }}>
-                Zawodnicy
-            </Typography>
-
-            {canCreate && (
-                <Box
-                    component="form"
-                    onSubmit={handleCreate}
-                    sx={{ mb: 3, display: "flex", gap: 2, alignItems: "flex-start", flexWrap: "wrap" }}
-                >
-                    {formError && <Alert severity="error">{formError}</Alert>}
-                    <TextField
-                        label="Imię"
-                        value={firstName}
-                        onChange={(e) => setFirstName(e.target.value)}
-                        required
-                    />
-                    <TextField
-                        label="Nazwisko"
-                        value={lastName}
-                        onChange={(e) => setLastName(e.target.value)}
-                        required
-                    />
-                    <TextField
-                        label="Data urodzenia"
-                        type="date"
-                        slotProps={{ inputLabel: { shrink: true } }}
-                        value={dateOfBirth}
-                        onChange={(e) => setDateOfBirth(e.target.value)}
-                        required
-                    />
-                    <TextField
-                        label="Pozycja"
-                        value={position}
-                        onChange={(e) => setPosition(e.target.value)}
-                        required
-                    />
-                    <TextField
-                        label="Wzrost (cm)"
-                        type="number"
-                        value={heightCm}
-                        onChange={(e) => setHeightCm(e.target.value)}
-                    />
-                    <TextField
-                        label="Waga (kg)"
-                        type="number"
-                        value={weightKg}
-                        onChange={(e) => setWeightKg(e.target.value)}
-                    />
-                    <TextField
-                        label="Numer"
-                        type="number"
-                        value={jerseyNumber}
-                        onChange={(e) => setJerseyNumber(e.target.value)}
-                    />
-                    <TextField
-                        select
-                        label="Noga"
-                        value={preferredFoot}
-                        onChange={(e) => setPreferredFoot(e.target.value)}
-                        sx={{ minWidth: 120 }}
-                    >
-                        <MenuItem value="">-</MenuItem>
-                        {FEET.map((f) => (
-                            <MenuItem key={f} value={f}>{FOOT_LABELS[f]}</MenuItem>
-                        ))}
-                    </TextField>
-                    {photoUrl && <Avatar src={`${BACKEND_ORIGIN}${photoUrl}`} />}
-                    <Button component="label" variant="outlined">
-                        Wybierz zdjęcie
-                        <input type="file" accept="image/png,image/jpeg" hidden onChange={handlePhotoSelect} />
-                    </Button>
-                    <Button type="submit" variant="contained">
-                        Dodaj zawodnika
-                    </Button>
-                </Box>
-            )}
-
-            {actionError && <Alert severity="error" sx={{ mb:2 }}>{actionError}</Alert>}
-
-            <TableContainer component={Paper}>
-                <Table>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>Zdjęcie</TableCell>
-                            <TableCell>Imię</TableCell>
-                            <TableCell>Nazwisko</TableCell>
-                            <TableCell>Data urodzenia</TableCell>
-                            <TableCell>Pozycja</TableCell>
-                            <TableCell>Wzrost</TableCell>
-                            <TableCell>Waga</TableCell>
-                            <TableCell>Numer</TableCell>
-                            <TableCell>Noga</TableCell>
-                            {(canEdit || canDelete) && <TableCell>Akcje</TableCell>}
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {players.map((player) => 
-                            editingId === player.id ? (
-                                <TableRow key={player.id}>
-                                    <TableCell>
-                                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                            {editPhotoUrl && <Avatar src={`${BACKEND_ORIGIN}${editPhotoUrl}`} />}
-                                            <Button component="label" size="small">
-                                                Zmień
-                                                <input type="file" accept="image/png,image/jpeg" hidden onChange={handleEditPhotoSelect} />
-                                            </Button>
-                                        </Box>
-                                    </TableCell>
-                                    <TableCell>
-                                        <TextField 
-                                            size="small" 
-                                            value={editFirstName} 
-                                            onChange={(e) => setEditFirstName(e.target.value)} 
-                                        />
-                                    </TableCell>
-                                    <TableCell>
-                                        <TextField 
-                                            size="small" 
-                                            value={editLastName} 
-                                            onChange={(e) => setEditLastName(e.target.value)} 
-                                        />
-                                    </TableCell>
-                                    <TableCell>
-                                        <TextField
-                                            size="small"
-                                            type="date"
-                                            slotProps={{ inputLabel: {shrink: true} }}
-                                            value={editDateOfBirth}
-                                            onChange={(e) => setEditDateOfBirth(e.target.value)}
-                                        />
-                                    </TableCell>
-                                    <TableCell>
-                                        <TextField 
-                                            size="small" 
-                                            value={editPosition} 
-                                            onChange={(e) => setEditPosition(e.target.value)} 
-                                        />
-                                    </TableCell>
-                                    <TableCell>
-                                        <TextField
-                                            size="small"
-                                            type="number"
-                                            value={editHeightCm}
-                                            onChange={(e) => setEditHeightCm(e.target.value)}
-                                            sx={{ width: 80 }}
-                                        />
-                                    </TableCell>
-                                    <TableCell>
-                                        <TextField
-                                            size="small"
-                                            type="number"
-                                            value={editWeightKg}
-                                            onChange={(e) => setEditWeightKg(e.target.value)}
-                                            sx={{ width: 80 }}
-                                        />
-                                    </TableCell>
-                                    <TableCell>
-                                        <TextField
-                                            size="small"
-                                            type="number"
-                                            value={editJerseyNumber}
-                                            onChange={(e) => setEditJerseyNumber(e.target.value)}
-                                            sx={{ width: 70 }}
-                                        />
-                                    </TableCell>
-                                    <TableCell>
-                                        <TextField
-                                            select
-                                            size="small"
-                                            value={editPreferredFoot}
-                                            onChange={(e) => setEditPreferredFoot(e.target.value)}
-                                            sx={{ minWidth: 100 }}
-                                        >
-                                            <MenuItem value="">-</MenuItem>
-                                            {FEET.map((f) => (
-                                                <MenuItem key={f} value={f}>{FOOT_LABELS[f]}</MenuItem>
-                                            ))}
-                                        </TextField>
-                                    </TableCell>
-                                    <TableCell>
-                                        <Box sx={{ display: "flex", gap: 1 }}>
-                                            <Button size="small" variant="contained" onClick={() => saveEdit(player.id)}>Zapisz</Button>
-                                            <Button size="small" onClick={() => setEditingId(null)}>Anuluj</Button>
-                                        </Box>
-                                    </TableCell>
-                                </TableRow>
-                            ) : (
-                                <TableRow key={player.id}>
-                                    <TableCell>
-                                        {player.photoUrl ? (
-                                            <Avatar src={`${BACKEND_ORIGIN}${player.photoUrl}`} />
-                                        ) :(
-                                            <Avatar>{player.firstName[0]}</Avatar>    
-                                        )}
-                                    </TableCell>
-                                    <TableCell>{player.firstName}</TableCell>
-                                    <TableCell>{player.lastName}</TableCell>
-                                    <TableCell>{player.dateOfBirth}</TableCell>
-                                    <TableCell>{player.position}</TableCell>
-                                    <TableCell>{player.heightCm ?? "-"}</TableCell>
-                                    <TableCell>{player.weightKg ?? "-"}</TableCell>
-                                    <TableCell>{player.jerseyNumber ?? "-"}</TableCell>
-                                    <TableCell>{player.preferredFoot ? FOOT_LABELS[player.preferredFoot] : "-"}</TableCell>
-                                    {(canEdit || canDelete) && (
-                                        <TableCell>
-                                            <Box sx={{ display: "flex", gap: 1 }}>
-                                                {canEdit && <Button size="small" onClick={() => startEdit(player)}>Edytuj</Button>}
-                                                {canDelete && <Button size="small" color="error" onClick={() => handleDelete(player.id)}>Usuń</Button>}
-                                            </Box>
-                                        </TableCell>
-                                    )}
-                                </TableRow>
-                            )
-                        )}
-                    </TableBody>
-                </Table>
-            </TableContainer>
-        </>
+        <PlayersPageView
+            players={players}
+            canCreate={!!canCreate}
+            canEdit={!!canEdit}
+            canDelete={!!canDelete}
+            firstName={firstName}
+            lastName={lastName}
+            dateOfBirth={dateOfBirth}
+            position={position}
+            heightCm={heightCm}
+            weightKg={weightKg}
+            jerseyNumber={jerseyNumber}
+            preferredFoot={preferredFoot}
+            photoUrl={photoUrl}
+            formError={formError}
+            onFirstNameChange={setFirstName}
+            onLastNameChange={setLastName}
+            onDateOfBirthChange={setDateOfBirth}
+            onPositionChange={setPosition}
+            onHeightCmChange={setHeightCm}
+            onWeightKgChange={setWeightKg}
+            onJerseyNumberChange={setJerseyNumber}
+            onPreferredFootChange={setPreferredFoot}
+            onPhotoSelect={handlePhotoSelect}
+            onCreate={handleCreate}
+            editingId={editingId}
+            editFirstName={editFirstName}
+            editLastName={editLastName}
+            editDateOfBirth={editDateOfBirth}
+            editPosition={editPosition}
+            editHeightCm={editHeightCm}
+            editWeightKg={editWeightKg}
+            editJerseyNumber={editJerseyNumber}
+            editPreferredFoot={editPreferredFoot}
+            editPhotoUrl={editPhotoUrl}
+            actionError={actionError}
+            onStartEdit={startEdit}
+            onEditFirstNameChange={setEditFirstName}
+            onEditLastNameChange={setEditLastName}
+            onEditDateOfBirthChange={setEditDateOfBirth}
+            onEditPositionChange={setEditPosition}
+            onEditHeightCmChange={setEditHeightCm}
+            onEditWeightKgChange={setEditWeightKg}
+            onEditJerseyNumberChange={setEditJerseyNumber}
+            onEditPreferredFootChange={setEditPreferredFoot}
+            onEditPhotoSelect={handleEditPhotoSelect}
+            onSaveEdit={saveEdit}
+            onCancelEdit={() => setEditingId(null)}
+            onDelete={handleDelete}
+        />
     );
 }

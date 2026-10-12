@@ -1,26 +1,11 @@
 import { useEffect, useState } from 'react';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    Paper,
-    Typography,
-    CircularProgress,
-    Alert,
-    Box,
-    TextField,
-    Button,
-    Avatar
-} from '@mui/material';
+import { CircularProgress, Alert } from '@mui/material';
 import axios from "axios";
 import { getTeams, createTeam, updateTeam, deleteTeam } from '../api/teamsApi';
 import type { Team } from '../types/team';
 import { useAuth } from "../context/AuthContext";
 import { uploadFile } from '../api/filesApi';
-import { BACKEND_ORIGIN } from '../api/axiosInstance';
+import { TeamsPageView } from './TeamsPageView';
 
 export function TeamsPage() {
     const [teams, setTeams] = useState<Team[]>([]);
@@ -126,117 +111,32 @@ export function TeamsPage() {
     if (loading) return <CircularProgress />;
     if (error) return <Alert severity="error">{error}</Alert>;
 
-    return (
-        <>
-            <Typography variant="h4" sx={{ mb: 2 }}>
-                Drużyny
-            </Typography>
-
-            {roles?.includes("Admin") && (
-                <Box
-                    component="form"
-                    onSubmit={handleCreate}
-                    sx={{ mb: 3, display: "flex", gap: 2, alignItems: "flex-start" }}
-                >
-                    {formError && <Alert severity="error">{formError}</Alert>}
-                    <TextField
-                        label="Nazwa"
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
-                        required
-                    />
-                    <TextField
-                        label="Data założenia"
-                        type="date"
-                        slotProps={{ inputLabel: { shrink: true } }}
-                        value={foundedDate}
-                        onChange={(e) => setFoundedDate(e.target.value)}
-                        required
-                    />
-                    {logoUrl && <Avatar src={`${BACKEND_ORIGIN}${logoUrl}`} variant="rounded" />}
-                    <Button component="label" variant="outlined">
-                        Wybierz logo
-                        <input type="file" accept="image/png,image/jpeg" hidden onChange={handleLogoSelect} />
-                    </Button>
-                    <Button type="submit" variant="contained">
-                        Dodaj drużynę
-                    </Button>
-                </Box>
-            )}
-
-            {actionError && <Alert severity="error" sx={{ mb:2 }}>{actionError}</Alert>}
-
-            <TableContainer component={Paper}>
-                <Table>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>Logo</TableCell>
-                            <TableCell>Nazwa</TableCell>
-                            <TableCell>Data założenia</TableCell>
-                            {(canEdit || canDelete) && <TableCell>Akcje</TableCell>}
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {teams.map((team) => 
-                            editingId == team.id ? (
-                                <TableRow key={team.id}>
-                                    <TableCell>
-                                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                            {editLogoUrl && <Avatar src={`${BACKEND_ORIGIN}${editLogoUrl}`} variant="rounded" />}
-                                            <Button component="label" size="small">
-                                                Zmień
-                                                <input type="file" accept="image/png,image/jpeg" hidden onChange={handleEditLogoSelect} />
-                                            </Button>
-                                        </Box>
-                                    </TableCell>
-                                    <TableCell>
-                                        <TextField 
-                                            size="small" 
-                                            value={editName} 
-                                            onChange={(e) => setEditName(e.target.value)} 
-                                        />
-                                    </TableCell>
-                                    <TableCell>
-                                        <TextField 
-                                            size="small" 
-                                            type="date" 
-                                            slotProps={{ inputLabel: { shrink: true } }}
-                                            value={editFoundedDate}
-                                            onChange={(e) => setEditFoundedDate(e.target.value)} 
-                                        />
-                                    </TableCell>
-                                    <TableCell>
-                                        <Box sx={{ display: "flex", gap: 1 }}>
-                                            <Button size="small" variant="contained" onClick={() => saveEdit(team.id)}>Zapisz</Button>
-                                            <Button size="small" onClick={() => setEditingId(null)}>Anuluj</Button>
-                                        </Box>
-                                    </TableCell>
-                                </TableRow>
-                            ) : (
-                                <TableRow key={team.id}>
-                                    <TableCell>
-                                        {team.logoUrl ? (
-                                            <Avatar src={`${BACKEND_ORIGIN}${team.logoUrl}`} variant="rounded" />
-                                        ) : (
-                                            <Avatar variant="rounded">{team.name[0]}</Avatar>
-                                        )}
-                                    </TableCell>
-                                    <TableCell>{team.name}</TableCell>
-                                    <TableCell>{team.foundedDate}</TableCell>
-                                    {(canEdit || canDelete) && (
-                                        <TableCell>
-                                            <Box sx={{ display: "flex", gap: 1}}>
-                                                {canEdit && <Button size="small" onClick={() => startEdit(team)}>Edytuj</Button>}
-                                                {canDelete && <Button size="small" color="error" onClick={() => handleDelete(team.id)}>Usuń</Button>}
-                                            </Box>
-                                        </TableCell>
-                                    )}
-                                </TableRow>
-                            )
-                        )}
-                    </TableBody>
-                </Table>
-            </TableContainer>
-        </>
+   return (
+        <TeamsPageView
+            teams={teams}
+            isAdmin={!!roles?.includes("Admin")}
+            canEdit={!!canEdit}
+            canDelete={!!canDelete}
+            name={name}
+            foundedDate={foundedDate}
+            logoUrl={logoUrl}
+            formError={formError}
+            onNameChange={setName}
+            onFoundedDateChange={setFoundedDate}
+            onLogoSelect={handleLogoSelect}
+            onCreate={handleCreate}
+            editingId={editingId}
+            editName={editName}
+            editFoundedDate={editFoundedDate}
+            editLogoUrl={editLogoUrl}
+            actionError={actionError}
+            onStartEdit={startEdit}
+            onEditNameChange={setEditName}
+            onEditFoundedDateChange={setEditFoundedDate}
+            onEditLogoSelect={handleEditLogoSelect}
+            onSaveEdit={saveEdit}
+            onCancelEdit={() => setEditingId(null)}
+            onDelete={handleDelete}
+        />
     );
 }

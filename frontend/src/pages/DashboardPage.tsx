@@ -1,16 +1,10 @@
-import { Box, Typography, Paper } from '@mui/material';
-import { Link as RouterLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined';
 import GroupsOutlinedIcon from '@mui/icons-material/GroupsOutlined';
 import SportsSoccerOutlinedIcon from '@mui/icons-material/SportsSoccerOutlined';
 import ManageAccountsOutlinedIcon from '@mui/icons-material/ManageAccountsOutlined';
-
-interface Tile {
-    label: string;
-    path: string;
-    icon: React.ReactNode;
-}
+import { DashboardPageView } from './DashboardPageView';
+import type { Tile } from './DashboardPageView';
 
 export function DashboardPage() {
     const { roles } = useAuth();
@@ -25,33 +19,5 @@ export function DashboardPage() {
             ]),
     ];
 
-    return (
-        <Box
-            sx={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-                gap: 2,
-            }}
-        >
-            {tiles.map((tile) => (
-                <Paper
-                    key={tile.path}
-                    component={RouterLink}
-                    to={tile.path}
-                    sx={{
-                        p: 3,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        gap: 1,
-                        textDecoration: 'none',
-                        color: 'inherit',
-                        "&:hover": { backgroundColor: 'action.hover' },
-                    }}
-                >
-                    {tile.icon}
-                    <Typography variant="subtitle1">{tile.label}</Typography>
-                </Paper>
-            ))}
-        </Box>
-    );
+    return <DashboardPageView tiles={tiles} />;
 } 
