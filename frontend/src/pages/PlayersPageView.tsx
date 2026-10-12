@@ -87,6 +87,31 @@ interface PlayersPageViewProps {
     onDelete: (id: number) => void;
 }
 
+function renderFoot(foot: string | null) {
+    const left = foot === "Left" || foot === "Both";
+    const right = foot === "Right" || foot === "Both";
+    const circleSx = (filled: boolean) => ({
+        width: 20,
+        height: 20,
+        borderRadius: "50%",
+        border: "1px solid",
+        borderColor: "divider",
+        bgcolor: filled ? "primary.main" : "transparent",
+        color: filled ? "primary.contrastText" : "text.secondary",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontSize: 11,
+        lineHeight: 1,
+    });
+    return (
+        <Box sx={{ display: "flex", gap: 1 }}>
+            <Box sx={circleSx(left)}>L</Box>
+            <Box sx={circleSx(right)}>R</Box>
+        </Box>
+    );
+}
+
 export function PlayersPageView({
     players,
     canCreate,
@@ -416,7 +441,7 @@ export function PlayersPageView({
                                     <TableCell>{POSITION_LABELS[player.position] ?? player.position}</TableCell>
                                     <TableCell>{player.heightCm ?? "-"}</TableCell>
                                     <TableCell>{player.jerseyNumber ?? "-"}</TableCell>
-                                    <TableCell>{player.preferredFoot ? FOOT_LABELS[player.preferredFoot] : "-"}</TableCell>
+                                    <TableCell>{renderFoot(player.preferredFoot)}</TableCell>
                                     {(canEdit || canDelete) && (
                                         <TableCell>
                                             <Box sx={{ display: "flex", gap: 1 }}>
