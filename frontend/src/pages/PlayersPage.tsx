@@ -6,6 +6,9 @@ import type { Player } from '../types/player';
 import { useAuth } from "../context/AuthContext";
 import { uploadFile } from '../api/filesApi';
 import { PlayersPageView } from './PlayersPageView';
+import {POSITIONS} from "../constants/labels";
+
+type SortField = "lastName" | "position" | "jerseyNumber";
 
 function toNullableNumber(value: string): number | null {
     return value === "" ? null : Number(value);
@@ -15,6 +18,8 @@ export function PlayersPage() {
     const [players, setPlayers] = useState<Player[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [sortField, setSortField] = useState<SortField>("lastName");
+    const [sortAsc, setSortAsc] = useState(true);
 
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
@@ -56,6 +61,15 @@ export function PlayersPage() {
     useEffect(() => {
         loadPlayers();
     }, []);
+
+    function handleSort(field: SortField) {
+        if (field === sortField) {
+            setSortAsc(!sortAsc);
+        } else {
+            setSortField(field);
+            setSortAsc(true);
+        }
+    }
 
     async function handlePhotoSelect(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0];
@@ -161,15 +175,26 @@ export function PlayersPage() {
         }
     }
 
+    const sortedPlayers = [...players].sort((a, b) => {
+        let result = 0;
+        if (sortField === "lastName") result = a.lastName.localeCompare(b.lastName);
+        if (sortField === "position") result = POSITIONS.indexOf(a.position) - POSITIONS.indexOf(b.position);
+        if (sortField === "jerseyNumber") result = (a.jerseyNumber ?? 0) - (b.jerseyNumber ?? 0);
+        return sortAsc ? result : -result;
+    });
+
     if (loading) return <CircularProgress />;
     if (error) return <Alert severity="error">{error}</Alert>;
 
     return (
         <PlayersPageView
-            players={players}
+            players={sortedPlayers}
             canCreate={!!canCreate}
             canEdit={!!canEdit}
             canDelete={!!canDelete}
+            sortField={sortField}
+            sortAsc={sortAsc}
+            onSort={handleSort}
             firstName={firstName}
             lastName={lastName}
             nationality={nationality}

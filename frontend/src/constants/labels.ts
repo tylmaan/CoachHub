@@ -34,3 +34,5 @@ export const POSITION_LABELS: Record<string, string> = {
     CF: "Środkowy napastnik",
     ST: "Napastnik",
 };
+
+export const POSITIONS = ["GK", "CB", "LB", "RB", "LWB", "RWB", "CDM", "CM", "CAM", "LM", "RM", "LW", "RW", "CF", "ST"];

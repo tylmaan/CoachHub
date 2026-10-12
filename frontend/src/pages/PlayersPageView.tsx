@@ -5,6 +5,7 @@ import {
     TableContainer,
     TableHead,
     TableRow,
+    TableSortLabel,
     Paper,
     Typography,
     Alert,
@@ -20,19 +21,21 @@ import {
     Autocomplete
 } from '@mui/material';
 import type { Player } from '../types/player';
-import { FOOT_LABELS, POSITION_LABELS } from '../constants/labels';
+import { FOOT_LABELS, POSITION_LABELS, POSITIONS } from '../constants/labels';
 import { COUNTRIES } from '../constants/countries';
 import type { Country } from '../constants/countries';
 import { BACKEND_ORIGIN } from '../api/axiosInstance';
 
 const FEET = ["Left", "Right", "Both"];
-const POSITIONS = ["GK", "CB", "LB", "RB", "LWB", "RWB", "CDM", "CM", "CAM", "LM", "RM", "LW", "RW", "CF", "ST"];
 
 interface PlayersPageViewProps {
     players: Player[];
     canCreate: boolean;
     canEdit: boolean;
     canDelete: boolean;
+    sortField: "lastName" | "position" | "jerseyNumber";
+    sortAsc: boolean;
+    onSort: (field: "lastName" | "position" | "jerseyNumber") => void;
 
     firstName: string;
     lastName: string;
@@ -89,6 +92,9 @@ export function PlayersPageView({
     canCreate,
     canEdit,
     canDelete,
+    sortField,
+    sortAsc,
+    onSort,
     firstName,
     lastName,
     nationality,
@@ -248,12 +254,36 @@ export function PlayersPageView({
                         <TableRow>
                             <TableCell>Zdjęcie</TableCell>
                             <TableCell>Imię</TableCell>
-                            <TableCell>Nazwisko</TableCell>
+                            <TableCell>
+                                <TableSortLabel
+                                    active={sortField === "lastName"}
+                                    direction={sortAsc ? "asc" : "desc"}
+                                    onClick={() => onSort("lastName")}
+                                >
+                                    Nazwisko
+                                </TableSortLabel>
+                            </TableCell>
                             <TableCell>Narodowość</TableCell>
                             <TableCell>Data urodzenia</TableCell>
-                            <TableCell>Pozycja</TableCell>
+                            <TableCell>
+                                <TableSortLabel
+                                    active={sortField === "position"}
+                                    direction={sortAsc ? "asc" : "desc"}
+                                    onClick={() => onSort("position")}
+                                >
+                                    Pozycja
+                                </TableSortLabel>
+                            </TableCell>
                             <TableCell>Wzrost</TableCell>
-                            <TableCell>Numer</TableCell>
+                            <TableCell>
+                                <TableSortLabel
+                                    active={sortField === "jerseyNumber"}
+                                    direction={sortAsc ? "asc" : "desc"}
+                                    onClick={() => onSort("jerseyNumber")}
+                                >
+                                    Numer
+                                </TableSortLabel>
+                            </TableCell>
                             <TableCell>Noga</TableCell>
                             {(canEdit || canDelete) && <TableCell>Akcje</TableCell>}
                         </TableRow>
