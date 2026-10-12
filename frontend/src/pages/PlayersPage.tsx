@@ -6,6 +6,9 @@ import type { Player } from '../types/player';
 import { useAuth } from "../context/AuthContext";
 import { uploadFile } from '../api/filesApi';
 import { PlayersPageView } from './PlayersPageView';
+import {POSITIONS} from "../constants/labels";
+
+type SortField = "lastName" | "position" | "jerseyNumber";
 
 function toNullableNumber(value: string): number | null {
     return value === "" ? null : Number(value);
@@ -15,25 +18,28 @@ export function PlayersPage() {
     const [players, setPlayers] = useState<Player[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [sortField, setSortField] = useState<SortField>("lastName");
+    const [sortAsc, setSortAsc] = useState(true);
 
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
+    const [nationality, setNationality] = useState<string | null>(null);
     const [dateOfBirth, setDateOfBirth] = useState("");
     const [position, setPosition] = useState("");
     const [heightCm, setHeightCm] = useState("");
-    const [weightKg, setWeightKg] = useState("");
     const [jerseyNumber, setJerseyNumber] = useState("");
     const [preferredFoot, setPreferredFoot] = useState("");
     const [photoUrl, setPhotoUrl] = useState<string | null>(null);
     const [formError, setFormError] = useState<string | null>(null);
+    const [createOpen, setCreateOpen] = useState(false);
 
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editFirstName, setEditFirstName] = useState("");
     const [editLastName, setEditLastName] = useState("");
+    const [editNationality, setEditNationality] = useState<string | null>(null);
     const [editDateOfBirth, setEditDateOfBirth] = useState("");
     const [editPosition, setEditPosition] = useState("");
     const [editHeightCm, setEditHeightCm] =useState("");
-    const [editWeightKg, setEditWeightKg] =useState("");
     const [editJerseyNumber, setEditJerseyNumber] = useState("");
     const [editPreferredFoot, setEditPreferredFoot] =useState("");
     const [editPhotoUrl, setEditPhotoUrl] = useState<string | null>(null);
@@ -55,6 +61,15 @@ export function PlayersPage() {
     useEffect(() => {
         loadPlayers();
     }, []);
+
+    function handleSort(field: SortField) {
+        if (field === sortField) {
+            setSortAsc(!sortAsc);
+        } else {
+            setSortField(field);
+            setSortAsc(true);
+        }
+    }
 
     async function handlePhotoSelect(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0];
@@ -85,24 +100,25 @@ export function PlayersPage() {
             await createPlayer({
                 firstName,
                 lastName,
+                nationality,
                 dateOfBirth,
                 position,
                 teamId: teamId as number,
                 heightCm : toNullableNumber(heightCm),
-                weightKg: toNullableNumber(weightKg),
                 jerseyNumber: toNullableNumber(jerseyNumber),
                 preferredFoot: preferredFoot || null,
                 photoUrl
             });
             setFirstName("");
             setLastName("");
+            setNationality(null);
             setDateOfBirth("");
             setPosition("");
             setHeightCm("");
-            setWeightKg("");
             setJerseyNumber("");
             setPreferredFoot("");
             setPhotoUrl(null);
+            setCreateOpen(false);
             loadPlayers();
         } catch (err) {
             if (axios.isAxiosError(err) && Array.isArray(err.response?.data)) {
@@ -117,10 +133,10 @@ export function PlayersPage() {
         setEditingId(player.id);
         setEditFirstName(player.firstName);
         setEditLastName(player.lastName);
+        setEditNationality(player.nationality);
         setEditDateOfBirth(player.dateOfBirth);
         setEditPosition(player.position);
         setEditHeightCm(player.heightCm?.toString() ?? "");
-        setEditWeightKg(player.weightKg?.toString() ?? "");
         setEditJerseyNumber(player.jerseyNumber?.toString() ?? "");
         setEditPreferredFoot(player.preferredFoot ?? "");
         setEditPhotoUrl(player.photoUrl);
@@ -133,11 +149,11 @@ export function PlayersPage() {
             await updatePlayer(id, {
                 firstName: editFirstName,
                 lastName: editLastName,
+                nationality: editNationality,
                 dateOfBirth: editDateOfBirth,
                 position: editPosition,
                 teamId: teamId as number,
                 heightCm: toNullableNumber(editHeightCm),
-                weightKg: toNullableNumber(editWeightKg),
                 jerseyNumber: toNullableNumber(editJerseyNumber),
                 preferredFoot: editPreferredFoot || null,
                 photoUrl: editPhotoUrl
@@ -159,42 +175,56 @@ export function PlayersPage() {
         }
     }
 
+    const sortedPlayers = [...players].sort((a, b) => {
+        let result = 0;
+        if (sortField === "lastName") result = a.lastName.localeCompare(b.lastName);
+        if (sortField === "position") result = POSITIONS.indexOf(a.position) - POSITIONS.indexOf(b.position);
+        if (sortField === "jerseyNumber") result = (a.jerseyNumber ?? 0) - (b.jerseyNumber ?? 0);
+        return sortAsc ? result : -result;
+    });
+
     if (loading) return <CircularProgress />;
     if (error) return <Alert severity="error">{error}</Alert>;
 
     return (
         <PlayersPageView
-            players={players}
+            players={sortedPlayers}
             canCreate={!!canCreate}
             canEdit={!!canEdit}
             canDelete={!!canDelete}
+            sortField={sortField}
+            sortAsc={sortAsc}
+            onSort={handleSort}
             firstName={firstName}
             lastName={lastName}
+            nationality={nationality}
             dateOfBirth={dateOfBirth}
             position={position}
             heightCm={heightCm}
-            weightKg={weightKg}
             jerseyNumber={jerseyNumber}
             preferredFoot={preferredFoot}
             photoUrl={photoUrl}
             formError={formError}
             onFirstNameChange={setFirstName}
             onLastNameChange={setLastName}
+            onNationalityChange={setNationality}
             onDateOfBirthChange={setDateOfBirth}
             onPositionChange={setPosition}
             onHeightCmChange={setHeightCm}
-            onWeightKgChange={setWeightKg}
             onJerseyNumberChange={setJerseyNumber}
             onPreferredFootChange={setPreferredFoot}
             onPhotoSelect={handlePhotoSelect}
+            createOpen={createOpen}
+            onOpenCreate={() => setCreateOpen(true)}
+            onCloseCreate={() => setCreateOpen(false)}
             onCreate={handleCreate}
             editingId={editingId}
             editFirstName={editFirstName}
             editLastName={editLastName}
+            editNationality={editNationality}
             editDateOfBirth={editDateOfBirth}
             editPosition={editPosition}
             editHeightCm={editHeightCm}
-            editWeightKg={editWeightKg}
             editJerseyNumber={editJerseyNumber}
             editPreferredFoot={editPreferredFoot}
             editPhotoUrl={editPhotoUrl}
@@ -202,10 +232,10 @@ export function PlayersPage() {
             onStartEdit={startEdit}
             onEditFirstNameChange={setEditFirstName}
             onEditLastNameChange={setEditLastName}
+            onEditNationalityChange={setEditNationality}
             onEditDateOfBirthChange={setEditDateOfBirth}
             onEditPositionChange={setEditPosition}
             onEditHeightCmChange={setEditHeightCm}
-            onEditWeightKgChange={setEditWeightKg}
             onEditJerseyNumberChange={setEditJerseyNumber}
             onEditPreferredFootChange={setEditPreferredFoot}
             onEditPhotoSelect={handleEditPhotoSelect}

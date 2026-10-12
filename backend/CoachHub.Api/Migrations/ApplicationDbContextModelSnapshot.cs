@@ -238,6 +238,9 @@ namespace CoachHub.Api.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Nationality")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("PhotoUrl")
                         .HasColumnType("TEXT");
 
@@ -249,9 +252,6 @@ namespace CoachHub.Api.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<int>("TeamId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int?>("WeightKg")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");

@@ -37,11 +37,11 @@ public class PlayerService : IPlayerService
 
         existing.FirstName = player.FirstName;
         existing.LastName = player.LastName;
+        existing.Nationality = player.Nationality;
         existing.DateOfBirth = player.DateOfBirth;
         existing.Position = player.Position;
         existing.TeamId = player.TeamId;
         existing.HeightCm = player.HeightCm;
-        existing.WeightKg = player.WeightKg;
         existing.JerseyNumber = player.JerseyNumber;
         existing.PreferredFoot = player.PreferredFoot;
         existing.PhotoUrl = player.PhotoUrl;
