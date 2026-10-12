@@ -4,6 +4,7 @@ import { BrowserRouter } from 'react-router-dom'
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material'
 import App from './App.tsx'
 import { AuthProvider } from './context/AuthContext.tsx'
+import 'flag-icons/css/flag-icons.min.css'
 
 const theme = createTheme({
   palette: {

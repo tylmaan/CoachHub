@@ -16,10 +16,13 @@ import {
     Dialog,
     DialogTitle,
     DialogContent,
-    DialogActions
+    DialogActions,
+    Autocomplete
 } from '@mui/material';
 import type { Player } from '../types/player';
 import { FOOT_LABELS, POSITION_LABELS } from '../constants/labels';
+import { COUNTRIES } from '../constants/countries';
+import type { Country } from '../constants/countries';
 import { BACKEND_ORIGIN } from '../api/axiosInstance';
 
 const FEET = ["Left", "Right", "Both"];
@@ -33,6 +36,7 @@ interface PlayersPageViewProps {
 
     firstName: string;
     lastName: string;
+    nationality: string | null;
     dateOfBirth: string;
     position: string;
     heightCm: string;
@@ -42,6 +46,7 @@ interface PlayersPageViewProps {
     formError: string | null;
     onFirstNameChange: (value: string) => void;
     onLastNameChange: (value: string) => void;
+    onNationalityChange: (value: string | null) => void;
     onDateOfBirthChange: (value: string) => void;
     onPositionChange: (value: string) => void;
     onHeightCmChange: (value: string) => void;
@@ -56,6 +61,7 @@ interface PlayersPageViewProps {
     editingId: number | null;
     editFirstName: string;
     editLastName: string;
+    editNationality: string | null;
     editDateOfBirth: string;
     editPosition: string;
     editHeightCm: string;
@@ -66,6 +72,7 @@ interface PlayersPageViewProps {
     onStartEdit: (player: Player) => void;
     onEditFirstNameChange: (value: string) => void;
     onEditLastNameChange: (value: string) => void;
+    onEditNationalityChange: (value: string | null) => void;
     onEditDateOfBirthChange: (value: string) => void;
     onEditPositionChange: (value: string) => void;
     onEditHeightCmChange: (value: string) => void;
@@ -84,6 +91,7 @@ export function PlayersPageView({
     canDelete,
     firstName,
     lastName,
+    nationality,
     dateOfBirth,
     position,
     heightCm,
@@ -93,6 +101,7 @@ export function PlayersPageView({
     formError,
     onFirstNameChange,
     onLastNameChange,
+    onNationalityChange,
     onDateOfBirthChange,
     onPositionChange,
     onHeightCmChange,
@@ -106,6 +115,7 @@ export function PlayersPageView({
     editingId,
     editFirstName,
     editLastName,
+    editNationality,
     editDateOfBirth,
     editPosition,
     editHeightCm,
@@ -116,6 +126,7 @@ export function PlayersPageView({
     onStartEdit,
     onEditFirstNameChange,
     onEditLastNameChange,
+    onEditNationalityChange,
     onEditDateOfBirthChange,
     onEditPositionChange,
     onEditHeightCmChange,
@@ -155,6 +166,20 @@ export function PlayersPageView({
                             value={lastName}
                             onChange={(e) => onLastNameChange(e.target.value)}
                             required
+                        />
+                        <Autocomplete
+                            options={COUNTRIES}
+                            getOptionLabel={(option) => option.name}
+                            value={COUNTRIES.find((c) => c.code === nationality) ?? null}
+                            onChange={(_, newValue: Country | null) => onNationalityChange(newValue?.code ?? null)}
+                            renderOption={(props, option) => (
+                                <Box component="li" {...props} key={option.code} sx={{ display: "flex", gap: 1}}>
+                                    <span className={`fi fi-${option.code}`} />
+                                    {option.name}
+                                </Box>
+                            )}
+                            renderInput={(params) => <TextField {...params} label="Narodowość" />}
+                            sx={{ minWidth: 220 }}
                         />
                         <TextField
                             label="Data urodzenia"
@@ -224,6 +249,7 @@ export function PlayersPageView({
                             <TableCell>Zdjęcie</TableCell>
                             <TableCell>Imię</TableCell>
                             <TableCell>Nazwisko</TableCell>
+                            <TableCell>Narodowość</TableCell>
                             <TableCell>Data urodzenia</TableCell>
                             <TableCell>Pozycja</TableCell>
                             <TableCell>Wzrost</TableCell>
@@ -257,6 +283,23 @@ export function PlayersPageView({
                                             size="small" 
                                             value={editLastName} 
                                             onChange={(e) => onEditLastNameChange(e.target.value)} 
+                                        />
+                                    </TableCell>
+                                    <TableCell>
+                                        <Autocomplete
+                                            size="small"
+                                            options={COUNTRIES}
+                                            getOptionLabel={(option) => option.name}
+                                            value={COUNTRIES.find((c) => c.code === editNationality) ?? null}
+                                            onChange={(_, newValue: Country | null) => onEditNationalityChange(newValue?.code ?? null)}
+                                            renderOption={(props, option) => (
+                                                <Box component="li" {...props} key={option.code} sx={{ display: "flex", gap: 1}}>
+                                                    <span className={`fi fi-${option.code}`} />
+                                                    {option.name}
+                                                </Box>
+                                            )}
+                                            renderInput={(params) => <TextField {...params} />}
+                                            sx={{ minWidth: 160 }}
                                         />
                                     </TableCell>
                                     <TableCell>
@@ -331,6 +374,14 @@ export function PlayersPageView({
                                     </TableCell>
                                     <TableCell>{player.firstName}</TableCell>
                                     <TableCell>{player.lastName}</TableCell>
+                                    <TableCell>
+                                        {player.nationality ? (
+                                            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                                <span className={`fi fi-${player.nationality}`} />
+                                                {COUNTRIES.find((c) => c.code === player.nationality)?.name ?? player.nationality}
+                                            </Box>
+                                        ) : "-"}
+                                    </TableCell>
                                     <TableCell>{player.dateOfBirth}</TableCell>
                                     <TableCell>{POSITION_LABELS[player.position] ?? player.position}</TableCell>
                                     <TableCell>{player.heightCm ?? "-"}</TableCell>

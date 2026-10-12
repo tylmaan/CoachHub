@@ -18,6 +18,7 @@ export function PlayersPage() {
 
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
+    const [nationality, setNationality] = useState<string | null>(null);
     const [dateOfBirth, setDateOfBirth] = useState("");
     const [position, setPosition] = useState("");
     const [heightCm, setHeightCm] = useState("");
@@ -30,6 +31,7 @@ export function PlayersPage() {
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editFirstName, setEditFirstName] = useState("");
     const [editLastName, setEditLastName] = useState("");
+    const [editNationality, setEditNationality] = useState<string | null>(null);
     const [editDateOfBirth, setEditDateOfBirth] = useState("");
     const [editPosition, setEditPosition] = useState("");
     const [editHeightCm, setEditHeightCm] =useState("");
@@ -84,6 +86,7 @@ export function PlayersPage() {
             await createPlayer({
                 firstName,
                 lastName,
+                nationality,
                 dateOfBirth,
                 position,
                 teamId: teamId as number,
@@ -94,6 +97,7 @@ export function PlayersPage() {
             });
             setFirstName("");
             setLastName("");
+            setNationality(null);
             setDateOfBirth("");
             setPosition("");
             setHeightCm("");
@@ -115,6 +119,7 @@ export function PlayersPage() {
         setEditingId(player.id);
         setEditFirstName(player.firstName);
         setEditLastName(player.lastName);
+        setEditNationality(player.nationality);
         setEditDateOfBirth(player.dateOfBirth);
         setEditPosition(player.position);
         setEditHeightCm(player.heightCm?.toString() ?? "");
@@ -130,6 +135,7 @@ export function PlayersPage() {
             await updatePlayer(id, {
                 firstName: editFirstName,
                 lastName: editLastName,
+                nationality: editNationality,
                 dateOfBirth: editDateOfBirth,
                 position: editPosition,
                 teamId: teamId as number,
@@ -166,6 +172,7 @@ export function PlayersPage() {
             canDelete={!!canDelete}
             firstName={firstName}
             lastName={lastName}
+            nationality={nationality}
             dateOfBirth={dateOfBirth}
             position={position}
             heightCm={heightCm}
@@ -175,6 +182,7 @@ export function PlayersPage() {
             formError={formError}
             onFirstNameChange={setFirstName}
             onLastNameChange={setLastName}
+            onNationalityChange={setNationality}
             onDateOfBirthChange={setDateOfBirth}
             onPositionChange={setPosition}
             onHeightCmChange={setHeightCm}
@@ -188,6 +196,7 @@ export function PlayersPage() {
             editingId={editingId}
             editFirstName={editFirstName}
             editLastName={editLastName}
+            editNationality={editNationality}
             editDateOfBirth={editDateOfBirth}
             editPosition={editPosition}
             editHeightCm={editHeightCm}
@@ -198,6 +207,7 @@ export function PlayersPage() {
             onStartEdit={startEdit}
             onEditFirstNameChange={setEditFirstName}
             onEditLastNameChange={setEditLastName}
+            onEditNationalityChange={setEditNationality}
             onEditDateOfBirthChange={setEditDateOfBirth}
             onEditPositionChange={setEditPosition}
             onEditHeightCmChange={setEditHeightCm}
