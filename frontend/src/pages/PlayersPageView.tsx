@@ -12,7 +12,11 @@ import {
     TextField,
     Button,
     MenuItem,
-    Avatar
+    Avatar,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions
 } from '@mui/material';
 import type { Player } from '../types/player';
 import { FOOT_LABELS } from '../constants/labels';
@@ -31,7 +35,6 @@ interface PlayersPageViewProps {
     dateOfBirth: string;
     position: string;
     heightCm: string;
-    weightKg: string;
     jerseyNumber: string;
     preferredFoot: string;
     photoUrl: string | null;
@@ -41,11 +44,13 @@ interface PlayersPageViewProps {
     onDateOfBirthChange: (value: string) => void;
     onPositionChange: (value: string) => void;
     onHeightCmChange: (value: string) => void;
-    onWeightKgChange: (value: string) => void;
     onJerseyNumberChange: (value: string) => void;
     onPreferredFootChange: (value: string) => void;
     onPhotoSelect: (e: React.ChangeEvent<HTMLInputElement>) => void;
     onCreate: (e: React.SyntheticEvent) => void;
+    createOpen: boolean;
+    onOpenCreate: () => void;
+    onCloseCreate: () => void;
 
     editingId: number | null;
     editFirstName: string;
@@ -53,7 +58,6 @@ interface PlayersPageViewProps {
     editDateOfBirth: string;
     editPosition: string;
     editHeightCm: string;
-    editWeightKg: string;
     editJerseyNumber: string;
     editPreferredFoot: string;
     editPhotoUrl: string | null;
@@ -64,7 +68,6 @@ interface PlayersPageViewProps {
     onEditDateOfBirthChange: (value: string) => void;
     onEditPositionChange: (value: string) => void;
     onEditHeightCmChange: (value: string) => void;
-    onEditWeightKgChange: (value: string) => void;
     onEditJerseyNumberChange: (value: string) => void;
     onEditPreferredFootChange: (value: string) => void;
     onEditPhotoSelect: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -83,7 +86,6 @@ export function PlayersPageView({
     dateOfBirth,
     position,
     heightCm,
-    weightKg,
     jerseyNumber,
     preferredFoot,
     photoUrl,
@@ -93,18 +95,19 @@ export function PlayersPageView({
     onDateOfBirthChange,
     onPositionChange,
     onHeightCmChange,
-    onWeightKgChange,
     onJerseyNumberChange,
     onPreferredFootChange,
     onPhotoSelect,
     onCreate,
+    createOpen,
+    onOpenCreate,
+    onCloseCreate,
     editingId,
     editFirstName,
     editLastName,
     editDateOfBirth,
     editPosition,
     editHeightCm,
-    editWeightKg,
     editJerseyNumber,
     editPreferredFoot,
     editPhotoUrl,
@@ -115,7 +118,6 @@ export function PlayersPageView({
     onEditDateOfBirthChange,
     onEditPositionChange,
     onEditHeightCmChange,
-    onEditWeightKgChange,
     onEditJerseyNumberChange,
     onEditPreferredFootChange,
     onEditPhotoSelect,
@@ -125,83 +127,86 @@ export function PlayersPageView({
 }: PlayersPageViewProps) {
     return (
         <>
-            <Typography variant="h4" sx={{ mb: 2 }}>
-                Zawodnicy
-            </Typography>
-
-            {canCreate && (
-                <Box
-                    component="form"
-                    onSubmit={onCreate}
-                    sx={{ mb: 3, display: "flex", gap: 2, alignItems: "flex-start", flexWrap: "wrap" }}
-                >
-                    {formError && <Alert severity="error">{formError}</Alert>}
-                    <TextField
-                        label="Imię"
-                        value={firstName}
-                        onChange={(e) => onFirstNameChange(e.target.value)}
-                        required
-                    />
-                    <TextField
-                        label="Nazwisko"
-                        value={lastName}
-                        onChange={(e) => onLastNameChange(e.target.value)}
-                        required
-                    />
-                    <TextField
-                        label="Data urodzenia"
-                        type="date"
-                        slotProps={{ inputLabel: { shrink: true } }}
-                        value={dateOfBirth}
-                        onChange={(e) => onDateOfBirthChange(e.target.value)}
-                        required
-                    />
-                    <TextField
-                        label="Pozycja"
-                        value={position}
-                        onChange={(e) => onPositionChange(e.target.value)}
-                        required
-                    />
-                    <TextField
-                        label="Wzrost (cm)"
-                        type="number"
-                        value={heightCm}
-                        onChange={(e) => onHeightCmChange(e.target.value)}
-                    />
-                    <TextField
-                        label="Waga (kg)"
-                        type="number"
-                        value={weightKg}
-                        onChange={(e) => onWeightKgChange(e.target.value)}
-                    />
-                    <TextField
-                        label="Numer"
-                        type="number"
-                        value={jerseyNumber}
-                        onChange={(e) => onJerseyNumberChange(e.target.value)}
-                    />
-                    <TextField
-                        select
-                        label="Noga"
-                        value={preferredFoot}
-                        onChange={(e) => onPreferredFootChange(e.target.value)}
-                        sx={{ minWidth: 120 }}
-                    >
-                        <MenuItem value="">-</MenuItem>
-                        {FEET.map((f) => (
-                            <MenuItem key={f} value={f}>{FOOT_LABELS[f]}</MenuItem>
-                        ))}
-                    </TextField>
-                    {photoUrl && <Avatar src={`${BACKEND_ORIGIN}${photoUrl}`} />}
-                    <Button component="label" variant="outlined">
-                        Wybierz zdjęcie
-                        <input type="file" accept="image/png,image/jpeg" hidden onChange={onPhotoSelect} />
-                    </Button>
-                    <Button type="submit" variant="contained">
+            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+                <Typography variant="h4" sx={{ mb: 2 }}>
+                    Zawodnicy
+                </Typography>
+                {canCreate && (
+                    <Button variant="contained" onClick={onOpenCreate}>
                         Dodaj zawodnika
                     </Button>
+                )}
+            </Box>
+
+            <Dialog open={createOpen} onClose={onCloseCreate} fullWidth maxWidth="sm">
+                <Box component="form" onSubmit={onCreate}>
+                    <DialogTitle>Nowy zawodnik</DialogTitle>
+                    <DialogContent sx={{ display: "flex", flexWrap: "wrap", gap: 2, pt: 1 }}>
+                        {formError && <Alert severity="error">{formError}</Alert>}
+                        <TextField
+                            label="Imię"
+                            value={firstName}
+                            onChange={(e) => onFirstNameChange(e.target.value)}
+                            required
+                        />
+                        <TextField
+                            label="Nazwisko"
+                            value={lastName}
+                            onChange={(e) => onLastNameChange(e.target.value)}
+                            required
+                        />
+                        <TextField
+                            label="Data urodzenia"
+                            type="date"
+                            slotProps={{ inputLabel: { shrink: true } }}
+                            value={dateOfBirth}
+                            onChange={(e) => onDateOfBirthChange(e.target.value)}
+                            required
+                        />
+                        <TextField
+                            label="Pozycja"
+                            value={position}
+                            onChange={(e) => onPositionChange(e.target.value)}
+                            required
+                        />
+                        <TextField
+                            label="Wzrost (cm)"
+                            type="number"
+                            value={heightCm}
+                            onChange={(e) => onHeightCmChange(e.target.value)}
+                        />
+                        <TextField
+                            label="Numer"
+                            type="number"
+                            value={jerseyNumber}
+                            onChange={(e) => onJerseyNumberChange(e.target.value)}
+                        />
+                        <TextField
+                            select
+                            label="Noga"
+                            value={preferredFoot}
+                            onChange={(e) => onPreferredFootChange(e.target.value)}
+                            sx={{ minWidth: 120 }}
+                        >
+                            <MenuItem value="">-</MenuItem>
+                            {FEET.map((f) => (
+                                <MenuItem key={f} value={f}>{FOOT_LABELS[f]}</MenuItem>
+                            ))}
+                        </TextField>
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                            {photoUrl && <Avatar src={`${BACKEND_ORIGIN}${photoUrl}`} />}
+                            <Button component="label" variant="outlined" size="small">
+                                Wybierz zdjęcie
+                                <input type="file" accept="image/png,image/jpeg" hidden onChange={onPhotoSelect} />
+                            </Button>
+                        </Box>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={onCloseCreate}>Anuluj</Button>
+                        <Button type="submit" variant="contained">Dodaj zawodnika</Button>
+                    </DialogActions>
                 </Box>
-            )}
+            </Dialog>
 
             {actionError && <Alert severity="error" sx={{ mb:2 }}>{actionError}</Alert>}
 
@@ -215,7 +220,6 @@ export function PlayersPageView({
                             <TableCell>Data urodzenia</TableCell>
                             <TableCell>Pozycja</TableCell>
                             <TableCell>Wzrost</TableCell>
-                            <TableCell>Waga</TableCell>
                             <TableCell>Numer</TableCell>
                             <TableCell>Noga</TableCell>
                             {(canEdit || canDelete) && <TableCell>Akcje</TableCell>}
@@ -277,15 +281,6 @@ export function PlayersPageView({
                                         <TextField
                                             size="small"
                                             type="number"
-                                            value={editWeightKg}
-                                            onChange={(e) => onEditWeightKgChange(e.target.value)}
-                                            sx={{ width: 80 }}
-                                        />
-                                    </TableCell>
-                                    <TableCell>
-                                        <TextField
-                                            size="small"
-                                            type="number"
                                             value={editJerseyNumber}
                                             onChange={(e) => onEditJerseyNumberChange(e.target.value)}
                                             sx={{ width: 70 }}
@@ -326,7 +321,6 @@ export function PlayersPageView({
                                     <TableCell>{player.dateOfBirth}</TableCell>
                                     <TableCell>{player.position}</TableCell>
                                     <TableCell>{player.heightCm ?? "-"}</TableCell>
-                                    <TableCell>{player.weightKg ?? "-"}</TableCell>
                                     <TableCell>{player.jerseyNumber ?? "-"}</TableCell>
                                     <TableCell>{player.preferredFoot ? FOOT_LABELS[player.preferredFoot] : "-"}</TableCell>
                                     {(canEdit || canDelete) && (
