@@ -169,10 +169,10 @@ namespace CoachHub.Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("MatchId")
+                    b.Property<bool>("IsStarting")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int?>("MinutesPlayed")
+                    b.Property<int>("MatchId")
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("PlayerId")

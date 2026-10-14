@@ -95,7 +95,7 @@ export function MatchesPage() {
                 scoreAgainst: toNullableNumber(scoreAgainst),
                 isHome: toNullableBool(isHome),
                 matchType: matchType || null,
-                round: toNullableNumber(round),
+                round: round || null,
                 opponentLogoUrl: opponentLogoUrl || null,
             });
             setDate("");
@@ -126,7 +126,7 @@ export function MatchesPage() {
         setEditScoreAgainst(match.scoreAgainst?.toString() ?? "");
         setEditIsHome(match.isHome?.toString() ?? "");
         setEditMatchType(match.matchType ?? "");
-        setEditRound(match.round?.toString() ?? "");
+        setEditRound(match.round ?? "");
         setEditOpponentLogoUrl(match.opponentLogoUrl ?? "");
         setActionError(null);
     }
@@ -143,7 +143,7 @@ export function MatchesPage() {
                 scoreAgainst: toNullableNumber(editScoreAgainst),
                 isHome: toNullableBool(editIsHome),
                 matchType: editMatchType || null,
-                round: toNullableNumber(editRound),
+                round: editRound || null,
                 opponentLogoUrl: editOpponentLogoUrl || null,
             });
             setEditingId(null);
@@ -163,12 +163,24 @@ export function MatchesPage() {
         }
     }
 
+    const matchesBySeason = [...matches]
+        .sort((a ,b) => b.season.localeCompare(a.season) || b.date.localeCompare(a.date))
+        .reduce<{ season: string; matches: Match[] }[]>((groups, match) => {
+            const group = groups.find(g => g.season === match.season);
+            if (group) {
+                group.matches.push(match);
+            } else {
+                groups.push({ season: match.season, matches: [match] });
+            }
+            return groups;
+        }, []);
+
     if (loading) return <CircularProgress />;
     if (error) return <Alert severity="error">{error}</Alert>;
 
     return (
         <MatchesPageView
-            matches={matches}
+            matchesBySeason={matchesBySeason}
             canCreate={!!canCreate}
             canEdit={!!canEdit}
             canDelete={!!canDelete}

@@ -17,11 +17,12 @@ import {
 import type { Match } from "../types/match";
 import { MATCH_TYPE_LABELS } from "../constants/labels";
 import { BACKEND_ORIGIN } from "../api/axiosInstance";
+import { Link as RouterLink} from "react-router-dom";
 
 const MATCH_TYPES = ["League", "Cup", "Friendly"];
 
 interface MatchesPageViewProps {
-    matches: Match[];
+    matchesBySeason: { season: string; matches: Match[] }[];
     canCreate: boolean;
     canEdit: boolean;
     canDelete: boolean;
@@ -74,7 +75,7 @@ interface MatchesPageViewProps {
 }
 
 export function MatchesPageView({
-    matches,
+    matchesBySeason,
     canCreate,
     canEdit,
     canDelete,
@@ -178,13 +179,12 @@ export function MatchesPageView({
                                 <MenuItem key={t} value={t}>{MATCH_TYPE_LABELS[t]}</MenuItem>
                             ))}
                         </TextField>
-                        {matchType === "League" && (
+                        {(matchType === "League" || matchType === "Cup") && (
                             <TextField
-                                label="Kolejka"
-                                type="number"
+                                label="Kolejka / Runda"
                                 value={round}
                                 onChange={(e) => onRoundChange(e.target.value)}
-                                sx={{ width: 100 }}
+                                sx={{ width: 160 }}
                             />
                         )}
                         <TextField
@@ -211,151 +211,163 @@ export function MatchesPageView({
                 
                 {actionError && <Alert severity="error" sx={{ mb: 2 }}>{actionError}</Alert>}
     
-                <TableContainer component={Paper}>
-                    <Table>
-                        <TableHead>
-                            <TableRow>
-                                <TableCell>Logo</TableCell>
-                                <TableCell>Data</TableCell>
-                                <TableCell>Przeciwnik</TableCell>
-                                <TableCell>Sezon</TableCell>
-                                <TableCell>Wynik</TableCell>
-                                <TableCell>Dom/Wyjazd</TableCell>
-                                <TableCell>Typ meczu</TableCell>
-                                <TableCell>Kolejka</TableCell>
-                                {(canEdit || canDelete) && <TableCell>Akcje</TableCell>}
-                            </TableRow>
-                        </TableHead>
-                        <TableBody>
-                            {matches.map((match) => (
-                                editingId === match.id ? (
-                                    <TableRow key={match.id}>
-                                        <TableCell>
-                                            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                                {editOpponentLogoUrl && <Avatar src={`${BACKEND_ORIGIN}${editOpponentLogoUrl}`} variant="rounded" />}
-                                                <Button component="label" size="small">
-                                                    Zmień logo
-                                                    <input type="file" accept="image/png, image/jpeg" hidden onChange={onEditOpponentLogoSelect} />
-                                                </Button>
-                                            </Box>
-                                        </TableCell>
-                                        <TableCell>
-                                            <TextField
-                                                size="small"
-                                                type="date"
-                                                slotProps={{ inputLabel: { shrink: true } }}
-                                                value={editDate}
-                                                onChange={(e) => onEditDateChange(e.target.value)}
-                                            />
-                                        </TableCell>
-                                        <TableCell>
-                                            <TextField
-                                                size="small"
-                                                value={editOpponent}
-                                                onChange={(e) => onEditOpponentChange(e.target.value)}
-                                            />
-                                        </TableCell>
-                                        <TableCell>
-                                            <TextField
-                                                size="small"
-                                                value={editSeason}
-                                                onChange={(e) => onEditSeasonChange(e.target.value)}
-                                            />
-                                        </TableCell>
-                                        <TableCell>
-                                            <Box sx={{ display: "flex", gap: 1 }}>
-                                                <TextField
-                                                    size="small"
-                                                    type="number"
-                                                    value={editScoreFor}
-                                                    onChange={(e) => onEditScoreForChange(e.target.value)}
-                                                    sx={{ width: 70 }}
-                                                />
-                                                <TextField
-                                                    size="small"
-                                                    type="number"
-                                                    value={editScoreAgainst}
-                                                    onChange={(e) => onEditScoreAgainstChange(e.target.value)}
-                                                    sx={{ width: 70 }}
-                                                />
-                                            </Box>
-                                        </TableCell>
-                                        <TableCell>
-                                            <TextField
-                                                select
-                                                size="small"
-                                                value={editIsHome}
-                                                onChange={(e) => onEditIsHomeChange(e.target.value)}
-                                                sx={{ minWidth: 100 }}
-                                            >
-                                                <MenuItem value="">--</MenuItem>
-                                                <MenuItem value="true">Dom</MenuItem>
-                                                <MenuItem value="false">Wyjazd</MenuItem>
-                                            </TextField>
-                                        </TableCell>
-                                        <TableCell>
-                                            <TextField
-                                                select
-                                                size="small"
-                                                value={editMatchType}
-                                                onChange={(e) => onEditMatchTypeChange(e.target.value)}
-                                                sx={{ minWidth: 120 }}
-                                            >
-                                                <MenuItem value="">--</MenuItem>
-                                                {MATCH_TYPES.map((t) => (
-                                                    <MenuItem key={t} value={t}>{MATCH_TYPE_LABELS[t]}</MenuItem>
-                                                ))}
-                                            </TextField>
-                                        </TableCell>
-                                        <TableCell>
-                                            {editMatchType === "League" && (
-                                                <TextField
-                                                    size="small"
-                                                    type="number"
-                                                    value={editRound}
-                                                    onChange={(e) => onEditRoundChange(e.target.value)}
-                                                    sx={{ width: 70 }}
-                                                />
-                                            )}
-                                        </TableCell>
-                                        <TableCell>
-                                            <Box sx={{ display: "flex", gap: 1 }}>
-                                                <Button size="small" variant="contained" onClick={() => onSaveEdit(match.id)}>Zapisz</Button>
-                                                <Button size="small" onClick={onCancelEdit}>Anuluj</Button>
-                                            </Box>
-                                        </TableCell>
+                {matchesBySeason.map((group) => (
+                    <Box key={group.season} sx={{ mb: 4 }}>
+                        <Typography variant="h6" sx={{ mb: 1 }}>
+                            Sezon: {group.season}
+                        </Typography>
+                        <TableContainer component={Paper}>
+                            <Table>
+                                <TableHead>
+                                    <TableRow>
+                                        <TableCell>Logo</TableCell>
+                                        <TableCell>Data</TableCell>
+                                        <TableCell>Przeciwnik</TableCell>
+                                        <TableCell>Sezon</TableCell>
+                                        <TableCell>Wynik</TableCell>
+                                        <TableCell>Dom/Wyjazd</TableCell>
+                                        <TableCell>Typ meczu</TableCell>
+                                        <TableCell>Kolejka</TableCell>
+                                        <TableCell>Szczegóły</TableCell>
+                                        {(canEdit || canDelete) && <TableCell>Akcje</TableCell>}
                                     </TableRow>
-                                ) : (
-                                    <TableRow key={match.id}>
-                                        <TableCell>
-                                            {match.opponentLogoUrl ? (
-                                                <Avatar src={`${BACKEND_ORIGIN}${match.opponentLogoUrl}`} variant="rounded" />
-                                            ) : (
-                                                <Avatar variant="rounded">{match.opponent[0]}</Avatar> 
-                                            )}
-                                        </TableCell>
-                                        <TableCell>{match.date}</TableCell>
-                                        <TableCell>{match.opponent}</TableCell>
-                                        <TableCell>{match.season}</TableCell>
-                                        <TableCell>{match.scoreFor ?? "-"} : {match.scoreAgainst ?? "-"}</TableCell>
-                                        <TableCell>{match.isHome === null ? "-" : match.isHome ? "Dom" : "Wyjazd"}</TableCell>
-                                        <TableCell>{match.matchType ? MATCH_TYPE_LABELS[match.matchType] : "-"}</TableCell>
-                                        <TableCell>{match.round ?? "-"}</TableCell>
-                                        {(canEdit || canDelete) && (
-                                            <TableCell>
-                                                <Box sx={{ display: "flex", gap: 1 }}>
-                                                    {canEdit && <Button size="small" onClick={() => onStartEdit(match)}>Edytuj</Button>}
-                                                    {canDelete && <Button size="small" color="error" onClick={() => onDelete(match.id)}>Usuń</Button>}
-                                                </Box>
-                                            </TableCell>
-                                        )}
-                                    </TableRow>
-                                )
-                            ))}
-                        </TableBody>
-                    </Table>
-                </TableContainer>
+                                </TableHead>
+                                <TableBody>
+                                    {group.matches.map((match) => (
+                                        editingId === match.id ? (
+                                            <TableRow key={match.id}>
+                                                <TableCell>
+                                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                                        {editOpponentLogoUrl && <Avatar src={`${BACKEND_ORIGIN}${editOpponentLogoUrl}`} variant="rounded" />}
+                                                        <Button component="label" size="small">
+                                                            Zmień logo
+                                                            <input type="file" accept="image/png, image/jpeg" hidden onChange={onEditOpponentLogoSelect} />
+                                                        </Button>
+                                                    </Box>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <TextField
+                                                        size="small"
+                                                        type="date"
+                                                        slotProps={{ inputLabel: { shrink: true } }}
+                                                        value={editDate}
+                                                        onChange={(e) => onEditDateChange(e.target.value)}
+                                                    />
+                                                </TableCell>
+                                                <TableCell>
+                                                    <TextField
+                                                        size="small"
+                                                        value={editOpponent}
+                                                        onChange={(e) => onEditOpponentChange(e.target.value)}
+                                                    />
+                                                </TableCell>
+                                                <TableCell>
+                                                    <TextField
+                                                        size="small"
+                                                        value={editSeason}
+                                                        onChange={(e) => onEditSeasonChange(e.target.value)}
+                                                    />
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Box sx={{ display: "flex", gap: 1 }}>
+                                                        <TextField
+                                                            size="small"
+                                                            type="number"
+                                                            value={editScoreFor}
+                                                            onChange={(e) => onEditScoreForChange(e.target.value)}
+                                                            sx={{ width: 70 }}
+                                                        />
+                                                        <TextField
+                                                            size="small"
+                                                            type="number"
+                                                            value={editScoreAgainst}
+                                                            onChange={(e) => onEditScoreAgainstChange(e.target.value)}
+                                                            sx={{ width: 70 }}
+                                                        />
+                                                    </Box>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <TextField
+                                                        select
+                                                        size="small"
+                                                        value={editIsHome}
+                                                        onChange={(e) => onEditIsHomeChange(e.target.value)}
+                                                        sx={{ minWidth: 100 }}
+                                                    >
+                                                        <MenuItem value="">--</MenuItem>
+                                                        <MenuItem value="true">Dom</MenuItem>
+                                                        <MenuItem value="false">Wyjazd</MenuItem>
+                                                    </TextField>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <TextField
+                                                        select
+                                                        size="small"
+                                                        value={editMatchType}
+                                                        onChange={(e) => onEditMatchTypeChange(e.target.value)}
+                                                        sx={{ minWidth: 120 }}
+                                                    >
+                                                        <MenuItem value="">--</MenuItem>
+                                                        {MATCH_TYPES.map((t) => (
+                                                            <MenuItem key={t} value={t}>{MATCH_TYPE_LABELS[t]}</MenuItem>
+                                                        ))}
+                                                    </TextField>
+                                                </TableCell>
+                                                <TableCell>
+                                                    {(editMatchType === "League" || editMatchType === "Cup") && (
+                                                        <TextField
+                                                            size="small"
+                                                            value={editRound}
+                                                            onChange={(e) => onEditRoundChange(e.target.value)}
+                                                            sx={{ width: 120 }}
+                                                        />
+                                                    )}
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Box sx={{ display: "flex", gap: 1 }}>
+                                                        <Button size="small" variant="contained" onClick={() => onSaveEdit(match.id)}>Zapisz</Button>
+                                                        <Button size="small" onClick={onCancelEdit}>Anuluj</Button>
+                                                    </Box>
+                                                </TableCell>
+                                            </TableRow>
+                                        ) : (
+                                            <TableRow key={match.id}>
+                                                <TableCell>
+                                                    {match.opponentLogoUrl ? (
+                                                        <Avatar src={`${BACKEND_ORIGIN}${match.opponentLogoUrl}`} variant="rounded" />
+                                                    ) : (
+                                                        <Avatar variant="rounded">{match.opponent[0]}</Avatar> 
+                                                    )}
+                                                </TableCell>
+                                                <TableCell>{match.date}</TableCell>
+                                                <TableCell>{match.opponent}</TableCell>
+                                                <TableCell>{match.season}</TableCell>
+                                                <TableCell>{match.scoreFor ?? "-"} : {match.scoreAgainst ?? "-"}</TableCell>
+                                                <TableCell>{match.isHome === null ? "-" : match.isHome ? "Dom" : "Wyjazd"}</TableCell>
+                                                <TableCell>{match.matchType ? MATCH_TYPE_LABELS[match.matchType] : "-"}</TableCell>
+                                                <TableCell>{match.round ?? "-"}</TableCell>
+                                                <TableCell>
+                                                    <Button size="small" component={RouterLink} to={`/matches/${match.id}`}>
+                                                        Szczegóły
+                                                    </Button>
+                                                </TableCell>
+                                                {(canEdit || canDelete) && (
+                                                    <TableCell>
+                                                        <Box sx={{ display: "flex", gap: 1 }}>
+                                                            {canEdit && <Button size="small" onClick={() => onStartEdit(match)}>Edytuj</Button>}
+                                                            {canDelete && <Button size="small" color="error" onClick={() => onDelete(match.id)}>Usuń</Button>}
+                                                        </Box>
+                                                    </TableCell>
+                                                )}
+                                            </TableRow>
+                                        )
+                                    ))}
+                                </TableBody>
+                            </Table>
+                        </TableContainer>
+                    </Box>
+                ))}
             </>
-    );
-        
-}
+        );
+                
+    }
