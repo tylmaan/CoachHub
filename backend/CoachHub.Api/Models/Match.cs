@@ -10,7 +10,7 @@ public class Match
     public int? ScoreAgainst { get; set; }
     public bool? IsHome { get; set; }
     public string? MatchType { get; set; }
-    public int? Round { get; set; }
+    public string? Round { get; set; }
     public string? OpponentLogoUrl { get; set; }
 
     public int TeamId { get; set; }
