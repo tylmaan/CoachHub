@@ -6,6 +6,11 @@ export const getMatches = async (): Promise<Match[]> => {
     return response.data;
 }
 
+export const getMatch = async (id: number): Promise<Match> => {
+    const response = await axiosInstance.get<Match>(`/matches/${id}`);
+    return response.data;
+}
+
 export async function createMatch(match: Omit<Match, "id">): Promise<Match> {
     const response = await axiosInstance.post<Match>('/matches', match);
     return response.data;

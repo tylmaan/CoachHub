@@ -17,6 +17,7 @@ import {
 import type { Match } from "../types/match";
 import { MATCH_TYPE_LABELS } from "../constants/labels";
 import { BACKEND_ORIGIN } from "../api/axiosInstance";
+import { Link as RouterLink} from "react-router-dom";
 
 const MATCH_TYPES = ["League", "Cup", "Friendly"];
 
@@ -227,6 +228,7 @@ export function MatchesPageView({
                                         <TableCell>Dom/Wyjazd</TableCell>
                                         <TableCell>Typ meczu</TableCell>
                                         <TableCell>Kolejka</TableCell>
+                                        <TableCell>Szczegóły</TableCell>
                                         {(canEdit || canDelete) && <TableCell>Akcje</TableCell>}
                                     </TableRow>
                                 </TableHead>
@@ -344,6 +346,11 @@ export function MatchesPageView({
                                                 <TableCell>{match.isHome === null ? "-" : match.isHome ? "Dom" : "Wyjazd"}</TableCell>
                                                 <TableCell>{match.matchType ? MATCH_TYPE_LABELS[match.matchType] : "-"}</TableCell>
                                                 <TableCell>{match.round ?? "-"}</TableCell>
+                                                <TableCell>
+                                                    <Button size="small" component={RouterLink} to={`/matches/${match.id}`}>
+                                                        Szczegóły
+                                                    </Button>
+                                                </TableCell>
                                                 {(canEdit || canDelete) && (
                                                     <TableCell>
                                                         <Box sx={{ display: "flex", gap: 1 }}>
