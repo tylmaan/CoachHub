@@ -140,8 +140,8 @@ namespace CoachHub.Api.Migrations
                     b.Property<string>("OpponentLogoUrl")
                         .HasColumnType("TEXT");
 
-                    b.Property<int?>("Round")
-                        .HasColumnType("INTEGER");
+                    b.Property<string>("Round")
+                        .HasColumnType("TEXT");
 
                     b.Property<int?>("ScoreAgainst")
                         .HasColumnType("INTEGER");
@@ -203,8 +203,15 @@ namespace CoachHub.Api.Migrations
                     b.Property<int?>("Minute")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("PlayerId")
+                    b.Property<string>("OpponentPlayerName")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int?>("PlayerId")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("Team")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
@@ -541,9 +548,7 @@ namespace CoachHub.Api.Migrations
 
                     b.HasOne("CoachHub.Api.Models.Player", "Player")
                         .WithMany("MatchEvents")
-                        .HasForeignKey("PlayerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("PlayerId");
 
                     b.Navigation("Match");
 

@@ -35,7 +35,10 @@ public class MatchEventService : IMatchEventService
         if (existing is null) return false;
 
         existing.EventType = matchEvent.EventType;
+        existing.Team = matchEvent.Team;
         existing.Minute = matchEvent.Minute;
+        existing.PlayerId = matchEvent.PlayerId;
+        existing.OpponentPlayerName = matchEvent.OpponentPlayerName;
         await _context.SaveChangesAsync();
         return true;
     }
