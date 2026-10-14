@@ -4,9 +4,11 @@ import { Alert, CircularProgress } from "@mui/material";
 import { getMatch } from "../api/matchesApi";
 import { getPlayers } from "../api/playersApi";
 import { getMatchAppearances, createMatchAppearance, deleteMatchAppearance } from "../api/matchAppearancesApi";
+import { getMatchEvents, createMatchEvent, deleteMatchEvent } from "../api/matchEventsApi";
 import type { Match } from "../types/match";
 import type { Player } from "../types/player";
 import type { MatchAppearance } from "../types/matchAppearance";
+import type { MatchEvent } from "../types/matchEvent";
 import { MatchDetailPageView } from "./MatchDetailPageView";
 
 export function MatchDetailPage() {
@@ -22,6 +24,15 @@ export function MatchDetailPage() {
     const [newIsStarting, setNewIsStarting] = useState(true);
     const [rosterError, setRosterError] = useState<string | null>(null);
 
+    const [events, setEvents] = useState<MatchEvent[]>([]);
+    const [eventOpen, setEventOpen] = useState(false);
+    const [newEventTeam, setNewEventTeam] = useState("Us");
+    const [newEventType, setNewEventType] = useState("");
+    const [newEventMinute, setNewEventMinute] = useState("");
+    const [newEventPlayerId, setNewEventPlayerId] = useState<number | "">("");
+    const [newEventOpponentName, setNewEventOpponentName] = useState("");
+    const [eventError, setEventError] = useState<string | null>(null);
+
     useEffect(() => {
         if (!id) return;
         getMatch(Number(id))
@@ -36,11 +47,18 @@ export function MatchDetailPage() {
             .then(setPlayers)
             .catch(() => {});
         loadAppearances(Number(id));
+        loadEvents(Number(id));
     }, [id]);
 
     function loadAppearances(matchId: number) {
         getMatchAppearances(matchId)
             .then(setAppearances)
+            .catch(() => {});
+    }
+
+    function loadEvents(matchId: number) {
+        getMatchEvents(matchId)
+            .then(setEvents)
             .catch(() => {});
     }
 
@@ -82,11 +100,56 @@ export function MatchDetailPage() {
         }
     }
 
+    function openEventDialog() {
+        setEventOpen(true);
+        setNewEventTeam("Us");
+        setNewEventType("");
+        setNewEventMinute("");
+        setNewEventPlayerId("");
+        setNewEventOpponentName("");
+        setEventError(null);
+    }
+
+    function closeEventDialog() {
+        setEventOpen(false);
+    }
+
+    async function handleAddEvent(e: React.SyntheticEvent) {
+        e.preventDefault();
+        if (!id) return;
+        setEventError(null);
+        try {
+            await createMatchEvent({
+                matchId: Number(id),
+                eventType: newEventType,
+                team: newEventTeam,
+                minute: newEventMinute === "" ? null : Number(newEventMinute),
+                playerId: newEventTeam === "Us" ? (newEventPlayerId as number) : null,
+                opponentPlayerName: newEventTeam === "Opponent" ? (newEventOpponentName || null) : null,
+            });
+            closeEventDialog();
+            loadEvents(Number(id));
+        } catch {
+            setEventError("Nie udało się dodać zdarzenia.");
+        }
+    }
+
+    async function handleRemoveEvent(eventId: number) {
+        if (!id) return;
+        try {
+            await deleteMatchEvent(eventId);
+            loadEvents(Number(id));
+        } catch {
+            setEventError("Nie udało się usunąć zdarzenia.");
+        }
+    }
+
     if (loading) return <CircularProgress />;
     if (error || !match) return <Alert severity="error">{error ?? "Nie znaleziono meczu."}</Alert>;
 
     const rosterPlayerIds = new Set(appearances.map((a) => a.playerId));
     const availablePlayers = players.filter((p) => !rosterPlayerIds.has(p.id));
+    const rosterPlayers = players.filter((p) => rosterPlayerIds.has(p.id));
 
     return (
         <MatchDetailPageView
@@ -94,6 +157,7 @@ export function MatchDetailPage() {
             players={players}
             appearances={appearances}
             availablePlayers={availablePlayers}
+            rosterPlayers={rosterPlayers}
             rosterOpen={rosterOpen}
             newPlayerId={newPlayerId}
             newIsStarting={newIsStarting}
@@ -104,6 +168,23 @@ export function MatchDetailPage() {
             onNewIsStartingChange={setNewIsStarting}
             onAddAppearance={handleAddAppearance}
             onRemoveAppearance={handleRemoveAppearance}
+            events={events}
+            eventOpen={eventOpen}
+            newEventTeam={newEventTeam}
+            newEventType={newEventType}
+            newEventMinute={newEventMinute}
+            newEventPlayerId={newEventPlayerId}
+            newEventOpponentName={newEventOpponentName}
+            eventError={eventError}
+            onOpenEvent={openEventDialog}
+            onCloseEvent={closeEventDialog}
+            onNewEventTeamChange={setNewEventTeam}
+            onNewEventTypeChange={setNewEventType}
+            onNewEventMinuteChange={setNewEventMinute}
+            onNewEventPlayerIdChange={setNewEventPlayerId}
+            onNewEventOpponentNameChange={setNewEventOpponentName}
+            onAddEvent={handleAddEvent}
+            onRemoveEvent={handleRemoveEvent}
         />
     );
 }

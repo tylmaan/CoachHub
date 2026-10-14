@@ -36,3 +36,14 @@ export const POSITION_LABELS: Record<string, string> = {
 };
 
 export const POSITIONS = ["GK", "CB", "LB", "RB", "LWB", "RWB", "CDM", "CM", "CAM", "LM", "RM", "LW", "RW", "CF", "ST"];
+
+export const EVENT_TYPE_LABELS: Record<string, string> = {
+    Goal: "Gol",
+    OwnGoal: "Samobój",
+    Assist: "Asysta",
+    YellowCard: "Żółta kartka",
+    RedCard: "Czerwona kartka",
+    SubstitutionIn: "Zmiana - wchodzi",
+    SubstitutionOff: "Zmiana - schodzi",
+    PenaltyMissed: "Niewykorzystany rzut karny",
+};
