@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { Alert, CircularProgress } from "@mui/material";
-import { getMatch } from "../api/matchesApi";
+import { getMatch, updateMatch } from "../api/matchesApi";
 import { getPlayers } from "../api/playersApi";
 import { getMatchAppearances, createMatchAppearance, deleteMatchAppearance } from "../api/matchAppearancesApi";
 import { getMatchEvents, createMatchEvent, deleteMatchEvent } from "../api/matchEventsApi";
@@ -10,6 +10,7 @@ import type { Player } from "../types/player";
 import type { MatchAppearance } from "../types/matchAppearance";
 import type { MatchEvent } from "../types/matchEvent";
 import { MatchDetailPageView } from "./MatchDetailPageView";
+import { POSITION_GROUPS } from "../constants/labels";
 
 export function MatchDetailPage() {
     const { id } = useParams<{ id: string }>();
@@ -19,10 +20,15 @@ export function MatchDetailPage() {
 
     const [players, setPlayers] = useState<Player[]>([]);
     const [appearances, setAppearances] = useState<MatchAppearance[]>([]);
-    const [rosterOpen, setRosterOpen] = useState(false);
-    const [newPlayerId, setNewPlayerId] = useState<number | "">("");
-    const [newIsStarting, setNewIsStarting] = useState(true);
+    const [formation, setFormation] = useState("433");
     const [rosterError, setRosterError] = useState<string | null>(null);
+
+    const [pickerOpen, setPickerOpen] = useState(false);
+    const [pickerIsStarting, setPickerIsStarting] = useState(true);
+    const [pickerPosition, setPickerPosition] = useState<string | null>(null);
+    const [pickerAppearanceId, setPickerAppearanceId] = useState<number | null>(null);
+    const [pickerSlotKey, setPickerSlotKey] = useState<string | null>(null);
+    const [pickerTab, setPickerTab] = useState(0);
 
     const [events, setEvents] = useState<MatchEvent[]>([]);
     const [eventOpen, setEventOpen] = useState(false);
@@ -36,7 +42,10 @@ export function MatchDetailPage() {
     useEffect(() => {
         if (!id) return;
         getMatch(Number(id))
-            .then(setMatch)
+            .then((data) => {
+                setMatch(data);
+                setFormation(data.formation ?? "433");
+            })
             .catch(() => setError("Nie udało się pobrać meczu."))
             .finally(() => setLoading(false));
     }, [id]);
@@ -62,38 +71,70 @@ export function MatchDetailPage() {
             .catch(() => {});
     }
 
-    function openRosterDialog() {
-        setRosterOpen(true);
-        setNewPlayerId("");
-        setNewIsStarting(true);
+    async function handleFormationChange(value: string) {
+        if (!match || !id) return;
+        setFormation(value);
+        const { id: matchId, ...rest } = match;
+        try {
+            await updateMatch(matchId, { ...rest, formation: value });
+            setMatch({ ...match, formation: value });
+            const startingIds = appearances.filter((a) => a.isStarting).map((a) => a.id);
+            await Promise.all(startingIds.map((appearanceId) => deleteMatchAppearance(appearanceId)));
+            loadAppearances(Number(id));
+        } catch {
+            setRosterError("Nie udało się zapisać formacji.");
+        }
+    }
+
+    function openPitchPicker(pos: string, slotKey: string, appearance: MatchAppearance | null) {
+        setPickerIsStarting(true);
+        setPickerPosition(pos);
+        setPickerSlotKey(slotKey);
+        setPickerAppearanceId(appearance?.id ?? null);
+        const idx = POSITION_GROUPS.findIndex((g) => g.codes.includes(pos));
+        setPickerTab(idx >= 0 ? idx : 0);
         setRosterError(null);
+        setPickerOpen(true);
     }
 
-    function closeRosterDialog() {
-        setRosterOpen(false);
+    function openBenchPicker(appearance: MatchAppearance | null) {
+        setPickerIsStarting(false);
+        setPickerPosition(null);
+        setPickerAppearanceId(appearance?.id ?? null);
+        setPickerTab(0);
+        setRosterError(null);
+        setPickerOpen(true);
     }
 
-    async function handleAddAppearance(e: React.SyntheticEvent) {
-        e.preventDefault();
-        if (!id || newPlayerId === "") return;
+    function closePicker() {
+        setPickerOpen(false);
+    }
+
+    async function handlePickPlayer(playerId: number) {
+        if (!id) return;
         setRosterError(null);
         try {
+            if (pickerAppearanceId) {
+                await deleteMatchAppearance(pickerAppearanceId);
+            }
             await createMatchAppearance({
                 matchId: Number(id),
-                playerId: newPlayerId as number,
-                isStarting: newIsStarting
+                playerId,
+                isStarting: pickerIsStarting,
+                position: pickerIsStarting ? pickerSlotKey : null,
             });
-            closeRosterDialog();
+            closePicker();
             loadAppearances(Number(id));
         } catch {
             setRosterError("Nie udało się dodać zawodnika do składu.");
         }
     }
 
-    async function handleRemoveAppearance(appearanceId: number) {
-        if (!id) return;
+    async function handleRemoveFromPicker() {
+        if (!id || !pickerAppearanceId) return;
         try {
-            await deleteMatchAppearance(appearanceId);
+            await deleteMatchAppearance(pickerAppearanceId);
+            closePicker();
             loadAppearances(Number(id));
         } catch {
             setRosterError("Nie udało się usunąć zawodnika ze składu.");
@@ -158,16 +199,20 @@ export function MatchDetailPage() {
             appearances={appearances}
             availablePlayers={availablePlayers}
             rosterPlayers={rosterPlayers}
-            rosterOpen={rosterOpen}
-            newPlayerId={newPlayerId}
-            newIsStarting={newIsStarting}
             rosterError={rosterError}
-            onOpenRoster={openRosterDialog}
-            onCloseRoster={closeRosterDialog}
-            onNewPlayerIdChange={setNewPlayerId}
-            onNewIsStartingChange={setNewIsStarting}
-            onAddAppearance={handleAddAppearance}
-            onRemoveAppearance={handleRemoveAppearance}
+            formation={formation}
+            onFormationChange={handleFormationChange}
+            pickerOpen={pickerOpen}
+            pickerIsStarting={pickerIsStarting}
+            pickerPosition={pickerPosition}
+            pickerTab={pickerTab}
+            onPickerTabChange={setPickerTab}
+            pickerHasAppearance={pickerAppearanceId !== null}
+            onOpenPitchPicker={openPitchPicker}
+            onOpenBenchPicker={openBenchPicker}
+            onClosePicker={closePicker}
+            onPickPlayer={handlePickPlayer}
+            onRemoveFromPicker={handleRemoveFromPicker}
             events={events}
             eventOpen={eventOpen}
             newEventTeam={newEventTeam}

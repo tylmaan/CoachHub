@@ -9,5 +9,6 @@ export interface Match {
     isHome: boolean | null;
     matchType: string | null;
     round: string | null;
+    formation: string | null;
     opponentLogoUrl: string | null;
 }
