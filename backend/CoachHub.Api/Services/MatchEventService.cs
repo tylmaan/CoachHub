@@ -37,6 +37,7 @@ public class MatchEventService : IMatchEventService
         existing.EventType = matchEvent.EventType;
         existing.Team = matchEvent.Team;
         existing.Minute = matchEvent.Minute;
+        existing.AddedTime = matchEvent.AddedTime;
         existing.PlayerId = matchEvent.PlayerId;
         existing.OpponentPlayerName = matchEvent.OpponentPlayerName;
         await _context.SaveChangesAsync();

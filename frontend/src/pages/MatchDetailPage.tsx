@@ -35,8 +35,14 @@ export function MatchDetailPage() {
     const [newEventTeam, setNewEventTeam] = useState("Us");
     const [newEventType, setNewEventType] = useState("");
     const [newEventMinute, setNewEventMinute] = useState("");
+    const [newEventAddedTime, setNewEventAddedTime] = useState("");
     const [newEventPlayerId, setNewEventPlayerId] = useState<number | "">("");
     const [newEventOpponentName, setNewEventOpponentName] = useState("");
+    const [newEventIsPenalty, setNewEventIsPenalty] = useState(false);
+    const [newEventAssistPlayerId, setNewEventAssistPlayerId] = useState<number | "">("");
+    const [newEventAssistOpponentName, setNewEventAssistOpponentName] = useState("");
+    const [newEventSecondPlayerId, setNewEventSecondPlayerId] = useState<number | "">("");
+    const [newEventSecondOpponentName, setNewEventSecondOpponentName] = useState("");
     const [eventError, setEventError] = useState<string | null>(null);
 
     useEffect(() => {
@@ -146,8 +152,14 @@ export function MatchDetailPage() {
         setNewEventTeam("Us");
         setNewEventType("");
         setNewEventMinute("");
+        setNewEventAddedTime("");
         setNewEventPlayerId("");
         setNewEventOpponentName("");
+        setNewEventIsPenalty(false);
+        setNewEventAssistPlayerId("");
+        setNewEventAssistOpponentName("");
+        setNewEventSecondPlayerId("");
+        setNewEventSecondOpponentName("");
         setEventError(null);
     }
 
@@ -159,17 +171,55 @@ export function MatchDetailPage() {
         e.preventDefault();
         if (!id) return;
         setEventError(null);
+        const matchId = Number(id);
+        const minute = newEventMinute === "" ? null : Number(newEventMinute);
+        const addedTime = newEventAddedTime === "" ? null : Number(newEventAddedTime);
         try {
-            await createMatchEvent({
-                matchId: Number(id),
-                eventType: newEventType,
-                team: newEventTeam,
-                minute: newEventMinute === "" ? null : Number(newEventMinute),
-                playerId: newEventTeam === "Us" ? (newEventPlayerId as number) : null,
-                opponentPlayerName: newEventTeam === "Opponent" ? (newEventOpponentName || null) : null,
-            });
+            if (newEventType === "Substitution") {
+                await createMatchEvent({
+                    matchId,
+                    eventType: "SubstitutionOff",
+                    team: newEventTeam,
+                    minute,
+                    addedTime,
+                    playerId: newEventTeam === "Us" ? (newEventPlayerId as number) : null,
+                    opponentPlayerName: newEventTeam === "Opponent" ? (newEventOpponentName || null) : null,
+                });
+                await createMatchEvent({
+                    matchId,
+                    eventType: "SubstitutionIn",
+                    team: newEventTeam,
+                    minute,
+                    addedTime,
+                    playerId: newEventTeam === "Us" ? (newEventSecondPlayerId as number) : null,
+                    opponentPlayerName: newEventTeam === "Opponent" ? (newEventSecondOpponentName || null) : null,
+                });
+            } else {
+                const actualType = newEventType === "Goal" && newEventIsPenalty ? "PenaltyGoal" : newEventType;
+                await createMatchEvent({
+                    matchId,
+                    eventType: actualType,
+                    team: newEventTeam,
+                    minute,
+                    addedTime,
+                    playerId: newEventTeam === "Us" ? (newEventPlayerId as number) : null,
+                    opponentPlayerName: newEventTeam === "Opponent" ? (newEventOpponentName || null) : null
+                });
+                const hasAssist = newEventTeam === "Us" ? newEventAssistPlayerId !== "" : newEventAssistOpponentName.trim() !== "";
+                if (newEventType === "Goal" && hasAssist) {
+                    await createMatchEvent({
+                        matchId,
+                        eventType: "Assist",
+                        team: newEventTeam,
+                        minute,
+                        addedTime,
+                        playerId: newEventTeam === "Us" ? (newEventAssistPlayerId as number) : null,
+                        opponentPlayerName: newEventTeam === "Opponent" ? (newEventAssistOpponentName || null) : null
+                    });
+                }
+            }
             closeEventDialog();
-            loadEvents(Number(id));
+            loadEvents(matchId);
         } catch {
             setEventError("Nie udało się dodać zdarzenia.");
         }
@@ -218,14 +268,26 @@ export function MatchDetailPage() {
             newEventTeam={newEventTeam}
             newEventType={newEventType}
             newEventMinute={newEventMinute}
+            newEventAddedTime={newEventAddedTime}
             newEventPlayerId={newEventPlayerId}
             newEventOpponentName={newEventOpponentName}
+            newEventIsPenalty={newEventIsPenalty}
+            newEventAssistPlayerId={newEventAssistPlayerId}
+            newEventAssistOpponentName={newEventAssistOpponentName}
+            newEventSecondPlayerId={newEventSecondPlayerId}
+            newEventSecondOpponentName={newEventSecondOpponentName}
+            onNewEventSecondPlayerIdChange={setNewEventSecondPlayerId}
+            onNewEventSecondOpponentNameChange={setNewEventSecondOpponentName}
+            onNewEventIsPenaltyChange={setNewEventIsPenalty}
+            onNewEventAssistPlayerIdChange={setNewEventAssistPlayerId}
+            onNewEventAssistOpponentNameChange={setNewEventAssistOpponentName}
             eventError={eventError}
             onOpenEvent={openEventDialog}
             onCloseEvent={closeEventDialog}
             onNewEventTeamChange={setNewEventTeam}
             onNewEventTypeChange={setNewEventType}
             onNewEventMinuteChange={setNewEventMinute}
+            onNewEventAddedTimeChange={setNewEventAddedTime}
             onNewEventPlayerIdChange={setNewEventPlayerId}
             onNewEventOpponentNameChange={setNewEventOpponentName}
             onAddEvent={handleAddEvent}

@@ -12,8 +12,6 @@ import {
     MenuItem,
     List,
     ListItem,
-    ListItemText,
-    ListItemIcon,
     IconButton,
     Alert,
     Divider,
@@ -21,6 +19,8 @@ import {
     ToggleButton,
     Tabs,
     Tab,
+    Checkbox,
+    FormControlLabel,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import SportsSoccerIcon from "@mui/icons-material/SportsSoccer";
@@ -28,6 +28,8 @@ import StarIcon from "@mui/icons-material/Star";
 import ArrowCircleUpIcon from "@mui/icons-material/ArrowCircleUp";
 import ArrowCircleDownIcon from "@mui/icons-material/ArrowCircleDown";
 import BlockIcon from "@mui/icons-material/Block";
+import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
+import AdjustIcon from "@mui/icons-material/Adjust";
 import type { Match } from "../types/match";
 import type { Player } from "../types/player";
 import type { MatchAppearance } from "../types/matchAppearance";
@@ -36,7 +38,7 @@ import { MATCH_TYPE_LABELS, POSITION_LABELS, EVENT_TYPE_LABELS, POSITIONS, POSIT
 import { FORMATIONS, FORMATION_LABELS, type FormationSlot } from "../constants/formations";
 import { BACKEND_ORIGIN } from "../api/axiosInstance";
 
-const EVENT_TYPES = ["Goal", "OwnGoal", "Assist", "YellowCard", "RedCard", "SubstitutionIn", "SubstitutionOff", "PenaltyMissed"];
+const EVENT_TYPES = ["Goal", "OwnGoal", "YellowCard", "RedCard", "Substitution", "PenaltyMissed"];
 const BENCH_SIZE = 12;
 
 interface MatchDetailPageViewProps {
@@ -64,14 +66,26 @@ interface MatchDetailPageViewProps {
     newEventTeam: string;
     newEventType: string;
     newEventMinute: string;
+    newEventAddedTime: string;
     newEventPlayerId: number | "";
     newEventOpponentName: string;
+    newEventIsPenalty: boolean;
+    onNewEventIsPenaltyChange: (value: boolean) => void;
+    newEventAssistPlayerId: number | "";
+    onNewEventAssistPlayerIdChange: (value: number | "") => void;
+    newEventAssistOpponentName: string;
+    onNewEventAssistOpponentNameChange: (value: string) => void;
+    newEventSecondPlayerId: number | "";
+    onNewEventSecondPlayerIdChange: (value: number | "") => void;
+    newEventSecondOpponentName: string;
+    onNewEventSecondOpponentNameChange: (value: string) => void;
     eventError: string | null;
     onOpenEvent: () => void;
     onCloseEvent: () => void;
     onNewEventTeamChange: (value: string) => void;
     onNewEventTypeChange: (value: string) => void;
     onNewEventMinuteChange: (value: string) => void;
+    onNewEventAddedTimeChange: (value: string) => void;
     onNewEventPlayerIdChange: (value: number | "") => void;
     onNewEventOpponentNameChange: (value: string) => void;
     onAddEvent: (e: React.SyntheticEvent) => void;
@@ -94,6 +108,22 @@ function Jersey({ number, muted }: { number: number | null; muted?: boolean }) {
                 </text>
             )}
         </svg>
+    );
+}
+
+function renderPlayerOption(p: Player) {
+    return (
+        <MenuItem key={p.id} value={p.id}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Avatar
+                    src={p.photoUrl ? `${BACKEND_ORIGIN}${p.photoUrl}` : undefined}
+                    sx={{ width: 24, height: 24, fontSize: 12 }}
+                >
+                    {p.firstName[0]}
+                </Avatar>
+                <span>{p.firstName} {p.lastName}</span>
+            </Box>
+        </MenuItem>
     );
 }
 
@@ -122,14 +152,26 @@ export function MatchDetailPageView({
     newEventTeam,
     newEventType,
     newEventMinute,
+    newEventAddedTime,
     newEventPlayerId,
     newEventOpponentName,
+    newEventIsPenalty,
+    onNewEventIsPenaltyChange,
+    newEventAssistPlayerId,
+    onNewEventAssistPlayerIdChange,
+    newEventAssistOpponentName,
+    onNewEventAssistOpponentNameChange,
+    newEventSecondPlayerId,
+    onNewEventSecondPlayerIdChange,
+    newEventSecondOpponentName,
+    onNewEventSecondOpponentNameChange,
     eventError,
     onOpenEvent,
     onCloseEvent,
     onNewEventTeamChange,
     onNewEventTypeChange,
     onNewEventMinuteChange,
+    onNewEventAddedTimeChange,
     onNewEventPlayerIdChange,
     onNewEventOpponentNameChange,
     onAddEvent,
@@ -152,16 +194,25 @@ export function MatchDetailPageView({
     const benchTiles = Array.from({ length: BENCH_SIZE }, (_, i) => benchAppearances[i] ?? null);
     const sortedAvailable = [...availablePlayers].sort((a, b) => POSITIONS.indexOf(a.position) - POSITIONS.indexOf(b.position)); 
 
-    function eventTypeIcon(eventType: string) {
+        function eventTypeIcon(eventType: string, isSecondYellow?: boolean) {
         if (eventType === "Goal") return <SportsSoccerIcon sx={{ color: "success.main" }} fontSize="small" />;
+        if (eventType === "PenaltyGoal") return <AdjustIcon sx={{ color: "success.main" }} fontSize="small" />;
         if (eventType === "OwnGoal") return <SportsSoccerIcon sx={{ color: "error.main" }} fontSize="small" />;
         if (eventType === "Assist") return <StarIcon sx={{ color: "info.main" }} />;
+        if (eventType === "YellowCard" && isSecondYellow) {
+            return (
+                <Box sx={{ display: "flex", gap: 0.3 }}>
+                    <Box sx={{ width: 10, height: 14, bgcolor: "#fdd835", borderRadius: 0.5 }} />
+                    <Box sx={{ width: 10, height: 14, bgcolor: "#d32f2f", borderRadius: 0.5 }} />
+                </Box>
+            );
+        }
         if (eventType === "YellowCard") return <Box sx={{ width: 12, height: 16, bgcolor: "#fdd835", borderRadius: 0.5 }} />;
         if (eventType === "RedCard") return <Box sx={{ width: 12, height: 16, bgcolor: "#d32f2f", borderRadius: 0.5 }} />;
         if (eventType === "SubstitutionIn") return <ArrowCircleUpIcon sx={{ color: "success.main" }} fontSize="small" />;
         if (eventType === "SubstitutionOff") return <ArrowCircleDownIcon sx={{ color: "error.main" }} fontSize="small" />;
         if (eventType === "PenaltyMissed") return <BlockIcon sx={{ color: "error.main" }} fontSize="small" />;
-        return null;
+        return <SwapHorizIcon sx={{ color: "text.secondary" }} fontSize="small" />;
     }
 
     function eventPlayerName(event: MatchEvent): string {
@@ -172,30 +223,120 @@ export function MatchDetailPageView({
         return player ? `${player.firstName} ${player.lastName}` : "Nieznany zawodnik";
     }
 
-    function renderEventRow(event: MatchEvent) {
+    function isSecondYellowCard(event: MatchEvent, allSorted: MatchEvent[]): boolean {
+        if (event.eventType !== "YellowCard") return false;
+        const sameCard = allSorted.filter((e) =>
+            e.eventType === "YellowCard" &&
+            e.team === event.team &&
+            (event.team === "Us" ? e.playerId === event.playerId : e.opponentPlayerName === event.opponentPlayerName)
+        );
+        return sameCard.findIndex((e) => e.id === event.id) >= 1;
+    }
+
+    interface DisplayEvent {
+        primary: MatchEvent;
+        secondary?: MatchEvent;
+    }
+
+    function buildDisplayEvents(sorted: MatchEvent[]): DisplayEvent[] {
+        const used = new Set<number>();
+        const result: DisplayEvent[] = [];
+        for (const event of sorted) {
+            if (used.has(event.id)) continue;
+            if (event.eventType === "Goal" || event.eventType === "PenaltyGoal") {
+                const assist = sorted.find((e) =>
+                    !used.has(e.id) && e.id !== event.id && e.eventType === "Assist" &&
+                    e.team === event.team && e.minute === event.minute
+                );
+                if (assist) used.add(assist.id);
+                used.add(event.id);
+                result.push({ primary: event, secondary: assist });
+            } else if (event.eventType === "SubstitutionOff") {
+                const subIn = sorted.find((e) =>
+                    !used.has(e.id) && e.id !== event.id && e.eventType === "SubstitutionIn" &&
+                    e.team === event.team && e.minute === event.minute
+                );
+                if (subIn) used.add(subIn.id);
+                used.add(event.id);
+                result.push({ primary: event, secondary: subIn });
+            } else if (event.eventType === "Assist" || event.eventType === "SubstitutionIn") {
+                continue;
+            } else {
+                used.add(event.id);
+                result.push({ primary: event });
+            }
+        }
+        for (const event of sorted) {
+            if (used.has(event.id)) continue;
+            used.add(event.id);
+            result.push({ primary: event });
+        }
+        return result;
+    }
+
+    function displayLabel(de: DisplayEvent): string {
+        const primaryName = eventPlayerName(de.primary);
+        if ((de.primary.eventType === "Goal" || de.primary.eventType === "PenaltyGoal") && de.secondary) {
+            return `${primaryName} (asysta: ${eventPlayerName(de.secondary)})`;
+        }
+        if (de.primary.eventType === "SubstitutionOff" && de.secondary) {
+            return `${primaryName} ↓ / ${eventPlayerName(de.secondary)} ↑`;
+        }
+        return primaryName;
+    }
+
+    function displayTypeLabel(de: DisplayEvent, sorted: MatchEvent[]): string {
+        if (de.primary.eventType === "SubstitutionOff" && de.secondary) return "Zmiana";
+        if (de.primary.eventType === "YellowCard" && isSecondYellowCard(de.primary, sorted)) return "Druga żółta (czerwona)";
+        return EVENT_TYPE_LABELS[de.primary.eventType] ?? de.primary.eventType;
+    }
+
+    function renderDisplayEvent(de: DisplayEvent, sorted: MatchEvent[]) {
+        const isOpponent = de.primary.team === "Opponent";
+        const second = de.primary.eventType === "YellowCard" && isSecondYellowCard(de.primary, sorted);
         return (
-            <ListItem
-                key={event.id}
-                secondaryAction={
-                    <IconButton edge="end" onClick={() => onRemoveEvent(event.id)}>
+            <Box
+                key={de.primary.id}
+                sx={{ display: "flex", justifyContent: isOpponent ? "flex-end" : "flex-start", mb: 0.5 }}
+            >
+                <Box
+                    sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 1,
+                        flexDirection: isOpponent ? "row-reverse" : "row",
+                        maxWidth: "80%",
+                    }}
+                >
+                    <IconButton
+                        size="small"
+                        onClick={() => {
+                            onRemoveEvent(de.primary.id);
+                            if (de.secondary) onRemoveEvent(de.secondary.id);
+                        }}
+                    >
                         <DeleteIcon fontSize="small" />
                     </IconButton>
-                }
-            >
-                <ListItemIcon>{eventTypeIcon(event.eventType)}</ListItemIcon>
-                <ListItemText
-                    primary={`${event.minute ?? "-"}' ${eventPlayerName(event)}`}
-                    secondary={`${EVENT_TYPE_LABELS[event.eventType] ?? event.eventType}${event.team === "Opponent" ? " (Rywal)" : ""}`}
-                />
-            </ListItem>
+                    {eventTypeIcon(de.primary.eventType, second)}
+                    <Box sx={{ textAlign: isOpponent ? "right" : "left" }}>
+                        <Typography variant="body2">
+                            {de.primary.minute ?? "-"}{de.primary.addedTime ? `+${de.primary.addedTime}` : ""}&apos; {displayLabel(de)}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                            {displayTypeLabel(de, sorted)}{isOpponent ? " (Rywal)" : ""}
+                        </Typography>
+                    </Box>
+                </Box>
+            </Box>
         );
     }
 
-    const sortedEvents = [...events].sort((a, b) => (a.minute ?? 999) - (b.minute ?? 999));
-    const firstHalf = sortedEvents.filter((e) => e.minute !== null && e.minute <= 45);
-    const secondHalf = sortedEvents.filter((e) => e.minute !== null && e.minute > 45 && e.minute <= 90);
-    const extraTime = sortedEvents.filter((e) => e.minute !== null && e.minute > 90);
-    const noMinute = sortedEvents.filter((e) => e.minute === null);
+    const sortedEvents = [...events].sort((a, b) => (a.minute ?? 999) - (b.minute ?? 999) || (a.addedTime ?? 0) - (b.addedTime ?? 0));
+    const displayEvents = buildDisplayEvents(sortedEvents);
+    const firstHalf = displayEvents.filter((de) => de.primary.minute !== null && de.primary.minute <= 45);
+    const secondHalf = displayEvents.filter((de) => de.primary.minute !== null && de.primary.minute > 45 && de.primary.minute <= 90);
+    const extraTime = displayEvents.filter((de) => de.primary.minute !== null && de.primary.minute > 90);
+    const noMinute = displayEvents.filter((de) => de.primary.minute === null);
 
     return (
         <Box>
@@ -268,13 +409,13 @@ export function MatchDetailPageView({
                                 display: "flex",
                                 flexDirection: "column",
                                 alignItems: "center",
-                                width: 76,
+                                width: 92,
                             }}
                         >
                             <Jersey number={player?.jerseyNumber ?? null} muted={!player} />
                             <Typography
                                 variant="caption"
-                                sx={{ color: "#fff", mt: 0.5, textAlign: "center", lineHeight: 1.1, maxWidth: 76, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                                sx={{ color: "#fff", mt: 0.5, textAlign: "center", maxWidth: 92, fontSize: 14, lineHeight: 1.15,  }}
                             >
                                 {player ? player.lastName : slot.pos}
                             </Typography>
@@ -291,12 +432,12 @@ export function MatchDetailPageView({
                         <Box
                             key={i}
                             onClick={() => onOpenBenchPicker(appearance)}
-                            sx={{ cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", width: 76 }}
+                            sx={{ cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", width: 92 }}
                         >
                             <Jersey number={player?.jerseyNumber ?? null} muted={!player} />
                             <Typography
                                 variant="caption"
-                                sx={{ mt: 0.5, textAlign: "center", lineHeight: 1.1, maxWidth: 76, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                                sx={{ mt: 0.5, textAlign: "center", maxWidth: 92, fontSize: 14, lineHeight: 1.15 }}
                             >
                                 {player ? player.lastName : ""}
                             </Typography>
@@ -363,33 +504,31 @@ export function MatchDetailPageView({
 
             {eventError && <Alert severity="error" sx={{ mb: 2 }}>{eventError}</Alert>}
 
-            <Paper sx={{ p: 2 }}>
-                <List dense>
-                    {firstHalf.length > 0 && (
-                        <>
-                            <Typography variant="overline" color="text.secondary">1. połowa</Typography>
-                            {firstHalf.map(renderEventRow)}
-                        </>
-                    )}
-                    {secondHalf.length > 0 && (
-                        <>
-                            <Divider sx={{ my: 1 }} />
-                            <Typography variant="overline" color="text.secondary">2. połowa</Typography>
-                            {secondHalf.map(renderEventRow)}
-                        </>
-                    )}
-                    {extraTime.length > 0 && (
-                        <>
-                            <Divider sx={{ my: 1 }} />
-                            <Typography variant="overline" color="text.secondary">Dogrywka</Typography>
-                            {extraTime.map(renderEventRow)}
-                        </>
-                    )}
-                    {noMinute.map(renderEventRow)}
-                    {sortedEvents.length === 0 && (
-                        <Typography variant="body2" color="text.secondary">Brak zdarzeń.</Typography>
-                    )}
-                </List>
+                        <Paper sx={{ p: 2 }}>
+                {firstHalf.length > 0 && (
+                    <>
+                        <Typography variant="overline" color="text.secondary">1. połowa</Typography>
+                        {firstHalf.map((de) => renderDisplayEvent(de, sortedEvents))}
+                    </>
+                )}
+                {secondHalf.length > 0 && (
+                    <>
+                        <Divider sx={{ my: 1 }} />
+                        <Typography variant="overline" color="text.secondary">2. połowa</Typography>
+                        {secondHalf.map((de) => renderDisplayEvent(de, sortedEvents))}
+                    </>
+                )}
+                {extraTime.length > 0 && (
+                    <>
+                        <Divider sx={{ my: 1 }} />
+                        <Typography variant="overline" color="text.secondary">Dogrywka</Typography>
+                        {extraTime.map((de) => renderDisplayEvent(de, sortedEvents))}
+                    </>
+                )}
+                {noMinute.map((de) => renderDisplayEvent(de, sortedEvents))}
+                {displayEvents.length === 0 && (
+                    <Typography variant="body2" color="text.secondary">Brak zdarzeń.</Typography>
+                )}
             </Paper>
 
             <Dialog open={eventOpen} onClose={onCloseEvent} fullWidth maxWidth="xs">
@@ -406,26 +545,6 @@ export function MatchDetailPageView({
                             <ToggleButton value="Opponent">Rywal</ToggleButton>
                         </ToggleButtonGroup>
 
-                        {newEventTeam === "Us" ? (
-                            <TextField
-                                select
-                                label="Zawodnik"
-                                value={newEventPlayerId}
-                                onChange={(e) => onNewEventPlayerIdChange(Number(e.target.value))}
-                                required
-                            >
-                                {rosterPlayers.map((p) => (
-                                    <MenuItem key={p.id} value={p.id}>{p.firstName} {p.lastName}</MenuItem>
-                                ))}
-                            </TextField>
-                        ) : (
-                            <TextField
-                                label="Nazwisko zawodnika rywala (opcjonalnie)"
-                                value={newEventOpponentName}
-                                onChange={(e) => onNewEventOpponentNameChange(e.target.value)}
-                            />
-                        )}
-
                         <TextField
                             select
                             label="Typ zdarzenia"
@@ -434,15 +553,97 @@ export function MatchDetailPageView({
                             required
                         >
                             {EVENT_TYPES.map((t) => (
-                                <MenuItem key={t} value={t}>{EVENT_TYPE_LABELS[t]}</MenuItem>
+                                <MenuItem key={t} value={t}>
+                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                                        {eventTypeIcon(t)}
+                                        <span>{EVENT_TYPE_LABELS[t]}</span>
+                                    </Box>
+                                </MenuItem>
                             ))}
                         </TextField>
+
+                        {newEventType === "Goal" && (
+                            <FormControlLabel
+                                control={
+                                    <Checkbox
+                                        checked={newEventIsPenalty}
+                                        onChange={(e) => onNewEventIsPenaltyChange(e.target.checked)}
+                                    />
+                                }
+                                label="Rzut karny"
+                            />
+                        )}
+
+                        {newEventTeam === "Us" ? (
+                            <TextField
+                                select
+                                label={newEventType === "Substitution" ? "Schodzi" : "Zawodnik"}
+                                value={newEventPlayerId}
+                                onChange={(e) => onNewEventPlayerIdChange(Number(e.target.value))}
+                                required
+                            >
+                                {rosterPlayers.map(renderPlayerOption)}
+                            </TextField>
+                        ) : (
+                            <TextField
+                                label={newEventType === "Substitution" ? "Schodzi (rywal, opcjonalnie)" : "Nazwisko zawodnika rywala (opcjonalnie)"}
+                                value={newEventOpponentName}
+                                onChange={(e) => onNewEventOpponentNameChange(e.target.value)}
+                            />
+                        )}
+
+                        {newEventType === "Substitution" && (
+                            newEventTeam === "Us" ? (
+                                <TextField
+                                    select
+                                    label="Wchodzi"
+                                    value={newEventSecondPlayerId}
+                                    onChange={(e) => onNewEventSecondPlayerIdChange(Number(e.target.value))}
+                                    required
+                                >
+                                    {rosterPlayers.map(renderPlayerOption)}
+                                </TextField>
+                            ) : (
+                                <TextField
+                                    label="Wchodzi (rywal, opcjonalnie)"
+                                    value={newEventSecondOpponentName}
+                                    onChange={(e) => onNewEventSecondOpponentNameChange(e.target.value)}
+                                />
+                            )
+                        )}
+
+                        {newEventType === "Goal" && (
+                            newEventTeam === "Us" ? (
+                                <TextField
+                                    select
+                                    label="Asysta (opcjonalnie)"
+                                    value={newEventAssistPlayerId}
+                                    onChange={(e) => onNewEventAssistPlayerIdChange(e.target.value === "" ? "" : Number(e.target.value))}
+                                >
+                                    <MenuItem value="">--</MenuItem>
+                                    {rosterPlayers.map(renderPlayerOption)}
+                                </TextField>
+                            ) : (
+                                <TextField
+                                    label="Asysta (rywal, opcjonalnie)"
+                                    value={newEventAssistOpponentName}
+                                    onChange={(e) => onNewEventAssistOpponentNameChange(e.target.value)}
+                                />
+                            )
+                        )}
 
                         <TextField
                             label="Minuta"
                             type="number"
                             value={newEventMinute}
                             onChange={(e) => onNewEventMinuteChange(e.target.value)}
+                        />
+
+                        <TextField
+                            label="Doliczony czas (min)"
+                            type="number"
+                            value={newEventAddedTime}
+                            onChange={(e) => onNewEventAddedTimeChange(e.target.value)}
                         />
                     </DialogContent>
                     <DialogActions>

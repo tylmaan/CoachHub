@@ -3,6 +3,7 @@ export interface MatchEvent {
     eventType: string;
     team: string;
     minute: number | null;
+    addedTime: number | null;
     matchId: number;
     playerId: number | null;
     opponentPlayerName: string | null;

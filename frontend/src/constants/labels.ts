@@ -58,7 +58,9 @@ export const EVENT_TYPE_LABELS: Record<string, string> = {
     Assist: "Asysta",
     YellowCard: "Żółta kartka",
     RedCard: "Czerwona kartka",
+    Substitution: "Zmiana",
     SubstitutionIn: "Zmiana - wchodzi",
     SubstitutionOff: "Zmiana - schodzi",
+    PenaltyGoal: "Gol z rzutu karnego",
     PenaltyMissed: "Niewykorzystany rzut karny",
 };
