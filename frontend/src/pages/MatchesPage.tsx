@@ -96,6 +96,7 @@ export function MatchesPage() {
                 isHome: toNullableBool(isHome),
                 matchType: matchType || null,
                 round: round || null,
+                formation: null,
                 opponentLogoUrl: opponentLogoUrl || null,
             });
             setDate("");
@@ -134,6 +135,7 @@ export function MatchesPage() {
     async function saveEdit(id: number) {
         setActionError(null);
         try {
+            const editingMatch = matches.find((m) => m.id === id);
             await updateMatch(id, {
                 date: editDate,
                 opponent: editOpponent,
@@ -144,6 +146,7 @@ export function MatchesPage() {
                 isHome: toNullableBool(editIsHome),
                 matchType: editMatchType || null,
                 round: editRound || null,
+                formation: editingMatch?.formation ?? null,
                 opponentLogoUrl: editOpponentLogoUrl || null,
             });
             setEditingId(null);

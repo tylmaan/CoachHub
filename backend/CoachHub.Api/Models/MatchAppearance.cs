@@ -4,6 +4,7 @@ public class MatchAppearance
 {
     public int Id { get; set; }
     public bool IsStarting { get; set; }
+    public string? Position { get; set; }
 
     public int MatchId { get; set; }
     public Match? Match { get; set; }

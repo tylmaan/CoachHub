@@ -37,6 +37,13 @@ export const POSITION_LABELS: Record<string, string> = {
 
 export const POSITIONS = ["GK", "CB", "LB", "RB", "LWB", "RWB", "CDM", "CM", "CAM", "LM", "RM", "LW", "RW", "CF", "ST"];
 
+export const POSITION_GROUPS: { label: string; codes: string[] }[] = [
+    { label: "Bramkarze", codes: ["GK"] },
+    { label: "Obrońcy", codes: ["LB", "CB", "RB", "LWB", "RWB"] },
+    { label: "Pomocnicy", codes: ["CDM", "CM", "CAM", "LM", "RM"] },
+    { label: "Napastnicy", codes: ["LW", "RW", "CF", "ST"] },
+];
+
 export const EVENT_TYPE_LABELS: Record<string, string> = {
     Goal: "Gol",
     OwnGoal: "Samobój",

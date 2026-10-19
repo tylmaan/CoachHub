@@ -11,6 +11,7 @@ public class Match
     public bool? IsHome { get; set; }
     public string? MatchType { get; set; }
     public string? Round { get; set; }
+    public string? Formation { get; set; }
     public string? OpponentLogoUrl { get; set; }
 
     public int TeamId { get; set; }

@@ -43,6 +43,7 @@ public class MatchService : IMatchService
         existing.IsHome = match.IsHome;
         existing.MatchType = match.MatchType;
         existing.Round = match.Round;
+        existing.Formation = match.Formation;
         existing.OpponentLogoUrl = match.OpponentLogoUrl;
         await _context.SaveChangesAsync();
         return true;

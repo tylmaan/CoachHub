@@ -12,16 +12,15 @@ import {
     MenuItem,
     List,
     ListItem,
-    ListItemAvatar,
     ListItemText,
     ListItemIcon,
     IconButton,
     Alert,
-    FormControlLabel,
-    Switch, 
     Divider,
     ToggleButtonGroup,
     ToggleButton,
+    Tabs,
+    Tab,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import SportsSoccerIcon from "@mui/icons-material/SportsSoccer";
@@ -33,27 +32,33 @@ import type { Match } from "../types/match";
 import type { Player } from "../types/player";
 import type { MatchAppearance } from "../types/matchAppearance";
 import type { MatchEvent } from "../types/matchEvent";
-import { MATCH_TYPE_LABELS, POSITION_LABELS, EVENT_TYPE_LABELS } from "../constants/labels";
+import { MATCH_TYPE_LABELS, POSITION_LABELS, EVENT_TYPE_LABELS, POSITIONS, POSITION_GROUPS } from "../constants/labels";
+import { FORMATIONS, FORMATION_LABELS, type FormationSlot } from "../constants/formations";
 import { BACKEND_ORIGIN } from "../api/axiosInstance";
 
 const EVENT_TYPES = ["Goal", "OwnGoal", "Assist", "YellowCard", "RedCard", "SubstitutionIn", "SubstitutionOff", "PenaltyMissed"];
+const BENCH_SIZE = 12;
 
 interface MatchDetailPageViewProps {
     match: Match;
     players: Player[];
     appearances: MatchAppearance[];
     availablePlayers: Player[];
-    rosterOpen: boolean;
-    newPlayerId: number | "";
-    newIsStarting: boolean;
-    rosterError: string | null;
-    onOpenRoster: () => void;
-    onCloseRoster: () => void;
-    onNewPlayerIdChange: (value: number | "") => void;
-    onNewIsStartingChange: (value: boolean) => void;
-    onAddAppearance: (e: React.SyntheticEvent) => void;
-    onRemoveAppearance: (appearanceId: number) => void;
     rosterPlayers: Player[];
+    rosterError: string | null;
+    formation: string;
+    onFormationChange: (value: string) => void;
+    pickerOpen: boolean;
+    pickerIsStarting: boolean;
+    pickerPosition: string | null;
+    pickerTab: number;
+    onPickerTabChange: (value: number) => void;
+    pickerHasAppearance: boolean;
+    onOpenPitchPicker: (pos: string, slotKey: string, appearance: MatchAppearance | null) => void;
+    onOpenBenchPicker: (appearance: MatchAppearance | null) => void;
+    onClosePicker: () => void;
+    onPickPlayer: (playerId: number) => void;
+    onRemoveFromPicker: () => void;
     events: MatchEvent[];
     eventOpen: boolean;
     newEventTeam: string;
@@ -73,21 +78,44 @@ interface MatchDetailPageViewProps {
     onRemoveEvent: (eventId: number) => void;
 }
 
+function Jersey({ number, muted }: { number: number | null; muted?: boolean }) {
+    return (
+        <svg width="56" height="56" viewBox="0 0 40 40">
+            <path
+                d="M12 4 L4 10 L8 16 L10 14 L10 34 Q10 36 12 36 L28 36 Q30 36 30 34 L30 14 L32 16 L36 10 L28 4 Q24 8 20 8 Q16 8 12 4 Z"
+                fill={muted ? "none" : "#7c3aed"}
+                stroke={muted ? "rgba(255,255,255,0.6)" : "#a78bfa"}
+                strokeWidth="1"
+                strokeDasharray={muted ? "3 2" : undefined}
+            />
+            {number !== null && (
+                <text x="20" y="26" textAnchor="middle" fontSize="12" fontWeight="600" fill="#ffffff" fontFamily="sans-serif">
+                    {number}
+                </text>
+            )}
+        </svg>
+    );
+}
+
 export function MatchDetailPageView({ 
     match,
     players,
     appearances,
     availablePlayers,
-    rosterOpen,
-    newPlayerId,
-    newIsStarting,
     rosterError,
-    onOpenRoster,
-    onCloseRoster,
-    onNewPlayerIdChange,
-    onNewIsStartingChange,
-    onAddAppearance,
-    onRemoveAppearance,
+    formation,
+    onFormationChange,
+    pickerOpen,
+    pickerIsStarting,
+    pickerPosition,
+    pickerTab,
+    onPickerTabChange,
+    pickerHasAppearance,
+    onOpenPitchPicker,
+    onOpenBenchPicker,
+    onClosePicker,
+    onPickPlayer,
+    onRemoveFromPicker,
     rosterPlayers,
     events,
     eventOpen,
@@ -111,40 +139,18 @@ export function MatchDetailPageView({
         return players.find((p) => p.id === appearance.playerId);
     }
 
-    const starters = appearances.filter((a) => a.isStarting);
-    const substitutes = appearances.filter((a) => !a.isStarting);
-    
-    function renderRosterList(list: MatchAppearance[]) {
-        return (
-            <List dense>
-                {list.map((appearance) => {
-                    const player = playerFor(appearance);
-                    return (
-                        <ListItem 
-                        key={appearance.id}
-                        secondaryAction={
-                            <IconButton edge="end" onClick={() => onRemoveAppearance(appearance.id)}>
-                                <DeleteIcon fontSize="small" />
-                            </IconButton>
-                        }
-                        >
-                            <ListItemAvatar>
-                                {player?.photoUrl ? (
-                                    <Avatar src={`${BACKEND_ORIGIN}${player.photoUrl}`} />
-                                ) : (
-                                    <Avatar>{player?.firstName[0] ?? "?"}</Avatar>
-                                )}
-                            </ListItemAvatar>
-                            <ListItemText
-                                primary={player ? `${player.firstName} ${player.lastName}` : "Nieznany zawodnik"}
-                                secondary={player ? POSITION_LABELS[player.position] ?? player.position : undefined}
-                            />
-                        </ListItem>
-                    );
-                })}
-            </List>
-        );
-    }
+    function buildPitchSlots(code: string): { pos: string; x: number; y: number, slotKey: string; appearance: MatchAppearance | null }[] {
+        return (FORMATIONS[code] ?? []).map(([pos, x, y]: FormationSlot, i: number) => {
+            const slotKey = `${pos}-${i}`;
+            const appearance = appearances.find((a) => a.isStarting && a.position === slotKey) ?? null;
+            return { pos, x, y, slotKey, appearance };
+        });
+    } 
+
+    const pitchSlots = buildPitchSlots(formation);
+    const benchAppearances = appearances.filter((a) => !a.isStarting);
+    const benchTiles = Array.from({ length: BENCH_SIZE }, (_, i) => benchAppearances[i] ?? null);
+    const sortedAvailable = [...availablePlayers].sort((a, b) => POSITIONS.indexOf(a.position) - POSITIONS.indexOf(b.position)); 
 
     function eventTypeIcon(eventType: string) {
         if (eventType === "Goal") return <SportsSoccerIcon sx={{ color: "success.main" }} fontSize="small" />;
@@ -205,7 +211,7 @@ export function MatchDetailPageView({
                         {match.date} &middot; {match.season}
                         {match.matchType && ` ·  ${MATCH_TYPE_LABELS[match.matchType] ?? match.matchType}`}
                         {match.round && ` · ${match.round}`}
-                        {match.isHome !== null && ` · ${match.isHome ? "Dom" : "Wyjazd"}`} 
+                        {match.isHome !== null && ` · ${match.isHome ? "Dom" : "Wyjazd"}`}
                     </Typography>
                 </Box>
                 <Box sx={{ flexGrow: 1 }} />
@@ -216,57 +222,138 @@ export function MatchDetailPageView({
 
             <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
                 <Typography variant="h6">Skład</Typography>
-                <Button variant="contained" onClick={onOpenRoster}>
-                    Dodaj zawodnika
-                </Button>
+                <TextField
+                    select
+                    size="small"
+                    label="Formacja"
+                    value={formation}
+                    onChange={(e) => onFormationChange(e.target.value)}
+                    sx={{ width: 160 }}
+                >
+                    {Object.keys(FORMATIONS).map((code) => (
+                        <MenuItem key={code} value={code}>{FORMATION_LABELS[code]}</MenuItem>
+                    ))}
+                </TextField>
             </Box>
 
             {rosterError && <Alert severity="error" sx={{ mb: 2 }}>{rosterError}</Alert>}
 
-            <Box sx={{ display: "flex", gap: 3, flexWrap: "wrap" }}>
-                <Paper sx={{ p: 2, flex: 1, minWidth: 260 }}>
-                    <Typography variant="subtitle1" sx={{ mb: 1 }}>Wyjściowy skład</Typography>
-                    {renderRosterList(starters)}
-                </Paper>
-                <Paper sx={{ p: 2, flex: 1, minWidth: 260 }}>
-                    <Typography variant="subtitle1" sx={{ mb: 1 }}>Rezerwowi</Typography>
-                    {renderRosterList(substitutes)}
-                </Paper>
+            <Box
+                sx={{
+                    position: "relative",
+                    width: "100%",
+                    aspectRatio: "7 / 5",
+                    borderRadius: 2,
+                    border: "0.5px solid rgba(255,255,255,0.2)",
+                    overflow: "hidden",
+                    background: "repeating-linear-gradient(0deg, rgba(99,153,34,0.18) 0 10%, rgba(99,153,34,0.08) 10% 20%), #3b6d11",
+                    mb: 2,
+                }}
+            >
+                <Box sx={{ position: "absolute", top: "50%", left: 0, right: 0, height: "1px", bgcolor: "rgba(255,255,255,0.5)" }} />
+                <Box sx={{ position: "absolute", left: "50%", top: "50%", width: "15%", aspectRatio: "1 / 1", border: "1px solid rgba(255,255,255,0.5)", borderRadius: "50%", transform: "translate(-50%,-50%)" }} />
+                <Box sx={{ position: "absolute", inset: "3%", border: "1px solid rgba(255,255,255,0.4)", borderRadius: 1 }} />
+                {pitchSlots.map((slot, i) => {
+                    const player = slot.appearance ? playerFor(slot.appearance) : undefined;
+                    return (
+                        <Box
+                            key={i}
+                            onClick={() => onOpenPitchPicker(slot.pos, slot.slotKey, slot.appearance)}
+                            sx={{
+                                position: "absolute",
+                                left: `${slot.x}%`,
+                                top: `${slot.y}%`,
+                                transform: "translate(-50%, -50%)",
+                                cursor: "pointer",
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "center",
+                                width: 76,
+                            }}
+                        >
+                            <Jersey number={player?.jerseyNumber ?? null} muted={!player} />
+                            <Typography
+                                variant="caption"
+                                sx={{ color: "#fff", mt: 0.5, textAlign: "center", lineHeight: 1.1, maxWidth: 76, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                            >
+                                {player ? player.lastName : slot.pos}
+                            </Typography>
+                        </Box>
+                    );
+                })}
             </Box>
 
-            <Dialog open={rosterOpen} onClose={onCloseRoster} fullWidth maxWidth="xs">
-                <Box component="form" onSubmit={onAddAppearance}>
-                    <DialogTitle>Dodaj do skladu</DialogTitle>
-                    <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}>
-                        <TextField
-                            select
-                            label="Zawodnik"
-                            value={newPlayerId}
-                            onChange={(e) => onNewPlayerIdChange(Number(e.target.value))}
-                            required
+            <Typography variant="subtitle2" sx={{ mb: 1 }}>Ławka rezerwowych</Typography>
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, mb: 2 }}>
+                {benchTiles.map((appearance, i) => {
+                    const player = appearance ? playerFor(appearance) : undefined;
+                    return (
+                        <Box
+                            key={i}
+                            onClick={() => onOpenBenchPicker(appearance)}
+                            sx={{ cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", width: 76 }}
                         >
-                            {availablePlayers.map((p) => (
-                                <MenuItem key={p.id} value={p.id}>
-                                    {p.firstName} {p.lastName}
-                                </MenuItem>
+                            <Jersey number={player?.jerseyNumber ?? null} muted={!player} />
+                            <Typography
+                                variant="caption"
+                                sx={{ mt: 0.5, textAlign: "center", lineHeight: 1.1, maxWidth: 76, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                            >
+                                {player ? player.lastName : ""}
+                            </Typography>
+                        </Box>
+                    );
+                })}
+            </Box>
+
+            <Dialog open={pickerOpen} onClose={onClosePicker} fullWidth maxWidth="sm">
+                <DialogTitle>
+                    {pickerIsStarting ? `Pozycja: ${pickerPosition}` : "Ławka rezerwowych"}
+                </DialogTitle>
+                <DialogContent sx={{ pt: 1 }}>
+                    <Tabs
+                        value={pickerTab}
+                        onChange={(_, value) => onPickerTabChange(value)}
+                        variant="fullWidth"
+                        sx={{ mb: 1 }}
+                    >
+                        {POSITION_GROUPS.map((group, i) => (
+                            <Tab key={group.label} label={group.label} value={i} />
+                        ))}
+                    </Tabs>
+                    <List dense sx={{ maxHeight: 320, overflowY: "auto" }}>
+                        {sortedAvailable
+                            .filter((p) => POSITION_GROUPS[pickerTab].codes.includes(p.position))
+                            .map((p) => (
+                                <ListItem key={p.id} disablePadding>
+                                    <Button
+                                        fullWidth
+                                        sx={{ justifyContent: "space-between", textTransform: "none", px: 1.5 }}
+                                        onClick={() => onPickPlayer(p.id)}
+                                    >
+                                        <span>{p.jerseyNumber ?? "-"} &nbsp; {p.firstName} {p.lastName}</span>
+                                        <Typography variant="caption" color="text.secondary">
+                                            {POSITION_LABELS[p.position] ?? p.position}
+                                        </Typography>
+                                    </Button>
+                                </ListItem>
                             ))}
-                        </TextField>
-                        <FormControlLabel
-                            control={
-                                <Switch
-                                    checked={newIsStarting}
-                                    onChange={(e) => onNewIsStartingChange(e.target.checked)}
-                                /> 
-                            }
-                            label={newIsStarting ? "Podstawowy" : "Rezerwowy"}
-                        />
-                    </DialogContent>
-                    <DialogActions>
-                        <Button onClick={onCloseRoster}>Anuluj</Button>
-                        <Button type="submit" variant="contained">Dodaj</Button>
-                    </DialogActions>
-                </Box>
+                        {sortedAvailable.filter((p) => POSITION_GROUPS[pickerTab].codes.includes(p.position)).length === 0 && (
+                            <Typography variant="body2" color="text.secondary" sx={{ px: 1.5 }}>
+                                Brak dostępnych zawodników w tej grupie.
+                            </Typography>
+                        )}
+                    </List>
+                </DialogContent>
+                <DialogActions>
+                    {pickerHasAppearance && (
+                        <Button color="error" onClick={onRemoveFromPicker}>
+                            Usuń z tej pozycji
+                        </Button>
+                    )}
+                    <Button onClick={onClosePicker}>Zamknij</Button>
+                </DialogActions>
             </Dialog>
+
             <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2, mt: 4 }}>
                 <Typography variant="h6">Zdarzenia meczowe</Typography>
                 <Button variant="contained" onClick={onOpenEvent}>
@@ -363,7 +450,7 @@ export function MatchDetailPageView({
                         <Button type="submit" variant="contained">Dodaj</Button>
                     </DialogActions>
                 </Box>
-            </Dialog>   
+            </Dialog>
         </Box>
     );
 }
