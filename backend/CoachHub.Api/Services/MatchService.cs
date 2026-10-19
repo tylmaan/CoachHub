@@ -42,6 +42,7 @@ public class MatchService : IMatchService
         existing.ScoreAgainst = match.ScoreAgainst;
         existing.IsHome = match.IsHome;
         existing.MatchType = match.MatchType;
+        existing.Competition = match.Competition;
         existing.Round = match.Round;
         existing.Formation = match.Formation;
         existing.OpponentLogoUrl = match.OpponentLogoUrl;
