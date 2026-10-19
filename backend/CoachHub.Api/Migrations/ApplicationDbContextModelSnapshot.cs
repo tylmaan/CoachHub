@@ -127,6 +127,9 @@ namespace CoachHub.Api.Migrations
                     b.Property<DateOnly>("Date")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Formation")
+                        .HasColumnType("TEXT");
+
                     b.Property<bool?>("IsHome")
                         .HasColumnType("INTEGER");
 
@@ -177,6 +180,9 @@ namespace CoachHub.Api.Migrations
 
                     b.Property<int>("PlayerId")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("Position")
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 

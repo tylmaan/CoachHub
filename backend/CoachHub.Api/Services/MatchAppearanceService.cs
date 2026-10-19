@@ -42,6 +42,7 @@ public class MatchAppearanceService : IMatchAppearanceService
         if (existing is null) return false;
 
         existing.IsStarting = appearance.IsStarting;
+        existing.Position = appearance.Position;
         await _context.SaveChangesAsync();
         return true;
     }
