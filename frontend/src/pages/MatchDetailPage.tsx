@@ -35,6 +35,7 @@ export function MatchDetailPage() {
     const [newEventTeam, setNewEventTeam] = useState("Us");
     const [newEventType, setNewEventType] = useState("");
     const [newEventMinute, setNewEventMinute] = useState("");
+    const [newEventAddedTime, setNewEventAddedTime] = useState("");
     const [newEventPlayerId, setNewEventPlayerId] = useState<number | "">("");
     const [newEventOpponentName, setNewEventOpponentName] = useState("");
     const [newEventIsPenalty, setNewEventIsPenalty] = useState(false);
@@ -151,6 +152,7 @@ export function MatchDetailPage() {
         setNewEventTeam("Us");
         setNewEventType("");
         setNewEventMinute("");
+        setNewEventAddedTime("");
         setNewEventPlayerId("");
         setNewEventOpponentName("");
         setNewEventIsPenalty(false);
@@ -171,6 +173,7 @@ export function MatchDetailPage() {
         setEventError(null);
         const matchId = Number(id);
         const minute = newEventMinute === "" ? null : Number(newEventMinute);
+        const addedTime = newEventAddedTime === "" ? null : Number(newEventAddedTime);
         try {
             if (newEventType === "Substitution") {
                 await createMatchEvent({
@@ -178,6 +181,7 @@ export function MatchDetailPage() {
                     eventType: "SubstitutionOff",
                     team: newEventTeam,
                     minute,
+                    addedTime,
                     playerId: newEventTeam === "Us" ? (newEventPlayerId as number) : null,
                     opponentPlayerName: newEventTeam === "Opponent" ? (newEventOpponentName || null) : null,
                 });
@@ -186,6 +190,7 @@ export function MatchDetailPage() {
                     eventType: "SubstitutionIn",
                     team: newEventTeam,
                     minute,
+                    addedTime,
                     playerId: newEventTeam === "Us" ? (newEventSecondPlayerId as number) : null,
                     opponentPlayerName: newEventTeam === "Opponent" ? (newEventSecondOpponentName || null) : null,
                 });
@@ -196,6 +201,7 @@ export function MatchDetailPage() {
                     eventType: actualType,
                     team: newEventTeam,
                     minute,
+                    addedTime,
                     playerId: newEventTeam === "Us" ? (newEventPlayerId as number) : null,
                     opponentPlayerName: newEventTeam === "Opponent" ? (newEventOpponentName || null) : null
                 });
@@ -206,6 +212,7 @@ export function MatchDetailPage() {
                         eventType: "Assist",
                         team: newEventTeam,
                         minute,
+                        addedTime,
                         playerId: newEventTeam === "Us" ? (newEventAssistPlayerId as number) : null,
                         opponentPlayerName: newEventTeam === "Opponent" ? (newEventAssistOpponentName || null) : null
                     });
@@ -261,6 +268,7 @@ export function MatchDetailPage() {
             newEventTeam={newEventTeam}
             newEventType={newEventType}
             newEventMinute={newEventMinute}
+            newEventAddedTime={newEventAddedTime}
             newEventPlayerId={newEventPlayerId}
             newEventOpponentName={newEventOpponentName}
             newEventIsPenalty={newEventIsPenalty}
@@ -279,6 +287,7 @@ export function MatchDetailPage() {
             onNewEventTeamChange={setNewEventTeam}
             onNewEventTypeChange={setNewEventType}
             onNewEventMinuteChange={setNewEventMinute}
+            onNewEventAddedTimeChange={setNewEventAddedTime}
             onNewEventPlayerIdChange={setNewEventPlayerId}
             onNewEventOpponentNameChange={setNewEventOpponentName}
             onAddEvent={handleAddEvent}

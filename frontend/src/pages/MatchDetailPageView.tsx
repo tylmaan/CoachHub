@@ -66,6 +66,7 @@ interface MatchDetailPageViewProps {
     newEventTeam: string;
     newEventType: string;
     newEventMinute: string;
+    newEventAddedTime: string;
     newEventPlayerId: number | "";
     newEventOpponentName: string;
     newEventIsPenalty: boolean;
@@ -84,6 +85,7 @@ interface MatchDetailPageViewProps {
     onNewEventTeamChange: (value: string) => void;
     onNewEventTypeChange: (value: string) => void;
     onNewEventMinuteChange: (value: string) => void;
+    onNewEventAddedTimeChange: (value: string) => void;
     onNewEventPlayerIdChange: (value: number | "") => void;
     onNewEventOpponentNameChange: (value: string) => void;
     onAddEvent: (e: React.SyntheticEvent) => void;
@@ -150,6 +152,7 @@ export function MatchDetailPageView({
     newEventTeam,
     newEventType,
     newEventMinute,
+    newEventAddedTime,
     newEventPlayerId,
     newEventOpponentName,
     newEventIsPenalty,
@@ -168,6 +171,7 @@ export function MatchDetailPageView({
     onNewEventTeamChange,
     onNewEventTypeChange,
     onNewEventMinuteChange,
+    onNewEventAddedTimeChange,
     onNewEventPlayerIdChange,
     onNewEventOpponentNameChange,
     onAddEvent,
@@ -316,7 +320,7 @@ export function MatchDetailPageView({
                     {eventTypeIcon(de.primary.eventType, second)}
                     <Box sx={{ textAlign: isOpponent ? "right" : "left" }}>
                         <Typography variant="body2">
-                            {de.primary.minute ?? "-"}&apos; {displayLabel(de)}
+                            {de.primary.minute ?? "-"}{de.primary.addedTime ? `+${de.primary.addedTime}` : ""}&apos; {displayLabel(de)}
                         </Typography>
                         <Typography variant="caption" color="text.secondary">
                             {displayTypeLabel(de, sorted)}{isOpponent ? " (Rywal)" : ""}
@@ -327,7 +331,7 @@ export function MatchDetailPageView({
         );
     }
 
-    const sortedEvents = [...events].sort((a, b) => (a.minute ?? 999) - (b.minute ?? 999));
+    const sortedEvents = [...events].sort((a, b) => (a.minute ?? 999) - (b.minute ?? 999) || (a.addedTime ?? 0) - (b.addedTime ?? 0));
     const displayEvents = buildDisplayEvents(sortedEvents);
     const firstHalf = displayEvents.filter((de) => de.primary.minute !== null && de.primary.minute <= 45);
     const secondHalf = displayEvents.filter((de) => de.primary.minute !== null && de.primary.minute > 45 && de.primary.minute <= 90);
@@ -405,13 +409,13 @@ export function MatchDetailPageView({
                                 display: "flex",
                                 flexDirection: "column",
                                 alignItems: "center",
-                                width: 76,
+                                width: 92,
                             }}
                         >
                             <Jersey number={player?.jerseyNumber ?? null} muted={!player} />
                             <Typography
                                 variant="caption"
-                                sx={{ color: "#fff", mt: 0.5, textAlign: "center", lineHeight: 1.1, maxWidth: 76, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                                sx={{ color: "#fff", mt: 0.5, textAlign: "center", maxWidth: 92, fontSize: 14, lineHeight: 1.15,  }}
                             >
                                 {player ? player.lastName : slot.pos}
                             </Typography>
@@ -428,12 +432,12 @@ export function MatchDetailPageView({
                         <Box
                             key={i}
                             onClick={() => onOpenBenchPicker(appearance)}
-                            sx={{ cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", width: 76 }}
+                            sx={{ cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", width: 92 }}
                         >
                             <Jersey number={player?.jerseyNumber ?? null} muted={!player} />
                             <Typography
                                 variant="caption"
-                                sx={{ mt: 0.5, textAlign: "center", lineHeight: 1.1, maxWidth: 76, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                                sx={{ mt: 0.5, textAlign: "center", maxWidth: 92, fontSize: 14, lineHeight: 1.15 }}
                             >
                                 {player ? player.lastName : ""}
                             </Typography>
@@ -633,6 +637,13 @@ export function MatchDetailPageView({
                             type="number"
                             value={newEventMinute}
                             onChange={(e) => onNewEventMinuteChange(e.target.value)}
+                        />
+
+                        <TextField
+                            label="Doliczony czas (min)"
+                            type="number"
+                            value={newEventAddedTime}
+                            onChange={(e) => onNewEventAddedTimeChange(e.target.value)}
                         />
                     </DialogContent>
                     <DialogActions>

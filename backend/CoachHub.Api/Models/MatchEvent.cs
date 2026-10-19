@@ -6,6 +6,7 @@ public class MatchEvent
     public required string EventType { get; set; }
     public required string Team { get; set; }
     public int? Minute { get; set; }
+    public int? AddedTime { get; set; }
 
     public int MatchId { get; set; }
     public Match? Match { get; set; }
