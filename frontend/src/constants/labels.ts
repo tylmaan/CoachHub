@@ -17,6 +17,14 @@ export const MATCH_TYPE_LABELS: Record<string, string> = {
     Friendly: "Towarzyski",
 };
 
+export const COMPETITIONS = [
+    "Superpuchar Polski",
+    "Puchar Polski",
+    "Liga Mistrzów",
+    "Liga Europy",
+    "Liga Konferencji Europy",
+];
+
 export const POSITION_LABELS: Record<string, string> = {
     GK: "Bramkarz",
     CB: "Środkowy obrońca",

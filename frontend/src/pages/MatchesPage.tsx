@@ -27,9 +27,11 @@ export function MatchesPage() {
     const [scoreAgainst, setScoreAgainst] = useState("");
     const [isHome, setIsHome] = useState("");
     const [matchType, setMatchType] = useState("");
+    const [competition, setCompetition] = useState("");
     const [round, setRound] = useState("");
     const [opponentLogoUrl, setOpponentLogoUrl] = useState("");
     const [formError, setFormError] = useState<string | null>(null);
+    const [createOpen, setCreateOpen] = useState(false);
 
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editDate, setEditDate] = useState("");
@@ -39,6 +41,7 @@ export function MatchesPage() {
     const [editScoreAgainst, setEditScoreAgainst] = useState("");
     const [editIsHome, setEditIsHome] = useState("");
     const [editMatchType, setEditMatchType] = useState("");
+    const [editCompetition, setEditCompetition] = useState("");
     const [editRound, setEditRound] = useState("");
     const [editOpponentLogoUrl, setEditOpponentLogoUrl] = useState("");
     const [actionError, setActionError] = useState<string | null>(null);
@@ -95,6 +98,7 @@ export function MatchesPage() {
                 scoreAgainst: toNullableNumber(scoreAgainst),
                 isHome: toNullableBool(isHome),
                 matchType: matchType || null,
+                competition: matchType === "Cup" ? (competition || null) : null,
                 round: round || null,
                 formation: null,
                 opponentLogoUrl: opponentLogoUrl || null,
@@ -106,8 +110,10 @@ export function MatchesPage() {
             setScoreAgainst("");
             setIsHome("");
             setMatchType("");
+            setCompetition("");
             setRound("");
             setOpponentLogoUrl("");
+            setCreateOpen(false);
             loadMatches();
         } catch (err) {
             if (axios.isAxiosError(err) && Array.isArray(err.response?.data)) {
@@ -127,6 +133,7 @@ export function MatchesPage() {
         setEditScoreAgainst(match.scoreAgainst?.toString() ?? "");
         setEditIsHome(match.isHome?.toString() ?? "");
         setEditMatchType(match.matchType ?? "");
+        setEditCompetition(match.competition ?? "");
         setEditRound(match.round ?? "");
         setEditOpponentLogoUrl(match.opponentLogoUrl ?? "");
         setActionError(null);
@@ -145,6 +152,7 @@ export function MatchesPage() {
                 scoreAgainst: toNullableNumber(editScoreAgainst),
                 isHome: toNullableBool(editIsHome),
                 matchType: editMatchType || null,
+                competition: editMatchType === "Cup" ? (editCompetition || null) : null,
                 round: editRound || null,
                 formation: editingMatch?.formation ?? null,
                 opponentLogoUrl: editOpponentLogoUrl || null,
@@ -194,6 +202,7 @@ export function MatchesPage() {
             scoreAgainst={scoreAgainst}
             isHome={isHome}
             matchType={matchType}
+            competition={competition}
             round={round}
             opponentLogoUrl={opponentLogoUrl}
             formError={formError}
@@ -204,8 +213,12 @@ export function MatchesPage() {
             onScoreAgainstChange={setScoreAgainst}
             onIsHomeChange={setIsHome}
             onMatchTypeChange={setMatchType}
+            onCompetitionChange={setCompetition}
             onRoundChange={setRound}
             onOpponentLogoSelect={handleOpponentLogoSelect}
+            createOpen={createOpen}
+            onOpenCreate={() => setCreateOpen(true)}
+            onCloseCreate={() => setCreateOpen(false)}
             onCreate={handleCreate}
             editingId={editingId}
             editDate={editDate}
@@ -215,6 +228,7 @@ export function MatchesPage() {
             editScoreAgainst={editScoreAgainst}
             editIsHome={editIsHome}
             editMatchType={editMatchType}
+            editCompetition={editCompetition}
             editRound={editRound}
             editOpponentLogoUrl={editOpponentLogoUrl}
             actionError={actionError}
@@ -226,6 +240,7 @@ export function MatchesPage() {
             onEditScoreAgainstChange={setEditScoreAgainst}
             onEditIsHomeChange={setEditIsHome}
             onEditMatchTypeChange={setEditMatchType}
+            onEditCompetitionChange={setEditCompetition}
             onEditRoundChange={setEditRound}
             onEditOpponentLogoSelect={handleEditOpponentLogoSelect}
             onSaveEdit={saveEdit}
