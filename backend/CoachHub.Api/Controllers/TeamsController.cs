@@ -37,8 +37,11 @@ public class TeamsController : ControllerBase
     [HttpGet("{id}")]
     public async Task<ActionResult<Team>> GetById(int id)
     {
-        var callerTeamId = User.FindFirstValue("teamId");
-        if (callerTeamId is null || int.Parse(callerTeamId) != id) return Forbid();
+        if (!User.IsInRole(Roles.Admin))
+        {
+            var callerTeamId = User.FindFirstValue("teamId");
+            if (callerTeamId is null || int.Parse(callerTeamId) != id) return Forbid();
+        }
 
         var team = await _teamService.GetByIdAsync(id);
         if (team is null) return NotFound();
@@ -54,24 +57,18 @@ public class TeamsController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [Authorize(Roles = $"{Roles.Coach}, {Roles.AssistantCoach}")]
+    [Authorize(Roles = Roles.Admin)]
     public async Task<IActionResult> Update(int id, Team team)
     {
-        var callerTeamId = User.FindFirstValue("teamId");
-        if (callerTeamId is null || int.Parse(callerTeamId) != id) return Forbid();
-
         var success = await _teamService.UpdateAsync(id, team);
         if (!success) return NotFound();
         return NoContent();
     }
 
     [HttpDelete("{id}")]
-    [Authorize(Roles = Roles.Coach)]
+    [Authorize(Roles = Roles.Admin)]
     public async Task<IActionResult> Delete(int id)
     {
-        var callerTeamId = User.FindFirstValue("teamId");
-        if (callerTeamId is null || int.Parse(callerTeamId) != id) return Forbid();
-
         var success = await _teamService.DeleteAsync(id);
         if (!success) return NotFound();
         return NoContent();
