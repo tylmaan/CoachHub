@@ -16,11 +16,13 @@ public class UsersController : ControllerBase
 {
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly ITeamService _teamService;
+    private readonly IFileStorageService _fileStorageService;
 
-    public UsersController(UserManager<ApplicationUser> userManager, ITeamService teamService)
+    public UsersController(UserManager<ApplicationUser> userManager, ITeamService teamService, IFileStorageService fileStorageService)
     {
         _userManager = userManager;
         _teamService = teamService;
+        _fileStorageService = fileStorageService;
     }
 
     [HttpGet]
@@ -64,12 +66,19 @@ public class UsersController : ControllerBase
         var team = await _teamService.GetByIdAsync(request.TeamId);
         if (team is null) return BadRequest("Nie znaleziono drużyny.");
 
+        var oldPhotoUrl = user.PhotoUrl;
+
         await _userManager.RemoveFromRolesAsync(user, currentRoles);
         await _userManager.AddToRoleAsync(user, request.Role);
         user.TeamId = request.TeamId;
         user.FullName = request.FullName;
         user.PhotoUrl = request.PhotoUrl;
         await _userManager.UpdateAsync(user);
+
+        if (oldPhotoUrl != request.PhotoUrl)
+        {
+            _fileStorageService.DeleteFile(oldPhotoUrl);
+        }
 
         return NoContent();
     }
@@ -84,6 +93,7 @@ public class UsersController : ControllerBase
         if (roles.Contains(Roles.Admin)) return Forbid();
 
         await _userManager.DeleteAsync(user);
+        _fileStorageService.DeleteFile(user.PhotoUrl);
         return NoContent();
     }
 }

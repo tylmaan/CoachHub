@@ -7,12 +7,14 @@ namespace CoachHub.Api.Services;
 public class MatchService : IMatchService
 {
     private readonly ApplicationDbContext _context;
+    private readonly IFileStorageService _fileStorageService;
 
-    public MatchService(ApplicationDbContext context)
+    public MatchService(ApplicationDbContext context, IFileStorageService fileStorageService)
     {
         _context = context;
+        _fileStorageService = fileStorageService;
     }
-
+    
     public async Task<List<Match>> GetAllAsync()
     {
         return await _context.Matches.ToListAsync();
@@ -35,6 +37,8 @@ public class MatchService : IMatchService
         var existing = await _context.Matches.FindAsync(id);
         if (existing is null) return false;
 
+        var oldOpponentLogoUrl = existing.OpponentLogoUrl;
+
         existing.Date = match.Date;
         existing.Opponent = match.Opponent;
         existing.Season = match.Season;
@@ -47,6 +51,12 @@ public class MatchService : IMatchService
         existing.Formation = match.Formation;
         existing.OpponentLogoUrl = match.OpponentLogoUrl;
         await _context.SaveChangesAsync();
+
+        if (oldOpponentLogoUrl != match.OpponentLogoUrl)
+        {
+            _fileStorageService.DeleteFile(oldOpponentLogoUrl);
+        }
+
         return true;
     }
 
@@ -57,6 +67,7 @@ public class MatchService : IMatchService
 
         _context.Matches.Remove(existing);
         await _context.SaveChangesAsync();
+        _fileStorageService.DeleteFile(existing.OpponentLogoUrl);
         return true;
     }
 }
