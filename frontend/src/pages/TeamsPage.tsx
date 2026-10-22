@@ -24,8 +24,8 @@ export function TeamsPage() {
     const [actionError, setActionError] = useState<string | null>(null);
 
     const { roles } = useAuth();
-    const canEdit = roles?.includes("Coach") || roles?.includes("AssistantCoach");
-    const canDelete = roles?.includes("Coach");
+    const canEdit = roles?.includes("Admin");
+    const canDelete = roles?.includes("Admin");
 
     function loadTeams() {
         setLoading(true);
