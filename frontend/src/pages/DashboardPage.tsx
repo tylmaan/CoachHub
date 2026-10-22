@@ -1,4 +1,7 @@
+import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { getTeams } from '../api/teamsApi';
+import type { TeamSummary } from '../types/team';
 import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined';
 import GroupsOutlinedIcon from '@mui/icons-material/GroupsOutlined';
 import SportsSoccerOutlinedIcon from '@mui/icons-material/SportsSoccerOutlined';
@@ -9,15 +12,24 @@ import type { Tile } from './DashboardPageView';
 export function DashboardPage() {
     const { roles } = useAuth();
     const isAdmin = roles?.includes('Admin');
+    const [team, setTeam] = useState<TeamSummary | null>(null);
 
-    const tiles: Tile[] = [
-        { label: 'Drużyny', path: '/teams', icon: <ShieldOutlinedIcon sx={{ fontSize: 32 }} /> },
-        ...(isAdmin ? [{ label: 'Użytkownicy', path: '/users', icon: <ManageAccountsOutlinedIcon sx={{ fontSize: 32 }} /> }] 
-            : [
-                { label: 'Zawodnicy', path: '/players', icon: <GroupsOutlinedIcon sx={{ fontSize: 32 }} /> },
-                { label: 'Mecze', path: '/matches', icon: <SportsSoccerOutlinedIcon sx={{ fontSize: 32 }} /> },
-            ]),
-    ];
+    useEffect(() => {
+        if (isAdmin) return;
+        getTeams()
+            .then((teams) => setTeam(teams[0] ?? null))
+            .catch(() => {});
+    }, [isAdmin]);
 
-    return <DashboardPageView tiles={tiles} />;
+    const tiles: Tile[] = isAdmin 
+        ?[
+            { label: 'Drużyny', path: '/teams', icon: <ShieldOutlinedIcon sx={{ fontSize: 32 }} /> },
+            { label: 'Użytkownicy', path: '/users', icon: <ManageAccountsOutlinedIcon sx={{ fontSize: 32 }} /> }
+        ]
+        : [
+            { label: 'Zawodnicy', path: '/players', icon: <GroupsOutlinedIcon sx={{ fontSize: 32 }} /> },
+            { label: 'Mecze', path: '/matches', icon: <SportsSoccerOutlinedIcon sx={{ fontSize: 32 }} /> },
+        ];
+
+    return <DashboardPageView tiles={tiles} team={team} />;
 } 
