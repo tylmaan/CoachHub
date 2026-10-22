@@ -25,6 +25,7 @@ export function UsersPage() {
     const [editFullName, setEditFullName] = useState("");
     const [editPhotoUrl, setEditPhotoUrl] = useState<string | null>(null);
     const [actionError, setActionError] = useState<string | null>(null);
+    const [deleteTargetId, setDeleteTargetId] = useState<string | null>(null);
 
     const [registerOpen, setRegisterOpen] = useState(false);
     const [newFullName, setNewFullName] = useState("");
@@ -148,6 +149,20 @@ export function UsersPage() {
         }
     }
 
+    function requestDelete(id: string) {
+        setDeleteTargetId(id);
+    }
+
+    function cancelDelete() {
+        setDeleteTargetId(null);
+    }
+
+    async function confirmDelete() {
+        if (deleteTargetId === null) return;
+        await handleDelete(deleteTargetId);
+        setDeleteTargetId(null);
+    }
+
     const sortedUsers = [...users].sort((a, b) => {
         let result = 0;
         if (sortField === "email") result = a.email.localeCompare(b.email);
@@ -180,7 +195,10 @@ export function UsersPage() {
             onEditPhotoSelect={handleEditPhotoSelect}
             onSaveEdit={saveEdit}
             onCancelEdit={() => setEditingId(null)}
-            onDelete={handleDelete}
+            deleteDialogOpen={deleteTargetId !== null}
+            onRequestDelete={requestDelete}
+            onCancelDelete={cancelDelete}
+            onConfirmDelete={confirmDelete}
             registerOpen={registerOpen}
             newFullName={newFullName}
             newPhotoUrl={newPhotoUrl}

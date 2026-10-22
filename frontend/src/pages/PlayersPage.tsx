@@ -44,6 +44,7 @@ export function PlayersPage() {
     const [editPreferredFoot, setEditPreferredFoot] =useState("");
     const [editPhotoUrl, setEditPhotoUrl] = useState<string | null>(null);
     const [actionError, setActionError] = useState<string | null>(null);
+    const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
 
     const { roles, teamId } = useAuth();
     const canCreate = roles?.includes("Coach") || roles?.includes("AssistantCoach");
@@ -175,6 +176,20 @@ export function PlayersPage() {
         }
     }
 
+    function requestDelete(id: number) {
+        setDeleteTargetId(id);
+    }
+
+    function cancelDelete() {
+        setDeleteTargetId(null);
+    }
+
+    async function confirmDelete() {
+        if (deleteTargetId === null) return;
+        await handleDelete(deleteTargetId);
+        setDeleteTargetId(null);
+    }
+
     const sortedPlayers = [...players].sort((a, b) => {
         let result = 0;
         if (sortField === "lastName") result = a.lastName.localeCompare(b.lastName);
@@ -241,7 +256,10 @@ export function PlayersPage() {
             onEditPhotoSelect={handleEditPhotoSelect}
             onSaveEdit={saveEdit}
             onCancelEdit={() => setEditingId(null)}
-            onDelete={handleDelete}
+            deleteDialogOpen={deleteTargetId !== null}
+            onRequestDelete={requestDelete}
+            onCancelDelete={cancelDelete}
+            onConfirmDelete={confirmDelete}
         />
     );
 }

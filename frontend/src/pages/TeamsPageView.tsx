@@ -14,6 +14,7 @@ import {
 import type { TeamSummary } from '../types/team';
 import { BACKEND_ORIGIN } from '../api/axiosInstance';
 import { ROLE_LABELS } from '../constants/labels';
+import { ConfirmDeleteDialog } from '../components/ConfirmDeleteDialog';
 
 interface TeamsPageViewProps {
     teams: TeamSummary[];
@@ -40,7 +41,10 @@ interface TeamsPageViewProps {
     onEditLogoSelect: (e: React.ChangeEvent<HTMLInputElement>) => void;
     onSaveEdit: (teamId: number) => void;
     onCancelEdit: () => void;
-    onDelete: (teamId: number) => void;
+    deleteDialogOpen: boolean;
+    onRequestDelete: (teamId: number) => void;
+    onCancelDelete: () => void;
+    onConfirmDelete: () => void;
 }
 
 export function TeamsPageView({
@@ -66,7 +70,10 @@ export function TeamsPageView({
     onEditLogoSelect,
     onSaveEdit,
     onCancelEdit,
-    onDelete
+    deleteDialogOpen,
+    onRequestDelete,
+    onCancelDelete,
+    onConfirmDelete,
 }: TeamsPageViewProps) {
      return (
         <>
@@ -135,7 +142,7 @@ export function TeamsPageView({
                             {(canEdit || canDelete) && (
                                 <Box sx={{ display: "flex", gap: 1, mt: 1.5 }}>
                                     {canEdit && <Button size="small" onClick={() => onStartEdit(team)}>Edytuj</Button>}
-                                    {canDelete && <Button size="small" color="error" onClick={() => onDelete(team.id)}>Usuń</Button>}
+                                    {canDelete && <Button size="small" color="error" onClick={() => onRequestDelete(team.id)}>Usuń</Button>}
                                 </Box>
                             )}
                         </Box>
@@ -193,6 +200,14 @@ export function TeamsPageView({
                     </DialogActions>
                 </Box>
             </Dialog>
+            
+            <ConfirmDeleteDialog
+                open={deleteDialogOpen}
+                title="Usunąć drużynę?"
+                message="Usunięcie tej drużyny skasuje też wszystkich jej zawodników, mecze, schematy taktyczne i raporty. Tej operacji nie można cofnąć."
+                onConfirm={onConfirmDelete}
+                onCancel={onCancelDelete}
+            />
         </>
     );
 }

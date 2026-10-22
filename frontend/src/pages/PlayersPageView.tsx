@@ -26,6 +26,7 @@ import { FOOT_LABELS, POSITION_LABELS, POSITIONS } from '../constants/labels';
 import { COUNTRIES } from '../constants/countries';
 import type { Country } from '../constants/countries';
 import { BACKEND_ORIGIN } from '../api/axiosInstance';
+import { ConfirmDeleteDialog } from '../components/ConfirmDeleteDialog';
 
 const FEET = ["Left", "Right", "Both"];
 
@@ -85,7 +86,10 @@ interface PlayersPageViewProps {
     onEditPhotoSelect: (e: React.ChangeEvent<HTMLInputElement>) => void;
     onSaveEdit: (id: number) => void;
     onCancelEdit: () => void;
-    onDelete: (id: number) => void;
+    deleteDialogOpen: boolean;
+    onRequestDelete: (id: number) => void;
+    onCancelDelete: () => void;
+    onConfirmDelete: () => void;
 }
 
 function renderFoot(foot: string | null) {
@@ -194,7 +198,10 @@ export function PlayersPageView({
     onEditPhotoSelect,
     onSaveEdit,
     onCancelEdit,
-    onDelete
+    deleteDialogOpen,
+    onRequestDelete,
+    onCancelDelete,
+    onConfirmDelete,
 }: PlayersPageViewProps) {
     return (
         <>
@@ -388,6 +395,14 @@ export function PlayersPageView({
                 </Box>
             </Dialog>
 
+            <ConfirmDeleteDialog
+                open={deleteDialogOpen}
+                title="Usunąć zawodnika?"
+                message="Usunięcie tego zawodnika skasuje też jego historię kariery i raporty. Jeśli zawodnik ma zarejestrowane zdarzenia meczowe, usunięcie może się nie powieść."
+                onConfirm={onConfirmDelete}
+                onCancel={onCancelDelete}
+            />
+
             {actionError && <Alert severity="error" sx={{ mb:2 }}>{actionError}</Alert>}
 
             <TableContainer component={Paper}>
@@ -465,7 +480,7 @@ export function PlayersPageView({
                                     <TableCell>
                                         <Box sx={{ display: "flex", gap: 1 }}>
                                             {canEdit && <Button size="small" onClick={() => onStartEdit(player)}>Edytuj</Button>}
-                                            {canDelete && <Button size="small" color="error" onClick={() => onDelete(player.id)}>Usuń</Button>}
+                                            {canDelete && <Button size="small" color="error" onClick={() => onRequestDelete(player.id)}>Usuń</Button>}
                                         </Box>
                                     </TableCell>
                                 )}
