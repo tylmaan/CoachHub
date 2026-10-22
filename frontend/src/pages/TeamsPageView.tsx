@@ -1,44 +1,42 @@
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    Paper,
     Typography,
     Alert,
     Box,
     TextField,
     Button,
-    Avatar
+    Avatar,
+    Chip,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
 } from '@mui/material';
-import type { Team } from '../types/team';
+import type { TeamSummary } from '../types/team';
 import { BACKEND_ORIGIN } from '../api/axiosInstance';
+import { ROLE_LABELS } from '../constants/labels';
 
 interface TeamsPageViewProps {
-    teams: Team[];
+    teams: TeamSummary[];
     isAdmin: boolean;
     canEdit: boolean;
     canDelete: boolean;
 
     name: string;
-    foundedDate: string;
     logoUrl: string | null;
     formError: string | null;
     onNameChange: (value: string) => void;
-    onFoundedDateChange: (value: string) => void;
     onLogoSelect: (e: React.ChangeEvent<HTMLInputElement>) => void;
     onCreate: (e: React.SyntheticEvent) => void;
+    createOpen: boolean;
+    onOpenCreate: () => void;
+    onCloseCreate: () => void;
     
     editingId: number | null;
     editName: string;
-    editFoundedDate: string;
     editLogoUrl: string | null;
     actionError: string | null;
-    onStartEdit: (team: Team) => void;
+    onStartEdit: (team: TeamSummary) => void;
     onEditNameChange: (value: string) => void;
-    onEditFoundedDateChange: (value: string) => void;
     onEditLogoSelect: (e: React.ChangeEvent<HTMLInputElement>) => void;
     onSaveEdit: (teamId: number) => void;
     onCancelEdit: () => void;
@@ -51,21 +49,20 @@ export function TeamsPageView({
     canEdit,
     canDelete,
     name,
-    foundedDate,
     logoUrl,
     formError,
     onNameChange,
-    onFoundedDateChange,
     onLogoSelect,
     onCreate,
+    createOpen,
+    onOpenCreate,
+    onCloseCreate,
     editingId,
     editName,
-    editFoundedDate,
     editLogoUrl,
     actionError,
     onStartEdit,
     onEditNameChange,
-    onEditFoundedDateChange,
     onEditLogoSelect,
     onSaveEdit,
     onCancelEdit,
@@ -78,32 +75,8 @@ export function TeamsPageView({
             </Typography>
 
             {isAdmin && (
-                <Box
-                    component="form"
-                    onSubmit={onCreate}
-                    sx={{ mb: 3, display: "flex", gap: 2, alignItems: "flex-start" }}
-                >
-                    {formError && <Alert severity="error">{formError}</Alert>}
-                    <TextField
-                        label="Nazwa"
-                        value={name}
-                        onChange={(e) => onNameChange(e.target.value)}
-                        required
-                    />
-                    <TextField
-                        label="Data założenia"
-                        type="date"
-                        slotProps={{ inputLabel: { shrink: true } }}
-                        value={foundedDate}
-                        onChange={(e) => onFoundedDateChange(e.target.value)}
-                        required
-                    />
-                    {logoUrl && <Avatar src={`${BACKEND_ORIGIN}${logoUrl}`} variant="rounded" />}
-                    <Button component="label" variant="outlined">
-                        Wybierz logo
-                        <input type="file" accept="image/png,image/jpeg" hidden onChange={onLogoSelect} />
-                    </Button>
-                    <Button type="submit" variant="contained">
+                <Box sx={{ display: "flex", justifyContent: "flex-end", mb: 2 }}>
+                    <Button variant="contained" onClick={onOpenCreate}>
                         Dodaj drużynę
                     </Button>
                 </Box>
@@ -111,77 +84,115 @@ export function TeamsPageView({
 
             {actionError && <Alert severity="error" sx={{ mb:2 }}>{actionError}</Alert>}
 
-            <TableContainer component={Paper}>
-                <Table>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>Logo</TableCell>
-                            <TableCell>Nazwa</TableCell>
-                            <TableCell>Data założenia</TableCell>
-                            {(canEdit || canDelete) && <TableCell>Akcje</TableCell>}
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {teams.map((team) => 
-                            editingId == team.id ? (
-                                <TableRow key={team.id}>
-                                    <TableCell>
-                                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                            {editLogoUrl && <Avatar src={`${BACKEND_ORIGIN}${editLogoUrl}`} variant="rounded" />}
-                                            <Button component="label" size="small">
-                                                Zmień
-                                                <input type="file" accept="image/png,image/jpeg" hidden onChange={onEditLogoSelect} />
-                                            </Button>
-                                        </Box>
-                                    </TableCell>
-                                    <TableCell>
-                                        <TextField 
-                                            size="small" 
-                                            value={editName} 
-                                            onChange={(e) => onEditNameChange(e.target.value)} 
-                                        />
-                                    </TableCell>
-                                    <TableCell>
-                                        <TextField 
-                                            size="small" 
-                                            type="date" 
-                                            slotProps={{ inputLabel: { shrink: true } }}
-                                            value={editFoundedDate}
-                                            onChange={(e) => onEditFoundedDateChange(e.target.value)} 
-                                        />
-                                    </TableCell>
-                                    <TableCell>
-                                        <Box sx={{ display: "flex", gap: 1 }}>
-                                            <Button size="small" variant="contained" onClick={() => onSaveEdit(team.id)}>Zapisz</Button>
-                                            <Button size="small" onClick={onCancelEdit}>Anuluj</Button>
-                                        </Box>
-                                    </TableCell>
-                                </TableRow>
-                            ) : (
-                                <TableRow key={team.id}>
-                                    <TableCell>
-                                        {team.logoUrl ? (
-                                            <Avatar src={`${BACKEND_ORIGIN}${team.logoUrl}`} variant="rounded" />
+            <Box sx={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 2 }}>
+                {teams.map((team) => {
+                    const coach = team.staffMembers.find((m) => m.roles.includes("Coach"));
+                    const otherStaff = team.staffMembers.filter((m) => m !== coach);
+                    return (
+                        <Box key={team.id} sx={{ bgcolor: "background.paper", borderRadius: 3, p: 2 }}>
+                            <Box sx={{ display: "flex", alignItems: "center", gap: 1.5, mb: 1.5 }}>
+                                {team.logoUrl ? (
+                                    <Avatar src={`${BACKEND_ORIGIN}${team.logoUrl}`} variant="rounded" sx={{ width: 44, height: 44 }} />
+                                ) : (
+                                    <Avatar variant="rounded" sx={{ width: 44, height: 44 }}>{team.name[0]}</Avatar>
+                                )}
+                                <Typography variant="subtitle1">{team.name}</Typography>
+                            </Box>
+
+                            <Box sx={{ borderTop: "1px solid", borderColor: "divider", pt: 1, mb: 1 }}>
+                                <Typography variant="caption" color="text.secondary">TRENER</Typography>
+                                {coach ? (
+                                    <Box sx={{ display: "flex", alignItems: "center", gap: 1, mt: 0.5 }}>
+                                        {coach.photoUrl ? (
+                                            <Avatar src={`${BACKEND_ORIGIN}${coach.photoUrl}`} sx={{ width: 26, height: 26 }} />
                                         ) : (
-                                            <Avatar variant="rounded">{team.name[0]}</Avatar>
+                                            <Avatar sx={{ width: 26, height: 26, fontSize: 12 }}>{(coach.fullName ?? coach.email)[0]}</Avatar>
                                         )}
-                                    </TableCell>
-                                    <TableCell>{team.name}</TableCell>
-                                    <TableCell>{team.foundedDate}</TableCell>
-                                    {(canEdit || canDelete) && (
-                                        <TableCell>
-                                            <Box sx={{ display: "flex", gap: 1}}>
-                                                {canEdit && <Button size="small" onClick={() => onStartEdit(team)}>Edytuj</Button>}
-                                                {canDelete && <Button size="small" color="error" onClick={() => onDelete(team.id)}>Usuń</Button>}
-                                            </Box>
-                                        </TableCell>
-                                    )}
-                                </TableRow>
-                            )
-                        )}
-                    </TableBody>
-                </Table>
-            </TableContainer>
+                                        <Typography variant="body2">{coach.fullName ?? coach.email}</Typography>
+                                    </Box>
+                                ) : (
+                                    <Typography variant="body2" color="text.secondary">Brak przypisanego trenera</Typography>
+                                )}
+                            </Box>
+
+                            <Box>
+                                <Typography variant="caption" color="text.secondary">SZTAB</Typography>
+                                {otherStaff.length > 0 ? (
+                                    <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap", mt: 0.5 }}>
+                                        {otherStaff.map((m) => (
+                                            <Chip
+                                                key={m.id}
+                                                size="small"
+                                                label={`${m.fullName ?? m.email} (${ROLE_LABELS[m.roles[0]] ?? m.roles[0]})`}
+                                            />
+                                        ))}
+                                    </Box>
+                                ) : (
+                                    <Typography variant="body2" color="text.secondary">Brak</Typography>
+                                )}
+                            </Box>
+
+                            {(canEdit || canDelete) && (
+                                <Box sx={{ display: "flex", gap: 1, mt: 1.5 }}>
+                                    {canEdit && <Button size="small" onClick={() => onStartEdit(team)}>Edytuj</Button>}
+                                    {canDelete && <Button size="small" color="error" onClick={() => onDelete(team.id)}>Usuń</Button>}
+                                </Box>
+                            )}
+                        </Box>
+                    );
+                })}
+            </Box>
+
+            <Dialog open={createOpen} onClose={onCloseCreate} fullWidth maxWidth="xs">
+                <Box component="form" onSubmit={onCreate}>
+                    <DialogTitle>Nowa drużyna</DialogTitle>
+                    <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}>
+                        {formError && <Alert severity="error">{formError}</Alert>}
+                        <TextField
+                            label="Nazwa"
+                            value={name}
+                            onChange={(e) => onNameChange(e.target.value)}
+                            required
+                        />
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                            {logoUrl && <Avatar src={`${BACKEND_ORIGIN}${logoUrl}`} variant="rounded" />}
+                            <Button component="label" variant="outlined">
+                                Wybierz logo
+                                <input type="file" accept="image/png,image/jpeg" hidden onChange={onLogoSelect} />
+                            </Button>
+                        </Box>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={onCloseCreate}>Anuluj</Button>
+                        <Button type="submit" variant="contained">Dodaj</Button>
+                    </DialogActions>
+                </Box>
+            </Dialog>
+
+            <Dialog open={editingId !== null} onClose={onCancelEdit} fullWidth maxWidth="xs">
+                <Box component="form" onSubmit={(e) => { e.preventDefault(); if (editingId !== null) onSaveEdit(editingId); }}>
+                    <DialogTitle>Edytuj drużynę</DialogTitle>
+                    <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}>
+                        <TextField
+                            label="Nazwa"
+                            value={editName}
+                            onChange={(e) => onEditNameChange(e.target.value)}
+                            required
+                        />
+                        <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                            {editLogoUrl && <Avatar src={`${BACKEND_ORIGIN}${editLogoUrl}`} variant="rounded" />}
+                            <Button component="label" variant="outlined">
+                                Zmień logo
+                                <input type="file" accept="image/png,image/jpeg" hidden onChange={onEditLogoSelect} />
+                            </Button>
+                        </Box>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={onCancelEdit}>Anuluj</Button>
+                        <Button type="submit" variant="contained">Zapisz</Button>
+                    </DialogActions>
+                </Box>
+            </Dialog>
         </>
     );
 }

@@ -1,8 +1,8 @@
 import axiosInstance from "./axiosInstance";
-import type { Team } from "../types/team";
+import type { Team, TeamSummary } from "../types/team";
 
-export async function getTeams(): Promise<Team[]> {
-    const response = await axiosInstance.get<Team[]>("/teams");
+export async function getTeams(): Promise<TeamSummary[]> {
+    const response = await axiosInstance.get<TeamSummary[]>("/teams");
     return response.data;
 }
 
