@@ -357,9 +357,6 @@ namespace CoachHub.Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateOnly>("FoundedDate")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("LogoUrl")
                         .HasColumnType("TEXT");
 

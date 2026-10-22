@@ -36,7 +36,6 @@ public class TeamService : ITeamService
         if (existing is null) return false;
 
         existing.Name = team.Name;
-        existing.FoundedDate = team.FoundedDate;
         existing.LogoUrl = team.LogoUrl;
         await _context.SaveChangesAsync();
         return true;

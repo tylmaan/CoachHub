@@ -2,24 +2,23 @@ import { useEffect, useState } from 'react';
 import { CircularProgress, Alert } from '@mui/material';
 import axios from "axios";
 import { getTeams, createTeam, updateTeam, deleteTeam } from '../api/teamsApi';
-import type { Team } from '../types/team';
+import type { TeamSummary } from '../types/team';
 import { useAuth } from "../context/AuthContext";
 import { uploadFile } from '../api/filesApi';
 import { TeamsPageView } from './TeamsPageView';
 
 export function TeamsPage() {
-    const [teams, setTeams] = useState<Team[]>([]);
+    const [teams, setTeams] = useState<TeamSummary[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     const [name, setName] = useState("");
-    const [foundedDate, setFoundedDate] = useState("");
     const [logoUrl, setLogoUrl] = useState<string | null>(null);
     const [formError, setFormError] = useState<string | null>(null);
+    const [createOpen, setCreateOpen] = useState(false);
 
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editName, setEditName] = useState("");
-    const [editFoundedDate, setEditFoundedDate] = useState("");
     const [editLogoUrl, setEditLogoUrl] = useState<string | null>(null);
     const [actionError, setActionError] = useState<string | null>(null);
 
@@ -65,10 +64,10 @@ export function TeamsPage() {
         e.preventDefault();
         setFormError(null);
         try {
-            await createTeam({ name, foundedDate, logoUrl });
+            await createTeam({ name, logoUrl });
             setName("");
-            setFoundedDate("");
             setLogoUrl(null);
+            setCreateOpen(false);
             loadTeams();
         } catch (err) {
             if (axios.isAxiosError(err) && Array.isArray(err.response?.data)) {
@@ -79,10 +78,9 @@ export function TeamsPage() {
         }
     }
 
-    function startEdit(team: Team) {
+    function startEdit(team: TeamSummary) {
         setEditingId(team.id);
         setEditName(team.name);
-        setEditFoundedDate(team.foundedDate);
         setEditLogoUrl(team.logoUrl);
         setActionError(null);
     }
@@ -90,7 +88,7 @@ export function TeamsPage() {
     async function saveEdit(id: number) {
         setActionError(null);
         try {
-            await updateTeam(id, { name: editName, foundedDate: editFoundedDate, logoUrl: editLogoUrl });
+            await updateTeam(id, { name: editName, logoUrl: editLogoUrl });
             setEditingId(null);
             loadTeams();
         } catch {
@@ -118,21 +116,20 @@ export function TeamsPage() {
             canEdit={!!canEdit}
             canDelete={!!canDelete}
             name={name}
-            foundedDate={foundedDate}
             logoUrl={logoUrl}
             formError={formError}
             onNameChange={setName}
-            onFoundedDateChange={setFoundedDate}
             onLogoSelect={handleLogoSelect}
+            createOpen={createOpen}
+            onOpenCreate={() => setCreateOpen(true)}
+            onCloseCreate={() => setCreateOpen(false)}
             onCreate={handleCreate}
             editingId={editingId}
             editName={editName}
-            editFoundedDate={editFoundedDate}
             editLogoUrl={editLogoUrl}
             actionError={actionError}
             onStartEdit={startEdit}
             onEditNameChange={setEditName}
-            onEditFoundedDateChange={setEditFoundedDate}
             onEditLogoSelect={handleEditLogoSelect}
             onSaveEdit={saveEdit}
             onCancelEdit={() => setEditingId(null)}
