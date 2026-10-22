@@ -24,6 +24,7 @@ import type { UserSummary } from "../types/user";
 import type { Team } from "../types/team";
 import { ROLE_LABELS } from "../constants/labels";
 import { BACKEND_ORIGIN } from "../api/axiosInstance";
+import { ConfirmDeleteDialog } from "../components/ConfirmDeleteDialog";
 
 type SortField = "email" | "roles" | "teamId" | "fullName";
 const ROLES = ["Coach", "AssistantCoach", "Analyst"];
@@ -49,7 +50,10 @@ interface UsersPageViewProps {
     onEditPhotoSelect: (e: React.ChangeEvent<HTMLInputElement>) => void;
     onSaveEdit: (id: string) => void;
     onCancelEdit: () => void;
-    onDelete: (id: string) => void;
+    deleteDialogOpen: boolean;
+    onRequestDelete: (id: string) => void;
+    onCancelDelete: () => void;
+    onConfirmDelete: () => void;
 
     registerOpen: boolean;
     newFullName: string;
@@ -89,7 +93,10 @@ export function UsersPageView({
     onEditPhotoSelect,
     onSaveEdit,
     onCancelEdit,
-    onDelete,
+    deleteDialogOpen,
+    onRequestDelete,
+    onCancelDelete,
+    onConfirmDelete,
     registerOpen,
     newFullName,
     newPhotoUrl,
@@ -223,7 +230,7 @@ export function UsersPageView({
                                         <TableCell>
                                             <Box sx={{ display: "flex", gap: 1 }}>
                                                 <Button size="small" onClick={() => onStartEdit(user)}>Edytuj</Button>
-                                                <Button size="small" color="error" onClick={() => onDelete(user.id)}>Usuń</Button>
+                                                <Button size="small" color="error" onClick={() => onRequestDelete(user.id)}>Usuń</Button>
                                             </Box>
                                         </TableCell>
                                     </>
@@ -294,6 +301,14 @@ export function UsersPageView({
                     </DialogActions>
                 </Box>
             </Dialog>
+
+            <ConfirmDeleteDialog
+                open={deleteDialogOpen}
+                title="Usunąć użytkownika?"
+                message="Usunięcie tego użytkownika skasuje też wszystkie raporty i schematy taktyczne, które utworzył. Tej operacji nie można cofnąć."
+                onConfirm={onConfirmDelete}
+                onCancel={onCancelDelete}
+            />
         </>
     );
 }

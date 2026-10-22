@@ -21,6 +21,7 @@ export function TeamsPage() {
     const [editName, setEditName] = useState("");
     const [editLogoUrl, setEditLogoUrl] = useState<string | null>(null);
     const [actionError, setActionError] = useState<string | null>(null);
+    const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
 
     const { roles } = useAuth();
     const canEdit = roles?.includes("Admin");
@@ -106,6 +107,20 @@ export function TeamsPage() {
         }
     }
 
+    function requestDelete(id: number) {
+        setDeleteTargetId(id);
+    }
+
+    function cancelDelete() {
+        setDeleteTargetId(null);
+    }
+
+    async function confirmDelete() {
+        if (deleteTargetId === null) return;
+        await handleDelete(deleteTargetId);
+        setDeleteTargetId(null);
+    }
+
     if (loading) return <CircularProgress />;
     if (error) return <Alert severity="error">{error}</Alert>;
 
@@ -133,7 +148,10 @@ export function TeamsPage() {
             onEditLogoSelect={handleEditLogoSelect}
             onSaveEdit={saveEdit}
             onCancelEdit={() => setEditingId(null)}
-            onDelete={handleDelete}
+            deleteDialogOpen={deleteTargetId !== null}
+            onRequestDelete={requestDelete}
+            onCancelDelete={cancelDelete}
+            onConfirmDelete={confirmDelete}
         />
     );
 }
