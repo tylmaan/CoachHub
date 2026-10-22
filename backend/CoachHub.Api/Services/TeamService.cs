@@ -7,10 +7,12 @@ namespace CoachHub.Api.Services;
 public class TeamService : ITeamService
 {
     private readonly ApplicationDbContext _context;
+    private readonly IFileStorageService _fileStorageService;
 
-    public TeamService(ApplicationDbContext context)
+    public TeamService(ApplicationDbContext context, IFileStorageService fileStorageService)
     {
         _context = context;
+        _fileStorageService = fileStorageService;
     }
 
     public async Task<List<Team>> GetAllAsync()
@@ -35,9 +37,17 @@ public class TeamService : ITeamService
         var existing = await _context.Teams.FindAsync(id);
         if (existing is null) return false;
 
+        var oldLogoUrl = existing.LogoUrl;
+
         existing.Name = team.Name;
         existing.LogoUrl = team.LogoUrl;
         await _context.SaveChangesAsync();
+
+        if (oldLogoUrl != team.LogoUrl)
+        {
+            _fileStorageService.DeleteFile(oldLogoUrl);
+        }
+
         return true;
     }
 
@@ -48,6 +58,7 @@ public class TeamService : ITeamService
 
         _context.Teams.Remove(existing);
         await _context.SaveChangesAsync();
+        _fileStorageService.DeleteFile(existing.LogoUrl);
         return true;
     }
 }
