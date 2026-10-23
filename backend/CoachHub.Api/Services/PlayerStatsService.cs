@@ -78,6 +78,7 @@ public class PlayerStatsService : IPlayerStatsService
                     PlayerId = player.Id,
                     FirstName = player.FirstName,
                     LastName = player.LastName,
+                    PhotoUrl = player.PhotoUrl,
                     Season = season,
                     Matches = matchesPlayed,
                     Minutes = minutesPlayed,

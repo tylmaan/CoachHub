@@ -5,6 +5,7 @@ public class PlayerSeasonStats
     public required int PlayerId { get; set; }
     public required string FirstName { get; set; }
     public required string LastName { get; set; }
+    public string? PhotoUrl { get; set; }
     public required string Season { get; set; }
     public required int Matches { get; set; }
     public required int Minutes { get; set; }
