@@ -6,6 +6,7 @@ import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined';
 import GroupsOutlinedIcon from '@mui/icons-material/GroupsOutlined';
 import SportsSoccerOutlinedIcon from '@mui/icons-material/SportsSoccerOutlined';
 import ManageAccountsOutlinedIcon from '@mui/icons-material/ManageAccountsOutlined';
+import BarChartOutlinedIcon from '@mui/icons-material/BarChartOutlined';
 import { DashboardPageView } from './DashboardPageView';
 import type { Tile } from './DashboardPageView';
 
@@ -29,6 +30,7 @@ export function DashboardPage() {
         : [
             { label: 'Zawodnicy', path: '/players', icon: <GroupsOutlinedIcon sx={{ fontSize: 32 }} /> },
             { label: 'Mecze', path: '/matches', icon: <SportsSoccerOutlinedIcon sx={{ fontSize: 32 }} /> },
+            { label: 'Statystyki', path: '/player-stats', icon: <BarChartOutlinedIcon sx={{ fontSize: 32 }} /> }
         ];
 
     return <DashboardPageView tiles={tiles} team={team} />;
