@@ -9,6 +9,7 @@ import { AdminRoute } from './components/AdminRoute';
 import { UsersPage } from './pages/UsersPage';
 import { MatchesPage } from './pages/MatchesPage';
 import { MatchDetailPage } from './pages/MatchDetailPage';
+import { PlayerStatsPage } from './pages/PlayerStatsPage';
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
         <Route path="/users" element={<AdminRoute><UsersPage /></AdminRoute>} />
         <Route path="/matches" element={<MatchesPage />} />
         <Route path="/matches/:id" element={<MatchDetailPage />} />
+        <Route path="/player-stats" element={<PlayerStatsPage />} />
       </Route>
     </Routes>
   );

@@ -9,6 +9,7 @@ const PAGE_TITLES: Record<string, string> = {
     "/players": "Zawodnicy",
     "/matches": "Mecze",
     "/users": "Użytkownicy",
+    "/player-stats": "Statystyki",
 };
 
 export function Layout() {
