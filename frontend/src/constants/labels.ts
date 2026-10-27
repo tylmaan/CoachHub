@@ -20,6 +20,8 @@ export const MATCH_TYPE_LABELS: Record<string, string> = {
 export const COMPETITIONS = [
     "Superpuchar Polski",
     "Puchar Polski",
+    "FA Cup",
+    "EFL Cup",
     "Liga Mistrzów",
     "Liga Europy",
     "Liga Konferencji Europy",
