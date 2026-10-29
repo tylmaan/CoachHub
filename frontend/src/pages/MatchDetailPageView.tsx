@@ -34,6 +34,7 @@ import type { Match } from "../types/match";
 import type { Player } from "../types/player";
 import type { MatchAppearance } from "../types/matchAppearance";
 import type { MatchEvent } from "../types/matchEvent";
+import type { DropTarget } from "../types/lineupDrag";
 import { MATCH_TYPE_LABELS, POSITION_LABELS, EVENT_TYPE_LABELS, POSITIONS, POSITION_GROUPS } from "../constants/labels";
 import { FORMATIONS, FORMATION_LABELS, type FormationSlot } from "../constants/formations";
 import { BACKEND_ORIGIN } from "../api/axiosInstance";
@@ -90,6 +91,14 @@ interface MatchDetailPageViewProps {
     onNewEventOpponentNameChange: (value: string) => void;
     onAddEvent: (e: React.SyntheticEvent) => void;
     onRemoveEvent: (eventId: number) => void;
+    canDrag: boolean;
+    dragId: number | null;
+    overKey: string | null;
+    onDragStart: (appearanceId: number) => void;
+    onDragEnd: () => void;
+    onDragOverTarget: (key: string) => void;
+    onDragLeaveTarget: (key: string) => void;
+    onDropOn: (target: DropTarget) => void;
 }
 
 function Jersey({ number, muted }: { number: number | null; muted?: boolean }) {
@@ -176,9 +185,44 @@ export function MatchDetailPageView({
     onNewEventOpponentNameChange,
     onAddEvent,
     onRemoveEvent,
+    canDrag,
+    dragId,
+    overKey,
+    onDragStart,
+    onDragEnd,
+    onDragOverTarget,
+    onDragLeaveTarget,
+    onDropOn,
 }: MatchDetailPageViewProps) {
     function playerFor(appearance: MatchAppearance): Player | undefined {
         return players.find((p) => p.id === appearance.playerId);
+    }
+
+    function dragProps(appearance: MatchAppearance | null) {
+        if (!canDrag || !appearance) return {};
+        return {
+            draggable: true,
+            onDragStart: (e: React.DragEvent) => {
+                e.dataTransfer.effectAllowed = "move";
+                onDragStart(appearance.id);
+            },
+            onDragEnd,
+        };
+    }
+
+    function dropProps(key: string, target: DropTarget) {
+        if (!canDrag) return {};
+        return {
+            onDragOver: (e: React.DragEvent) => {
+                e.preventDefault();
+                onDragOverTarget(key);
+            },
+            onDragLeave: () => onDragLeaveTarget(key),
+            onDrop: (e: React.DragEvent) => {
+                e.preventDefault();
+                onDropOn(target);
+            },
+        };
     }
 
     function buildPitchSlots(code: string): { pos: string; x: number; y: number, slotKey: string; appearance: MatchAppearance | null }[] {
@@ -400,6 +444,8 @@ export function MatchDetailPageView({
                         <Box
                             key={i}
                             onClick={() => onOpenPitchPicker(slot.pos, slot.slotKey, slot.appearance)}
+                            {...dragProps(slot.appearance)}
+                            {...dropProps(slot.slotKey, { kind: "pitch", slotKey: slot.slotKey })}
                             sx={{
                                 position: "absolute",
                                 left: `${slot.x}%`,
@@ -410,6 +456,9 @@ export function MatchDetailPageView({
                                 flexDirection: "column",
                                 alignItems: "center",
                                 width: 92,
+                                opacity: slot.appearance && dragId === slot.appearance.id ? 0.4 : 1,
+                                outline: overKey === slot.slotKey ? "2px dashed #fff" : "none",
+                                borderRadius: 1,
                             }}
                         >
                             <Jersey number={player?.jerseyNumber ?? null} muted={!player} />
@@ -425,14 +474,33 @@ export function MatchDetailPageView({
             </Box>
 
             <Typography variant="subtitle2" sx={{ mb: 1 }}>Ławka rezerwowych</Typography>
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, mb: 2 }}>
+            <Box
+                {...dropProps("bench", { kind: "bench" })} 
+                sx={{ 
+                    display: "flex", 
+                    flexWrap: "wrap", 
+                    gap: 2, 
+                    mb: 2,
+                    p: 1,
+                    borderRadius: 2,
+                    outline: overKey === "bench" ? "2px dashed #fff" : "none", 
+                }}
+            >
                 {benchTiles.map((appearance, i) => {
                     const player = appearance ? playerFor(appearance) : undefined;
                     return (
                         <Box
                             key={i}
                             onClick={() => onOpenBenchPicker(appearance)}
-                            sx={{ cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", width: 92 }}
+                            {...dragProps(appearance)}
+                            sx={{ 
+                                cursor: "pointer", 
+                                display: "flex", 
+                                flexDirection: "column", 
+                                alignItems: "center", 
+                                width: 92,
+                                opacity: appearance && dragId === appearance.id ? 0.4 : 1, 
+                            }}
                         >
                             <Jersey number={player?.jerseyNumber ?? null} muted={!player} />
                             <Typography

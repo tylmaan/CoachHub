@@ -1,19 +1,22 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import { Alert, CircularProgress } from "@mui/material";
 import { getMatch, updateMatch } from "../api/matchesApi";
 import { getPlayers } from "../api/playersApi";
-import { getMatchAppearances, createMatchAppearance, deleteMatchAppearance } from "../api/matchAppearancesApi";
+import { getMatchAppearances, createMatchAppearance, deleteMatchAppearance, updateMatchAppearance } from "../api/matchAppearancesApi";
 import { getMatchEvents, createMatchEvent, deleteMatchEvent } from "../api/matchEventsApi";
 import type { Match } from "../types/match";
 import type { Player } from "../types/player";
 import type { MatchAppearance } from "../types/matchAppearance";
 import type { MatchEvent } from "../types/matchEvent";
+import type { DragSource, DropTarget } from "../types/lineupDrag";
 import { MatchDetailPageView } from "./MatchDetailPageView";
 import { POSITION_GROUPS } from "../constants/labels";
 
 export function MatchDetailPage() {
     const { id } = useParams<{ id: string }>();
+    const { roles } = useAuth();
     const [match, setMatch] = useState<Match | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -44,6 +47,10 @@ export function MatchDetailPage() {
     const [newEventSecondPlayerId, setNewEventSecondPlayerId] = useState<number | "">("");
     const [newEventSecondOpponentName, setNewEventSecondOpponentName] = useState("");
     const [eventError, setEventError] = useState<string | null>(null);
+
+    const canDrag = !!roles?.some((r) => r === "Coach" || r === "AssistantCoach");
+    const [dragId, setDragId] = useState<number | null>(null);
+    const [overKey, setOverKey] = useState<string | null>(null);
 
     useEffect(() => {
         if (!id) return;
@@ -145,6 +152,74 @@ export function MatchDetailPage() {
         } catch {
             setRosterError("Nie udało się usunąć zawodnika ze składu.");
         }
+    }
+
+    async function handleMoveAppearance(source: DragSource, target: DropTarget) {
+        if (!id) return;
+        const matchId = Number(id);
+        const moved = appearances.find((a) => a.id === source.appearanceId);
+        if (!moved) return;
+        setRosterError(null);
+
+        try {
+            if (target.kind === "bench") {
+                if (!moved.isStarting) return;
+                await updateMatchAppearance(moved.id, { 
+                    matchId,
+                    playerId: moved.playerId,
+                    isStarting: false,
+                    position: null
+                });
+            } else {
+                if (moved.isStarting && moved.position === target.slotKey) return;
+                const occupant = appearances.find((a) => a.isStarting && a.position === target.slotKey && a.id !== moved.id);
+
+                await updateMatchAppearance(moved.id, {
+                    matchId,
+                    playerId: moved.playerId,
+                    isStarting: true,
+                    position: target.slotKey
+                });
+
+                if (occupant) {
+                    await updateMatchAppearance(occupant.id, {
+                        matchId,
+                        playerId: occupant.playerId,
+                        isStarting: moved.isStarting,
+                        position: moved.isStarting ? moved.position : null
+                    });
+                }
+            }
+            loadAppearances(matchId);
+        } catch {
+            setRosterError("Nie udało się przenieść zawodnika.");
+            loadAppearances(matchId);
+        }
+    }
+
+    function handleDragStart(appearanceId: number) {
+        setDragId(appearanceId);
+    }
+
+    function handleDragEnd() {
+        setDragId(null);
+        setOverKey(null);
+    }
+
+    function handleDragOverTarget(key: string) {
+        setOverKey(key);
+    }
+
+    function handleDragLeaveTarget(key: string) {
+        setOverKey((current) => (current === key ? null : current));
+    }
+
+    function handleDropOn(target: DropTarget) {
+        if (dragId !== null) {
+            handleMoveAppearance({ appearanceId: dragId }, target);
+        }
+        setDragId(null);
+        setOverKey(null);
     }
 
     function openEventDialog() {
@@ -292,6 +367,14 @@ export function MatchDetailPage() {
             onNewEventOpponentNameChange={setNewEventOpponentName}
             onAddEvent={handleAddEvent}
             onRemoveEvent={handleRemoveEvent}
+            canDrag={canDrag}
+            dragId={dragId}
+            overKey={overKey}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            onDragOverTarget={handleDragOverTarget}
+            onDragLeaveTarget={handleDragLeaveTarget}
+            onDropOn={handleDropOn}
         />
     );
 }
