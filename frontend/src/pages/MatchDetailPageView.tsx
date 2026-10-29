@@ -29,6 +29,7 @@ import ArrowCircleUpIcon from "@mui/icons-material/ArrowCircleUp";
 import ArrowCircleDownIcon from "@mui/icons-material/ArrowCircleDown";
 import BlockIcon from "@mui/icons-material/Block";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
+import SwapVertIcon from "@mui/icons-material/SwapVert";
 import AdjustIcon from "@mui/icons-material/Adjust";
 import type { Match } from "../types/match";
 import type { Player } from "../types/player";
@@ -256,6 +257,7 @@ export function MatchDetailPageView({
         if (eventType === "SubstitutionIn") return <ArrowCircleUpIcon sx={{ color: "success.main" }} fontSize="small" />;
         if (eventType === "SubstitutionOff") return <ArrowCircleDownIcon sx={{ color: "error.main" }} fontSize="small" />;
         if (eventType === "PenaltyMissed") return <BlockIcon sx={{ color: "error.main" }} fontSize="small" />;
+        if (eventType === "Substitution") return <SwapVertIcon sx={{ color: "info.main" }} fontSize="small" />;
         return <SwapHorizIcon sx={{ color: "text.secondary" }} fontSize="small" />;
     }
 
@@ -361,7 +363,7 @@ export function MatchDetailPageView({
                     >
                         <DeleteIcon fontSize="small" />
                     </IconButton>
-                    {eventTypeIcon(de.primary.eventType, second)}
+                    {eventTypeIcon(de.primary.eventType === "SubstitutionOff" && de.secondary ? "Substitution" : de.primary.eventType, second)}
                     <Box sx={{ textAlign: isOpponent ? "right" : "left" }}>
                         <Typography variant="body2">
                             {de.primary.minute ?? "-"}{de.primary.addedTime ? `+${de.primary.addedTime}` : ""}&apos; {displayLabel(de)}
