@@ -21,6 +21,7 @@ import {
     Tab,
     Checkbox,
     FormControlLabel,
+    Chip,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import SportsSoccerIcon from "@mui/icons-material/SportsSoccer";
@@ -29,12 +30,15 @@ import ArrowCircleUpIcon from "@mui/icons-material/ArrowCircleUp";
 import ArrowCircleDownIcon from "@mui/icons-material/ArrowCircleDown";
 import BlockIcon from "@mui/icons-material/Block";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
+import SwapVertIcon from "@mui/icons-material/SwapVert";
 import AdjustIcon from "@mui/icons-material/Adjust";
 import type { Match } from "../types/match";
 import type { Player } from "../types/player";
 import type { MatchAppearance } from "../types/matchAppearance";
 import type { MatchEvent } from "../types/matchEvent";
-import { MATCH_TYPE_LABELS, POSITION_LABELS, EVENT_TYPE_LABELS, POSITIONS, POSITION_GROUPS } from "../constants/labels";
+import type { DropTarget } from "../types/lineupDrag";
+import type { PickerOption } from "../types/pickerOption";
+import { MATCH_TYPE_LABELS, EVENT_TYPE_LABELS, POSITION_GROUPS } from "../constants/labels";
 import { FORMATIONS, FORMATION_LABELS, type FormationSlot } from "../constants/formations";
 import { BACKEND_ORIGIN } from "../api/axiosInstance";
 
@@ -45,7 +49,6 @@ interface MatchDetailPageViewProps {
     match: Match;
     players: Player[];
     appearances: MatchAppearance[];
-    availablePlayers: Player[];
     rosterPlayers: Player[];
     rosterError: string | null;
     formation: string;
@@ -55,6 +58,9 @@ interface MatchDetailPageViewProps {
     pickerPosition: string | null;
     pickerTab: number;
     onPickerTabChange: (value: number) => void;
+    pickerSearch: string;
+    onPickerSearchChange: (value: string) => void;
+    pickerOptions: PickerOption[];
     pickerHasAppearance: boolean;
     onOpenPitchPicker: (pos: string, slotKey: string, appearance: MatchAppearance | null) => void;
     onOpenBenchPicker: (appearance: MatchAppearance | null) => void;
@@ -90,6 +96,15 @@ interface MatchDetailPageViewProps {
     onNewEventOpponentNameChange: (value: string) => void;
     onAddEvent: (e: React.SyntheticEvent) => void;
     onRemoveEvent: (eventId: number) => void;
+    addedTimeEnabled: boolean;
+    canDrag: boolean;
+    dragId: number | null;
+    overKey: string | null;
+    onDragStart: (appearanceId: number) => void;
+    onDragEnd: () => void;
+    onDragOverTarget: (key: string) => void;
+    onDragLeaveTarget: (key: string) => void;
+    onDropOn: (target: DropTarget) => void;
 }
 
 function Jersey({ number, muted }: { number: number | null; muted?: boolean }) {
@@ -131,7 +146,6 @@ export function MatchDetailPageView({
     match,
     players,
     appearances,
-    availablePlayers,
     rosterError,
     formation,
     onFormationChange,
@@ -140,6 +154,9 @@ export function MatchDetailPageView({
     pickerPosition,
     pickerTab,
     onPickerTabChange,
+    pickerSearch,
+    onPickerSearchChange,
+    pickerOptions,
     pickerHasAppearance,
     onOpenPitchPicker,
     onOpenBenchPicker,
@@ -176,9 +193,45 @@ export function MatchDetailPageView({
     onNewEventOpponentNameChange,
     onAddEvent,
     onRemoveEvent,
+    addedTimeEnabled,
+    canDrag,
+    dragId,
+    overKey,
+    onDragStart,
+    onDragEnd,
+    onDragOverTarget,
+    onDragLeaveTarget,
+    onDropOn,
 }: MatchDetailPageViewProps) {
     function playerFor(appearance: MatchAppearance): Player | undefined {
         return players.find((p) => p.id === appearance.playerId);
+    }
+
+    function dragProps(appearance: MatchAppearance | null) {
+        if (!canDrag || !appearance) return {};
+        return {
+            draggable: true,
+            onDragStart: (e: React.DragEvent) => {
+                e.dataTransfer.effectAllowed = "move";
+                onDragStart(appearance.id);
+            },
+            onDragEnd,
+        };
+    }
+
+    function dropProps(key: string, target: DropTarget) {
+        if (!canDrag) return {};
+        return {
+            onDragOver: (e: React.DragEvent) => {
+                e.preventDefault();
+                onDragOverTarget(key);
+            },
+            onDragLeave: () => onDragLeaveTarget(key),
+            onDrop: (e: React.DragEvent) => {
+                e.preventDefault();
+                onDropOn(target);
+            },
+        };
     }
 
     function buildPitchSlots(code: string): { pos: string; x: number; y: number, slotKey: string; appearance: MatchAppearance | null }[] {
@@ -192,7 +245,6 @@ export function MatchDetailPageView({
     const pitchSlots = buildPitchSlots(formation);
     const benchAppearances = appearances.filter((a) => !a.isStarting);
     const benchTiles = Array.from({ length: BENCH_SIZE }, (_, i) => benchAppearances[i] ?? null);
-    const sortedAvailable = [...availablePlayers].sort((a, b) => POSITIONS.indexOf(a.position) - POSITIONS.indexOf(b.position)); 
 
         function eventTypeIcon(eventType: string, isSecondYellow?: boolean) {
         if (eventType === "Goal") return <SportsSoccerIcon sx={{ color: "success.main" }} fontSize="small" />;
@@ -212,6 +264,7 @@ export function MatchDetailPageView({
         if (eventType === "SubstitutionIn") return <ArrowCircleUpIcon sx={{ color: "success.main" }} fontSize="small" />;
         if (eventType === "SubstitutionOff") return <ArrowCircleDownIcon sx={{ color: "error.main" }} fontSize="small" />;
         if (eventType === "PenaltyMissed") return <BlockIcon sx={{ color: "error.main" }} fontSize="small" />;
+        if (eventType === "Substitution") return <SwapVertIcon sx={{ color: "info.main" }} fontSize="small" />;
         return <SwapHorizIcon sx={{ color: "text.secondary" }} fontSize="small" />;
     }
 
@@ -317,7 +370,7 @@ export function MatchDetailPageView({
                     >
                         <DeleteIcon fontSize="small" />
                     </IconButton>
-                    {eventTypeIcon(de.primary.eventType, second)}
+                    {eventTypeIcon(de.primary.eventType === "SubstitutionOff" && de.secondary ? "Substitution" : de.primary.eventType, second)}
                     <Box sx={{ textAlign: isOpponent ? "right" : "left" }}>
                         <Typography variant="body2">
                             {de.primary.minute ?? "-"}{de.primary.addedTime ? `+${de.primary.addedTime}` : ""}&apos; {displayLabel(de)}
@@ -400,6 +453,8 @@ export function MatchDetailPageView({
                         <Box
                             key={i}
                             onClick={() => onOpenPitchPicker(slot.pos, slot.slotKey, slot.appearance)}
+                            {...dragProps(slot.appearance)}
+                            {...dropProps(slot.slotKey, { kind: "pitch", slotKey: slot.slotKey })}
                             sx={{
                                 position: "absolute",
                                 left: `${slot.x}%`,
@@ -410,6 +465,9 @@ export function MatchDetailPageView({
                                 flexDirection: "column",
                                 alignItems: "center",
                                 width: 92,
+                                opacity: slot.appearance && dragId === slot.appearance.id ? 0.4 : 1,
+                                outline: overKey === slot.slotKey ? "2px dashed #fff" : "none",
+                                borderRadius: 1,
                             }}
                         >
                             <Jersey number={player?.jerseyNumber ?? null} muted={!player} />
@@ -425,14 +483,33 @@ export function MatchDetailPageView({
             </Box>
 
             <Typography variant="subtitle2" sx={{ mb: 1 }}>Ławka rezerwowych</Typography>
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 2, mb: 2 }}>
+            <Box
+                {...dropProps("bench", { kind: "bench" })} 
+                sx={{ 
+                    display: "flex", 
+                    flexWrap: "wrap", 
+                    gap: 2, 
+                    mb: 2,
+                    p: 1,
+                    borderRadius: 2,
+                    outline: overKey === "bench" ? "2px dashed #fff" : "none", 
+                }}
+            >
                 {benchTiles.map((appearance, i) => {
                     const player = appearance ? playerFor(appearance) : undefined;
                     return (
                         <Box
                             key={i}
                             onClick={() => onOpenBenchPicker(appearance)}
-                            sx={{ cursor: "pointer", display: "flex", flexDirection: "column", alignItems: "center", width: 92 }}
+                            {...dragProps(appearance)}
+                            sx={{ 
+                                cursor: "pointer", 
+                                display: "flex", 
+                                flexDirection: "column", 
+                                alignItems: "center", 
+                                width: 92,
+                                opacity: appearance && dragId === appearance.id ? 0.4 : 1, 
+                            }}
                         >
                             <Jersey number={player?.jerseyNumber ?? null} muted={!player} />
                             <Typography
@@ -451,6 +528,15 @@ export function MatchDetailPageView({
                     {pickerIsStarting ? `Pozycja: ${pickerPosition}` : "Ławka rezerwowych"}
                 </DialogTitle>
                 <DialogContent sx={{ pt: 1 }}>
+                    <TextField
+                        autoFocus
+                        fullWidth
+                        size="small"
+                        placeholder="Szukaj zawodnika"
+                        value={pickerSearch}
+                        onChange={(e) => onPickerSearchChange(e.target.value)}
+                        sx={{ mb: 1 }}
+                    />
                     <Tabs
                         value={pickerTab}
                         onChange={(_, value) => onPickerTabChange(value)}
@@ -462,25 +548,43 @@ export function MatchDetailPageView({
                         ))}
                     </Tabs>
                     <List dense sx={{ maxHeight: 320, overflowY: "auto" }}>
-                        {sortedAvailable
-                            .filter((p) => POSITION_GROUPS[pickerTab].codes.includes(p.position))
-                            .map((p) => (
-                                <ListItem key={p.id} disablePadding>
-                                    <Button
-                                        fullWidth
-                                        sx={{ justifyContent: "space-between", textTransform: "none", px: 1.5 }}
-                                        onClick={() => onPickPlayer(p.id)}
+                        {pickerOptions.map((option) => (
+                            <ListItem key={option.player.id} disablePadding divider>
+                                <Button
+                                    fullWidth
+                                    disabled={option.inLineup}
+                                    onClick={() => onPickPlayer(option.player.id)}
+                                    sx={{ justifyContent: "flex-start", textTransform: "none", gap: 1.5, px: 1.5, py: 1 }}
+                                >
+                                    <Typography variant="body2" sx={{ width: 28, textAlign: "center", color: "text.secondary", fontWeight: 500 }}>
+                                        {option.player.jerseyNumber ?? "-"}
+                                    </Typography>
+                                    <Avatar
+                                        src={option.player.photoUrl ? `${BACKEND_ORIGIN}${option.player.photoUrl}` : undefined}
+                                        sx={{ width: 34, height: 34, fontSize: 12 }}
                                     >
-                                        <span>{p.jerseyNumber ?? "-"} &nbsp; {p.firstName} {p.lastName}</span>
-                                        <Typography variant="caption" color="text.secondary">
-                                            {POSITION_LABELS[p.position] ?? p.position}
+                                        {option.player.firstName[0]}{option.player.lastName[0]}
+                                    </Avatar>
+                                    <Box sx={{ flex: 1, textAlign: "left" }}>
+                                        <Typography variant="body2" color="text.primary">
+                                            {option.player.firstName} {option.player.lastName}
                                         </Typography>
-                                    </Button>
-                                </ListItem>
-                            ))}
-                        {sortedAvailable.filter((p) => POSITION_GROUPS[pickerTab].codes.includes(p.position)).length === 0 && (
+                                        {option.inLineup && (
+                                            <Typography variant="caption" color="text.secondary">w składzie</Typography>
+                                        )}
+                                    </Box>
+                                    <Chip
+                                        size="small"
+                                        label={option.player.position}
+                                        color={option.fitsPosition ? "success" : "default"}
+                                        variant={option.fitsPosition ? "filled" : "outlined"}
+                                    />
+                                </Button>
+                            </ListItem>
+                        ))}
+                        {pickerOptions.length === 0 && (
                             <Typography variant="body2" color="text.secondary" sx={{ px: 1.5 }}>
-                                Brak dostępnych zawodników w tej grupie.
+                                Brak zawodników.
                             </Typography>
                         )}
                     </List>
@@ -644,6 +748,8 @@ export function MatchDetailPageView({
                             type="number"
                             value={newEventAddedTime}
                             onChange={(e) => onNewEventAddedTimeChange(e.target.value)}
+                            disabled={!addedTimeEnabled}
+                            helperText={addedTimeEnabled ? undefined : "Dostępne dla minut 45, 90, 105, 120"}
                         />
                     </DialogContent>
                     <DialogActions>

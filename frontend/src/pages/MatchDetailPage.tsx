@@ -1,19 +1,25 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 import { Alert, CircularProgress } from "@mui/material";
 import { getMatch, updateMatch } from "../api/matchesApi";
 import { getPlayers } from "../api/playersApi";
-import { getMatchAppearances, createMatchAppearance, deleteMatchAppearance } from "../api/matchAppearancesApi";
+import { getMatchAppearances, createMatchAppearance, deleteMatchAppearance, updateMatchAppearance } from "../api/matchAppearancesApi";
 import { getMatchEvents, createMatchEvent, deleteMatchEvent } from "../api/matchEventsApi";
 import type { Match } from "../types/match";
 import type { Player } from "../types/player";
 import type { MatchAppearance } from "../types/matchAppearance";
 import type { MatchEvent } from "../types/matchEvent";
+import type { DragSource, DropTarget } from "../types/lineupDrag";
+import type { PickerOption } from "../types/pickerOption";
 import { MatchDetailPageView } from "./MatchDetailPageView";
 import { POSITION_GROUPS } from "../constants/labels";
 
+const STOPPAGE_MINUTES = [45, 90, 105, 120];
+
 export function MatchDetailPage() {
     const { id } = useParams<{ id: string }>();
+    const { roles } = useAuth();
     const [match, setMatch] = useState<Match | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -29,6 +35,7 @@ export function MatchDetailPage() {
     const [pickerAppearanceId, setPickerAppearanceId] = useState<number | null>(null);
     const [pickerSlotKey, setPickerSlotKey] = useState<string | null>(null);
     const [pickerTab, setPickerTab] = useState(0);
+    const [pickerSearch, setPickerSearch] = useState("");
 
     const [events, setEvents] = useState<MatchEvent[]>([]);
     const [eventOpen, setEventOpen] = useState(false);
@@ -44,6 +51,11 @@ export function MatchDetailPage() {
     const [newEventSecondPlayerId, setNewEventSecondPlayerId] = useState<number | "">("");
     const [newEventSecondOpponentName, setNewEventSecondOpponentName] = useState("");
     const [eventError, setEventError] = useState<string | null>(null);
+
+    const addedTimeEnabled = newEventMinute !== "" && STOPPAGE_MINUTES.includes(Number(newEventMinute));
+    const canDrag = !!roles?.some((r) => r === "Coach" || r === "AssistantCoach");
+    const [dragId, setDragId] = useState<number | null>(null);
+    const [overKey, setOverKey] = useState<string | null>(null);
 
     useEffect(() => {
         if (!id) return;
@@ -99,6 +111,7 @@ export function MatchDetailPage() {
         setPickerAppearanceId(appearance?.id ?? null);
         const idx = POSITION_GROUPS.findIndex((g) => g.codes.includes(pos));
         setPickerTab(idx >= 0 ? idx : 0);
+        setPickerSearch("");
         setRosterError(null);
         setPickerOpen(true);
     }
@@ -108,11 +121,13 @@ export function MatchDetailPage() {
         setPickerPosition(null);
         setPickerAppearanceId(appearance?.id ?? null);
         setPickerTab(0);
+        setPickerSearch("");
         setRosterError(null);
         setPickerOpen(true);
     }
 
     function closePicker() {
+        setPickerSearch("");
         setPickerOpen(false);
     }
 
@@ -147,6 +162,81 @@ export function MatchDetailPage() {
         }
     }
 
+    async function handleMoveAppearance(source: DragSource, target: DropTarget) {
+        if (!id) return;
+        const matchId = Number(id);
+        const moved = appearances.find((a) => a.id === source.appearanceId);
+        if (!moved) return;
+        setRosterError(null);
+
+        try {
+            if (target.kind === "bench") {
+                if (!moved.isStarting) return;
+                await updateMatchAppearance(moved.id, { 
+                    matchId,
+                    playerId: moved.playerId,
+                    isStarting: false,
+                    position: null
+                });
+            } else {
+                if (moved.isStarting && moved.position === target.slotKey) return;
+                const occupant = appearances.find((a) => a.isStarting && a.position === target.slotKey && a.id !== moved.id);
+
+                await updateMatchAppearance(moved.id, {
+                    matchId,
+                    playerId: moved.playerId,
+                    isStarting: true,
+                    position: target.slotKey
+                });
+
+                if (occupant) {
+                    await updateMatchAppearance(occupant.id, {
+                        matchId,
+                        playerId: occupant.playerId,
+                        isStarting: moved.isStarting,
+                        position: moved.isStarting ? moved.position : null
+                    });
+                }
+            }
+            loadAppearances(matchId);
+        } catch {
+            setRosterError("Nie udało się przenieść zawodnika.");
+            loadAppearances(matchId);
+        }
+    }
+
+    function handleDragStart(appearanceId: number) {
+        setDragId(appearanceId);
+    }
+
+    function handleDragEnd() {
+        setDragId(null);
+        setOverKey(null);
+    }
+
+    function handleDragOverTarget(key: string) {
+        setOverKey(key);
+    }
+
+    function handleDragLeaveTarget(key: string) {
+        setOverKey((current) => (current === key ? null : current));
+    }
+
+    function handleDropOn(target: DropTarget) {
+        if (dragId !== null) {
+            handleMoveAppearance({ appearanceId: dragId }, target);
+        }
+        setDragId(null);
+        setOverKey(null);
+    }
+
+    function handleMinuteChange(value: string) {
+        setNewEventMinute(value);
+        if (!STOPPAGE_MINUTES.includes(Number(value))) {
+            setNewEventAddedTime("");
+        }
+    }
+
     function openEventDialog() {
         setEventOpen(true);
         setNewEventTeam("Us");
@@ -174,6 +264,10 @@ export function MatchDetailPage() {
         const matchId = Number(id);
         const minute = newEventMinute === "" ? null : Number(newEventMinute);
         const addedTime = newEventAddedTime === "" ? null : Number(newEventAddedTime);
+        if (addedTime !== null && (minute === null || !STOPPAGE_MINUTES.includes(minute))) {
+            setEventError("Dodanie czasu doliczonego jest możliwe tylko dla minut 45, 90, 105 lub 120.");
+            return;
+        }
         try {
             if (newEventType === "Substitution") {
                 await createMatchEvent({
@@ -239,15 +333,28 @@ export function MatchDetailPage() {
     if (error || !match) return <Alert severity="error">{error ?? "Nie znaleziono meczu."}</Alert>;
 
     const rosterPlayerIds = new Set(appearances.map((a) => a.playerId));
-    const availablePlayers = players.filter((p) => !rosterPlayerIds.has(p.id));
     const rosterPlayers = players.filter((p) => rosterPlayerIds.has(p.id));
+    const searchTerm = pickerSearch.trim().toLowerCase();
+    const pickerOptions: PickerOption[] = players
+        .filter((p) => searchTerm !== "" || POSITION_GROUPS[pickerTab].codes.includes(p.position))
+        .filter((p) => `${p.firstName} ${p.lastName}`.toLowerCase().includes(searchTerm))
+        .map((p) => ({
+            player: p,
+            inLineup: rosterPlayerIds.has(p.id),
+            fitsPosition: pickerIsStarting && p.position === pickerPosition,
+        }))
+        .sort(
+            (a, b) => 
+                Number(b.fitsPosition) - Number(a.fitsPosition) || 
+                Number(a.inLineup) - Number(b.inLineup) ||
+                (a.player.jerseyNumber ?? 999) - (b.player.jerseyNumber ?? 999)
+            );
 
     return (
         <MatchDetailPageView
             match={match}
             players={players}
             appearances={appearances}
-            availablePlayers={availablePlayers}
             rosterPlayers={rosterPlayers}
             rosterError={rosterError}
             formation={formation}
@@ -257,6 +364,9 @@ export function MatchDetailPage() {
             pickerPosition={pickerPosition}
             pickerTab={pickerTab}
             onPickerTabChange={setPickerTab}
+            pickerSearch={pickerSearch}
+            onPickerSearchChange={setPickerSearch}
+            pickerOptions={pickerOptions}
             pickerHasAppearance={pickerAppearanceId !== null}
             onOpenPitchPicker={openPitchPicker}
             onOpenBenchPicker={openBenchPicker}
@@ -286,12 +396,21 @@ export function MatchDetailPage() {
             onCloseEvent={closeEventDialog}
             onNewEventTeamChange={setNewEventTeam}
             onNewEventTypeChange={setNewEventType}
-            onNewEventMinuteChange={setNewEventMinute}
+            onNewEventMinuteChange={handleMinuteChange}
             onNewEventAddedTimeChange={setNewEventAddedTime}
             onNewEventPlayerIdChange={setNewEventPlayerId}
             onNewEventOpponentNameChange={setNewEventOpponentName}
             onAddEvent={handleAddEvent}
             onRemoveEvent={handleRemoveEvent}
+            addedTimeEnabled={addedTimeEnabled}
+            canDrag={canDrag}
+            dragId={dragId}
+            overKey={overKey}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+            onDragOverTarget={handleDragOverTarget}
+            onDragLeaveTarget={handleDragLeaveTarget}
+            onDropOn={handleDropOn}
         />
     );
 }
