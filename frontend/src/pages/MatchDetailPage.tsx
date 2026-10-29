@@ -11,6 +11,7 @@ import type { Player } from "../types/player";
 import type { MatchAppearance } from "../types/matchAppearance";
 import type { MatchEvent } from "../types/matchEvent";
 import type { DragSource, DropTarget } from "../types/lineupDrag";
+import type { PickerOption } from "../types/pickerOption";
 import { MatchDetailPageView } from "./MatchDetailPageView";
 import { POSITION_GROUPS } from "../constants/labels";
 
@@ -34,6 +35,7 @@ export function MatchDetailPage() {
     const [pickerAppearanceId, setPickerAppearanceId] = useState<number | null>(null);
     const [pickerSlotKey, setPickerSlotKey] = useState<string | null>(null);
     const [pickerTab, setPickerTab] = useState(0);
+    const [pickerSearch, setPickerSearch] = useState("");
 
     const [events, setEvents] = useState<MatchEvent[]>([]);
     const [eventOpen, setEventOpen] = useState(false);
@@ -109,6 +111,7 @@ export function MatchDetailPage() {
         setPickerAppearanceId(appearance?.id ?? null);
         const idx = POSITION_GROUPS.findIndex((g) => g.codes.includes(pos));
         setPickerTab(idx >= 0 ? idx : 0);
+        setPickerSearch("");
         setRosterError(null);
         setPickerOpen(true);
     }
@@ -118,11 +121,13 @@ export function MatchDetailPage() {
         setPickerPosition(null);
         setPickerAppearanceId(appearance?.id ?? null);
         setPickerTab(0);
+        setPickerSearch("");
         setRosterError(null);
         setPickerOpen(true);
     }
 
     function closePicker() {
+        setPickerSearch("");
         setPickerOpen(false);
     }
 
@@ -328,15 +333,28 @@ export function MatchDetailPage() {
     if (error || !match) return <Alert severity="error">{error ?? "Nie znaleziono meczu."}</Alert>;
 
     const rosterPlayerIds = new Set(appearances.map((a) => a.playerId));
-    const availablePlayers = players.filter((p) => !rosterPlayerIds.has(p.id));
     const rosterPlayers = players.filter((p) => rosterPlayerIds.has(p.id));
+    const searchTerm = pickerSearch.trim().toLowerCase();
+    const pickerOptions: PickerOption[] = players
+        .filter((p) => searchTerm !== "" || POSITION_GROUPS[pickerTab].codes.includes(p.position))
+        .filter((p) => `${p.firstName} ${p.lastName}`.toLowerCase().includes(searchTerm))
+        .map((p) => ({
+            player: p,
+            inLineup: rosterPlayerIds.has(p.id),
+            fitsPosition: pickerIsStarting && p.position === pickerPosition,
+        }))
+        .sort(
+            (a, b) => 
+                Number(b.fitsPosition) - Number(a.fitsPosition) || 
+                Number(a.inLineup) - Number(b.inLineup) ||
+                (a.player.jerseyNumber ?? 999) - (b.player.jerseyNumber ?? 999)
+            );
 
     return (
         <MatchDetailPageView
             match={match}
             players={players}
             appearances={appearances}
-            availablePlayers={availablePlayers}
             rosterPlayers={rosterPlayers}
             rosterError={rosterError}
             formation={formation}
@@ -346,6 +364,9 @@ export function MatchDetailPage() {
             pickerPosition={pickerPosition}
             pickerTab={pickerTab}
             onPickerTabChange={setPickerTab}
+            pickerSearch={pickerSearch}
+            onPickerSearchChange={setPickerSearch}
+            pickerOptions={pickerOptions}
             pickerHasAppearance={pickerAppearanceId !== null}
             onOpenPitchPicker={openPitchPicker}
             onOpenBenchPicker={openBenchPicker}

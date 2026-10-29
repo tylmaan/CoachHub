@@ -21,6 +21,7 @@ import {
     Tab,
     Checkbox,
     FormControlLabel,
+    Chip,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import SportsSoccerIcon from "@mui/icons-material/SportsSoccer";
@@ -36,7 +37,8 @@ import type { Player } from "../types/player";
 import type { MatchAppearance } from "../types/matchAppearance";
 import type { MatchEvent } from "../types/matchEvent";
 import type { DropTarget } from "../types/lineupDrag";
-import { MATCH_TYPE_LABELS, POSITION_LABELS, EVENT_TYPE_LABELS, POSITIONS, POSITION_GROUPS } from "../constants/labels";
+import type { PickerOption } from "../types/pickerOption";
+import { MATCH_TYPE_LABELS, EVENT_TYPE_LABELS, POSITION_GROUPS } from "../constants/labels";
 import { FORMATIONS, FORMATION_LABELS, type FormationSlot } from "../constants/formations";
 import { BACKEND_ORIGIN } from "../api/axiosInstance";
 
@@ -47,7 +49,6 @@ interface MatchDetailPageViewProps {
     match: Match;
     players: Player[];
     appearances: MatchAppearance[];
-    availablePlayers: Player[];
     rosterPlayers: Player[];
     rosterError: string | null;
     formation: string;
@@ -57,6 +58,9 @@ interface MatchDetailPageViewProps {
     pickerPosition: string | null;
     pickerTab: number;
     onPickerTabChange: (value: number) => void;
+    pickerSearch: string;
+    onPickerSearchChange: (value: string) => void;
+    pickerOptions: PickerOption[];
     pickerHasAppearance: boolean;
     onOpenPitchPicker: (pos: string, slotKey: string, appearance: MatchAppearance | null) => void;
     onOpenBenchPicker: (appearance: MatchAppearance | null) => void;
@@ -142,7 +146,6 @@ export function MatchDetailPageView({
     match,
     players,
     appearances,
-    availablePlayers,
     rosterError,
     formation,
     onFormationChange,
@@ -151,6 +154,9 @@ export function MatchDetailPageView({
     pickerPosition,
     pickerTab,
     onPickerTabChange,
+    pickerSearch,
+    onPickerSearchChange,
+    pickerOptions,
     pickerHasAppearance,
     onOpenPitchPicker,
     onOpenBenchPicker,
@@ -239,7 +245,6 @@ export function MatchDetailPageView({
     const pitchSlots = buildPitchSlots(formation);
     const benchAppearances = appearances.filter((a) => !a.isStarting);
     const benchTiles = Array.from({ length: BENCH_SIZE }, (_, i) => benchAppearances[i] ?? null);
-    const sortedAvailable = [...availablePlayers].sort((a, b) => POSITIONS.indexOf(a.position) - POSITIONS.indexOf(b.position)); 
 
         function eventTypeIcon(eventType: string, isSecondYellow?: boolean) {
         if (eventType === "Goal") return <SportsSoccerIcon sx={{ color: "success.main" }} fontSize="small" />;
@@ -523,6 +528,15 @@ export function MatchDetailPageView({
                     {pickerIsStarting ? `Pozycja: ${pickerPosition}` : "Ławka rezerwowych"}
                 </DialogTitle>
                 <DialogContent sx={{ pt: 1 }}>
+                    <TextField
+                        autoFocus
+                        fullWidth
+                        size="small"
+                        placeholder="Szukaj zawodnika"
+                        value={pickerSearch}
+                        onChange={(e) => onPickerSearchChange(e.target.value)}
+                        sx={{ mb: 1 }}
+                    />
                     <Tabs
                         value={pickerTab}
                         onChange={(_, value) => onPickerTabChange(value)}
@@ -534,25 +548,43 @@ export function MatchDetailPageView({
                         ))}
                     </Tabs>
                     <List dense sx={{ maxHeight: 320, overflowY: "auto" }}>
-                        {sortedAvailable
-                            .filter((p) => POSITION_GROUPS[pickerTab].codes.includes(p.position))
-                            .map((p) => (
-                                <ListItem key={p.id} disablePadding>
-                                    <Button
-                                        fullWidth
-                                        sx={{ justifyContent: "space-between", textTransform: "none", px: 1.5 }}
-                                        onClick={() => onPickPlayer(p.id)}
+                        {pickerOptions.map((option) => (
+                            <ListItem key={option.player.id} disablePadding divider>
+                                <Button
+                                    fullWidth
+                                    disabled={option.inLineup}
+                                    onClick={() => onPickPlayer(option.player.id)}
+                                    sx={{ justifyContent: "flex-start", textTransform: "none", gap: 1.5, px: 1.5, py: 1 }}
+                                >
+                                    <Typography variant="body2" sx={{ width: 28, textAlign: "center", color: "text.secondary", fontWeight: 500 }}>
+                                        {option.player.jerseyNumber ?? "-"}
+                                    </Typography>
+                                    <Avatar
+                                        src={option.player.photoUrl ? `${BACKEND_ORIGIN}${option.player.photoUrl}` : undefined}
+                                        sx={{ width: 34, height: 34, fontSize: 12 }}
                                     >
-                                        <span>{p.jerseyNumber ?? "-"} &nbsp; {p.firstName} {p.lastName}</span>
-                                        <Typography variant="caption" color="text.secondary">
-                                            {POSITION_LABELS[p.position] ?? p.position}
+                                        {option.player.firstName[0]}{option.player.lastName[0]}
+                                    </Avatar>
+                                    <Box sx={{ flex: 1, textAlign: "left" }}>
+                                        <Typography variant="body2" color="text.primary">
+                                            {option.player.firstName} {option.player.lastName}
                                         </Typography>
-                                    </Button>
-                                </ListItem>
-                            ))}
-                        {sortedAvailable.filter((p) => POSITION_GROUPS[pickerTab].codes.includes(p.position)).length === 0 && (
+                                        {option.inLineup && (
+                                            <Typography variant="caption" color="text.secondary">w składzie</Typography>
+                                        )}
+                                    </Box>
+                                    <Chip
+                                        size="small"
+                                        label={option.player.position}
+                                        color={option.fitsPosition ? "success" : "default"}
+                                        variant={option.fitsPosition ? "filled" : "outlined"}
+                                    />
+                                </Button>
+                            </ListItem>
+                        ))}
+                        {pickerOptions.length === 0 && (
                             <Typography variant="body2" color="text.secondary" sx={{ px: 1.5 }}>
-                                Brak dostępnych zawodników w tej grupie.
+                                Brak zawodników.
                             </Typography>
                         )}
                     </List>
