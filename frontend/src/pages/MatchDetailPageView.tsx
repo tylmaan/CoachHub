@@ -92,6 +92,7 @@ interface MatchDetailPageViewProps {
     onNewEventOpponentNameChange: (value: string) => void;
     onAddEvent: (e: React.SyntheticEvent) => void;
     onRemoveEvent: (eventId: number) => void;
+    addedTimeEnabled: boolean;
     canDrag: boolean;
     dragId: number | null;
     overKey: string | null;
@@ -186,6 +187,7 @@ export function MatchDetailPageView({
     onNewEventOpponentNameChange,
     onAddEvent,
     onRemoveEvent,
+    addedTimeEnabled,
     canDrag,
     dragId,
     overKey,
@@ -714,6 +716,8 @@ export function MatchDetailPageView({
                             type="number"
                             value={newEventAddedTime}
                             onChange={(e) => onNewEventAddedTimeChange(e.target.value)}
+                            disabled={!addedTimeEnabled}
+                            helperText={addedTimeEnabled ? undefined : "Dostępne dla minut 45, 90, 105, 120"}
                         />
                     </DialogContent>
                     <DialogActions>

@@ -14,6 +14,8 @@ import type { DragSource, DropTarget } from "../types/lineupDrag";
 import { MatchDetailPageView } from "./MatchDetailPageView";
 import { POSITION_GROUPS } from "../constants/labels";
 
+const STOPPAGE_MINUTES = [45, 90, 105, 120];
+
 export function MatchDetailPage() {
     const { id } = useParams<{ id: string }>();
     const { roles } = useAuth();
@@ -48,6 +50,7 @@ export function MatchDetailPage() {
     const [newEventSecondOpponentName, setNewEventSecondOpponentName] = useState("");
     const [eventError, setEventError] = useState<string | null>(null);
 
+    const addedTimeEnabled = newEventMinute !== "" && STOPPAGE_MINUTES.includes(Number(newEventMinute));
     const canDrag = !!roles?.some((r) => r === "Coach" || r === "AssistantCoach");
     const [dragId, setDragId] = useState<number | null>(null);
     const [overKey, setOverKey] = useState<string | null>(null);
@@ -222,6 +225,13 @@ export function MatchDetailPage() {
         setOverKey(null);
     }
 
+    function handleMinuteChange(value: string) {
+        setNewEventMinute(value);
+        if (!STOPPAGE_MINUTES.includes(Number(value))) {
+            setNewEventAddedTime("");
+        }
+    }
+
     function openEventDialog() {
         setEventOpen(true);
         setNewEventTeam("Us");
@@ -249,6 +259,10 @@ export function MatchDetailPage() {
         const matchId = Number(id);
         const minute = newEventMinute === "" ? null : Number(newEventMinute);
         const addedTime = newEventAddedTime === "" ? null : Number(newEventAddedTime);
+        if (addedTime !== null && (minute === null || !STOPPAGE_MINUTES.includes(minute))) {
+            setEventError("Dodanie czasu doliczonego jest możliwe tylko dla minut 45, 90, 105 lub 120.");
+            return;
+        }
         try {
             if (newEventType === "Substitution") {
                 await createMatchEvent({
@@ -361,12 +375,13 @@ export function MatchDetailPage() {
             onCloseEvent={closeEventDialog}
             onNewEventTeamChange={setNewEventTeam}
             onNewEventTypeChange={setNewEventType}
-            onNewEventMinuteChange={setNewEventMinute}
+            onNewEventMinuteChange={handleMinuteChange}
             onNewEventAddedTimeChange={setNewEventAddedTime}
             onNewEventPlayerIdChange={setNewEventPlayerId}
             onNewEventOpponentNameChange={setNewEventOpponentName}
             onAddEvent={handleAddEvent}
             onRemoveEvent={handleRemoveEvent}
+            addedTimeEnabled={addedTimeEnabled}
             canDrag={canDrag}
             dragId={dragId}
             overKey={overKey}

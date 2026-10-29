@@ -21,6 +21,12 @@ public class MatchEventsController : ControllerBase
         _matchService = matchService;
     }
 
+    private static readonly int[] StoppageMinutes = { 45, 90, 105, 120 };
+
+    private static bool IsValidAddedTime(MatchEvent matchEvent) =>
+        matchEvent.AddedTime is null
+        || (matchEvent.Minute is int minute && StoppageMinutes.Contains(minute));
+    
     [HttpGet("match/{matchId}")]
     public async Task<ActionResult<List<MatchEvent>>> GetByMatchId(int matchId)
     {
@@ -38,6 +44,9 @@ public class MatchEventsController : ControllerBase
         var match = await _matchService.GetByIdAsync(matchEvent.MatchId);
         var callerTeamId = User.FindFirstValue("teamId");
         if (match is null || callerTeamId is null || int.Parse(callerTeamId) != match.TeamId) return Forbid();
+
+        if (!IsValidAddedTime(matchEvent))
+            return BadRequest(new[] { "Doliczony czas jest dostępny tylko dla minut 45, 90, 105 i 120." });
         
         var created = await _eventService.CreateAsync(matchEvent);
         return CreatedAtAction(nameof(GetByMatchId), new { matchId = created.MatchId }, created);
@@ -53,6 +62,9 @@ public class MatchEventsController : ControllerBase
         var match = await _matchService.GetByIdAsync(existing.MatchId);
         var callerTeamId = User.FindFirstValue("teamId");
         if (match is null || callerTeamId is null || int.Parse(callerTeamId) != match.TeamId) return Forbid();
+
+        if (!IsValidAddedTime(matchEvent))
+            return BadRequest(new[] { "Doliczony czas jest dostępny tylko dla minut 45, 90, 105 i 120." });
 
         var success = await _eventService.UpdateAsync(id, matchEvent);
         if (!success) return NotFound();
