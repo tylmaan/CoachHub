@@ -35,5 +35,12 @@ base(options)
             .WithMany(t => t.Reports)
             .HasForeignKey(r => r.TeamId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Team>(entity =>
+        {
+            entity.ComplexProperty(t => t.HomeKit);
+            entity.ComplexProperty(t => t.AwayKit);
+            entity.ComplexProperty(t => t.GoalkeeperKit);
+        }); 
     }
 }
