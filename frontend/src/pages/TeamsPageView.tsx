@@ -15,6 +15,8 @@ import type { TeamSummary } from '../types/team';
 import { BACKEND_ORIGIN } from '../api/axiosInstance';
 import { ROLE_LABELS } from '../constants/labels';
 import { ConfirmDeleteDialog } from '../components/ConfirmDeleteDialog';
+import { KitEditor } from '../components/KitEditor';
+import type { TeamKits } from '../types/kit';
 
 interface TeamsPageViewProps {
     teams: TeamSummary[];
@@ -24,9 +26,11 @@ interface TeamsPageViewProps {
 
     name: string;
     logoUrl: string | null;
+    kits: TeamKits;
     formError: string | null;
     onNameChange: (value: string) => void;
     onLogoSelect: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    onKitsChange: (kits: TeamKits) => void;
     onCreate: (e: React.SyntheticEvent) => void;
     createOpen: boolean;
     onOpenCreate: () => void;
@@ -35,10 +39,12 @@ interface TeamsPageViewProps {
     editingId: number | null;
     editName: string;
     editLogoUrl: string | null;
+    editKits: TeamKits;
     actionError: string | null;
     onStartEdit: (team: TeamSummary) => void;
     onEditNameChange: (value: string) => void;
     onEditLogoSelect: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    onEditKitsChange: (kits: TeamKits) => void;
     onSaveEdit: (teamId: number) => void;
     onCancelEdit: () => void;
     deleteDialogOpen: boolean;
@@ -54,9 +60,11 @@ export function TeamsPageView({
     canDelete,
     name,
     logoUrl,
+    kits,
     formError,
     onNameChange,
     onLogoSelect,
+    onKitsChange,
     onCreate,
     createOpen,
     onOpenCreate,
@@ -64,10 +72,12 @@ export function TeamsPageView({
     editingId,
     editName,
     editLogoUrl,
+    editKits,
     actionError,
     onStartEdit,
     onEditNameChange,
     onEditLogoSelect,
+    onEditKitsChange,
     onSaveEdit,
     onCancelEdit,
     deleteDialogOpen,
@@ -150,7 +160,7 @@ export function TeamsPageView({
                 })}
             </Box>
 
-            <Dialog open={createOpen} onClose={onCloseCreate} fullWidth maxWidth="xs">
+            <Dialog open={createOpen} onClose={onCloseCreate} fullWidth maxWidth="sm">
                 <Box component="form" onSubmit={onCreate}>
                     <DialogTitle>Nowa drużyna</DialogTitle>
                     <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}>
@@ -168,6 +178,22 @@ export function TeamsPageView({
                                 <input type="file" accept="image/png,image/jpeg" hidden onChange={onLogoSelect} />
                             </Button>
                         </Box>
+                        <KitEditor
+                            label="Koszulka domowa"
+                            kit={kits.homeKit}
+                            onChange={(homeKit) => onKitsChange({ ...kits, homeKit })}
+                        />
+                        <KitEditor
+                            label="Koszulka wyjazdowa"
+                            kit={kits.awayKit}
+                            onChange={(awayKit) => onKitsChange({ ...kits, awayKit })}
+                        />
+                        <KitEditor
+                            label="Koszulka bramkarza"
+                            kit={kits.goalkeeperKit}
+                            onChange={(goalkeeperKit) => onKitsChange({ ...kits, goalkeeperKit })}
+                            solidOnly
+                        />
                     </DialogContent>
                     <DialogActions>
                         <Button onClick={onCloseCreate}>Anuluj</Button>
@@ -176,7 +202,7 @@ export function TeamsPageView({
                 </Box>
             </Dialog>
 
-            <Dialog open={editingId !== null} onClose={onCancelEdit} fullWidth maxWidth="xs">
+            <Dialog open={editingId !== null} onClose={onCancelEdit} fullWidth maxWidth="sm">
                 <Box component="form" onSubmit={(e) => { e.preventDefault(); if (editingId !== null) onSaveEdit(editingId); }}>
                     <DialogTitle>Edytuj drużynę</DialogTitle>
                     <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}>
@@ -193,6 +219,22 @@ export function TeamsPageView({
                                 <input type="file" accept="image/png,image/jpeg" hidden onChange={onEditLogoSelect} />
                             </Button>
                         </Box>
+                        <KitEditor
+                            label="Koszulka domowa"
+                            kit={editKits.homeKit}
+                            onChange={(homeKit) => onEditKitsChange({ ...editKits, homeKit })}
+                        />
+                        <KitEditor
+                            label="Koszulka wyjazdowa"
+                            kit={editKits.awayKit}
+                            onChange={(awayKit) => onEditKitsChange({ ...editKits, awayKit })}
+                        />
+                        <KitEditor
+                            label="Koszulka bramkarza"
+                            kit={editKits.goalkeeperKit}
+                            onChange={(goalkeeperKit) => onEditKitsChange({ ...editKits, goalkeeperKit })}
+                            solidOnly
+                        />                    
                     </DialogContent>
                     <DialogActions>
                         <Button onClick={onCancelEdit}>Anuluj</Button>
