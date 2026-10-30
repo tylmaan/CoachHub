@@ -6,12 +6,14 @@ import { getMatch, updateMatch } from "../api/matchesApi";
 import { getPlayers } from "../api/playersApi";
 import { getMatchAppearances, createMatchAppearance, deleteMatchAppearance, updateMatchAppearance } from "../api/matchAppearancesApi";
 import { getMatchEvents, createMatchEvent, deleteMatchEvent } from "../api/matchEventsApi";
+import { getTeams } from "../api/teamsApi";
 import type { Match } from "../types/match";
 import type { Player } from "../types/player";
 import type { MatchAppearance } from "../types/matchAppearance";
 import type { MatchEvent } from "../types/matchEvent";
 import type { DragSource, DropTarget } from "../types/lineupDrag";
 import type { PickerOption } from "../types/pickerOption";
+import type { TeamSummary } from "../types/team";
 import { MatchDetailPageView } from "./MatchDetailPageView";
 import { POSITION_GROUPS } from "../constants/labels";
 
@@ -20,6 +22,7 @@ const STOPPAGE_MINUTES = [45, 90, 105, 120];
 export function MatchDetailPage() {
     const { id } = useParams<{ id: string }>();
     const { roles } = useAuth();
+    const [team, setTeam] = useState<TeamSummary | null>(null);
     const [match, setMatch] = useState<Match | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -72,6 +75,9 @@ export function MatchDetailPage() {
         if (!id) return;
         getPlayers()
             .then(setPlayers)
+            .catch(() => {});
+        getTeams()
+            .then((teams) => setTeam(teams[0] ?? null))
             .catch(() => {});
         loadAppearances(Number(id));
         loadEvents(Number(id));
@@ -332,6 +338,8 @@ export function MatchDetailPage() {
     if (loading) return <CircularProgress />;
     if (error || !match) return <Alert severity="error">{error ?? "Nie znaleziono meczu."}</Alert>;
 
+    const teamKit = team ? (match.isHome === false ? team.awayKit : team.homeKit) : undefined;
+    const goalkeeperKit = team?.goalkeeperKit;
     const rosterPlayerIds = new Set(appearances.map((a) => a.playerId));
     const rosterPlayers = players.filter((p) => rosterPlayerIds.has(p.id));
     const searchTerm = pickerSearch.trim().toLowerCase();
@@ -355,6 +363,8 @@ export function MatchDetailPage() {
             match={match}
             players={players}
             appearances={appearances}
+            teamKit={teamKit}
+            goalkeeperKit={goalkeeperKit}
             rosterPlayers={rosterPlayers}
             rosterError={rosterError}
             formation={formation}
