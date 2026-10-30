@@ -23,6 +23,28 @@ public class TeamsController : ControllerBase
         _userManager = userManager;
     }
 
+    private static readonly string[] KitPatterns =
+    {
+        "Solid",
+        "HorizontalStripes",
+        "VerticalStripes",
+        "Halves",
+        "Sash",
+        "Quarters",
+    };
+    
+    private static readonly System.Text.RegularExpressions.Regex HexColor = new(@"^#([0-9A-Fa-f]{6})$");
+
+    private static bool IsValidKit(Kit kit) =>
+        KitPatterns.Contains(kit.Pattern)
+        && HexColor.IsMatch(kit.PrimaryColor)
+        && HexColor.IsMatch(kit.SecondaryColor);
+
+    private static bool HasValidKits(Team team) =>
+        IsValidKit(team.HomeKit)
+        && IsValidKit(team.AwayKit)
+        && IsValidKit(team.GoalkeeperKit);
+
     [HttpGet]
     public async Task<ActionResult<List<TeamSummary>>> GetAll()
     {
@@ -63,6 +85,9 @@ public class TeamsController : ControllerBase
                 Id = team.Id,
                 Name = team.Name,
                 LogoUrl = team.LogoUrl,
+                HomeKit = team.HomeKit,
+                AwayKit = team.AwayKit,
+                GoalkeeperKit = team.GoalkeeperKit,
                 StaffMembers = staff
             });
         }
@@ -87,6 +112,9 @@ public class TeamsController : ControllerBase
     [Authorize(Roles = Roles.Admin)]
     public async Task<ActionResult<Team>> Create(Team team)
     {
+        if (!HasValidKits(team))
+            return BadRequest(new[] { "Nieprawidłowy wzór lub kolor koszulki." });
+
         var created = await _teamService.CreateAsync(team);
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
@@ -95,6 +123,9 @@ public class TeamsController : ControllerBase
     [Authorize(Roles = Roles.Admin)]
     public async Task<IActionResult> Update(int id, Team team)
     {
+        if (!HasValidKits(team))
+            return BadRequest(new[] { "Nieprawidłowy wzór lub kolor koszulki." });
+            
         var success = await _teamService.UpdateAsync(id, team);
         if (!success) return NotFound();
         return NoContent();

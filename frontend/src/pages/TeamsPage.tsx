@@ -6,6 +6,8 @@ import type { TeamSummary } from '../types/team';
 import { useAuth } from "../context/AuthContext";
 import { uploadFile } from '../api/filesApi';
 import { TeamsPageView } from './TeamsPageView';
+import { DEFAULT_KITS } from '../types/kit';
+import type { TeamKits } from '../types/kit';
 
 export function TeamsPage() {
     const [teams, setTeams] = useState<TeamSummary[]>([]);
@@ -14,12 +16,14 @@ export function TeamsPage() {
 
     const [name, setName] = useState("");
     const [logoUrl, setLogoUrl] = useState<string | null>(null);
+    const [kits, setKits] = useState<TeamKits>(DEFAULT_KITS);
     const [formError, setFormError] = useState<string | null>(null);
     const [createOpen, setCreateOpen] = useState(false);
 
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editName, setEditName] = useState("");
     const [editLogoUrl, setEditLogoUrl] = useState<string | null>(null);
+    const [editKits, setEditKits] = useState<TeamKits>(DEFAULT_KITS);
     const [actionError, setActionError] = useState<string | null>(null);
     const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
 
@@ -65,9 +69,10 @@ export function TeamsPage() {
         e.preventDefault();
         setFormError(null);
         try {
-            await createTeam({ name, logoUrl });
+            await createTeam({ name, logoUrl, ...kits });
             setName("");
             setLogoUrl(null);
+            setKits(DEFAULT_KITS);
             setCreateOpen(false);
             loadTeams();
         } catch (err) {
@@ -83,13 +88,18 @@ export function TeamsPage() {
         setEditingId(team.id);
         setEditName(team.name);
         setEditLogoUrl(team.logoUrl);
+        setEditKits({
+            homeKit: team.homeKit,
+            awayKit: team.awayKit,
+            goalkeeperKit: team.goalkeeperKit
+        });
         setActionError(null);
     }
 
     async function saveEdit(id: number) {
         setActionError(null);
         try {
-            await updateTeam(id, { name: editName, logoUrl: editLogoUrl });
+            await updateTeam(id, { name: editName, logoUrl: editLogoUrl, ...editKits });
             setEditingId(null);
             loadTeams();
         } catch {
@@ -132,9 +142,11 @@ export function TeamsPage() {
             canDelete={!!canDelete}
             name={name}
             logoUrl={logoUrl}
+            kits={kits}
             formError={formError}
             onNameChange={setName}
             onLogoSelect={handleLogoSelect}
+            onKitsChange={setKits}
             createOpen={createOpen}
             onOpenCreate={() => setCreateOpen(true)}
             onCloseCreate={() => setCreateOpen(false)}
@@ -142,10 +154,12 @@ export function TeamsPage() {
             editingId={editingId}
             editName={editName}
             editLogoUrl={editLogoUrl}
+            editKits={editKits}
             actionError={actionError}
             onStartEdit={startEdit}
             onEditNameChange={setEditName}
             onEditLogoSelect={handleEditLogoSelect}
+            onEditKitsChange={setEditKits}
             onSaveEdit={saveEdit}
             onCancelEdit={() => setEditingId(null)}
             deleteDialogOpen={deleteTargetId !== null}

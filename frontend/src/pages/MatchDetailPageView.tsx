@@ -32,6 +32,8 @@ import BlockIcon from "@mui/icons-material/Block";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import SwapVertIcon from "@mui/icons-material/SwapVert";
 import AdjustIcon from "@mui/icons-material/Adjust";
+import { Jersey } from "../components/Jersey";
+import type { Kit } from "../types/kit";
 import type { Match } from "../types/match";
 import type { Player } from "../types/player";
 import type { MatchAppearance } from "../types/matchAppearance";
@@ -49,6 +51,8 @@ interface MatchDetailPageViewProps {
     match: Match;
     players: Player[];
     appearances: MatchAppearance[];
+    teamKit?: Kit;
+    goalkeeperKit?: Kit;
     rosterPlayers: Player[];
     rosterError: string | null;
     formation: string;
@@ -107,25 +111,6 @@ interface MatchDetailPageViewProps {
     onDropOn: (target: DropTarget) => void;
 }
 
-function Jersey({ number, muted }: { number: number | null; muted?: boolean }) {
-    return (
-        <svg width="56" height="56" viewBox="0 0 40 40">
-            <path
-                d="M12 4 L4 10 L8 16 L10 14 L10 34 Q10 36 12 36 L28 36 Q30 36 30 34 L30 14 L32 16 L36 10 L28 4 Q24 8 20 8 Q16 8 12 4 Z"
-                fill={muted ? "none" : "#7c3aed"}
-                stroke={muted ? "rgba(255,255,255,0.6)" : "#a78bfa"}
-                strokeWidth="1"
-                strokeDasharray={muted ? "3 2" : undefined}
-            />
-            {number !== null && (
-                <text x="20" y="26" textAnchor="middle" fontSize="12" fontWeight="600" fill="#ffffff" fontFamily="sans-serif">
-                    {number}
-                </text>
-            )}
-        </svg>
-    );
-}
-
 function renderPlayerOption(p: Player) {
     return (
         <MenuItem key={p.id} value={p.id}>
@@ -146,6 +131,8 @@ export function MatchDetailPageView({
     match,
     players,
     appearances,
+    teamKit,
+    goalkeeperKit,
     rosterError,
     formation,
     onFormationChange,
@@ -205,6 +192,10 @@ export function MatchDetailPageView({
 }: MatchDetailPageViewProps) {
     function playerFor(appearance: MatchAppearance): Player | undefined {
         return players.find((p) => p.id === appearance.playerId);
+    }
+
+    function kitFor(player: Player | undefined): Kit | undefined {
+        return player?.position === "GK" ? goalkeeperKit : teamKit;
     }
 
     function dragProps(appearance: MatchAppearance | null) {
@@ -470,7 +461,7 @@ export function MatchDetailPageView({
                                 borderRadius: 1,
                             }}
                         >
-                            <Jersey number={player?.jerseyNumber ?? null} muted={!player} />
+                            <Jersey number={player?.jerseyNumber ?? null} muted={!player} kit={kitFor(player)} />
                             <Typography
                                 variant="caption"
                                 sx={{ color: "#fff", mt: 0.5, textAlign: "center", maxWidth: 92, fontSize: 14, lineHeight: 1.15,  }}
@@ -511,7 +502,7 @@ export function MatchDetailPageView({
                                 opacity: appearance && dragId === appearance.id ? 0.4 : 1, 
                             }}
                         >
-                            <Jersey number={player?.jerseyNumber ?? null} muted={!player} />
+                            <Jersey number={player?.jerseyNumber ?? null} muted={!player} kit={kitFor(player)} />
                             <Typography
                                 variant="caption"
                                 sx={{ mt: 0.5, textAlign: "center", maxWidth: 92, fontSize: 14, lineHeight: 1.15 }}
