@@ -41,6 +41,9 @@ public class TeamService : ITeamService
 
         existing.Name = team.Name;
         existing.LogoUrl = team.LogoUrl;
+        existing.HomeKit = team.HomeKit;
+        existing.AwayKit = team.AwayKit;
+        existing.GoalkeeperKit = team.GoalkeeperKit;
         await _context.SaveChangesAsync();
 
         if (oldLogoUrl != team.LogoUrl)
