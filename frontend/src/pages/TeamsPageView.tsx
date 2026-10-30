@@ -16,6 +16,7 @@ import { BACKEND_ORIGIN } from '../api/axiosInstance';
 import { ROLE_LABELS } from '../constants/labels';
 import { ConfirmDeleteDialog } from '../components/ConfirmDeleteDialog';
 import { KitEditor } from '../components/KitEditor';
+import { Jersey } from "../components/Jersey";
 import type { TeamKits } from '../types/kit';
 
 interface TeamsPageViewProps {
@@ -114,6 +115,22 @@ export function TeamsPageView({
                                     <Avatar variant="rounded" sx={{ width: 44, height: 44 }}>{team.name[0]}</Avatar>
                                 )}
                                 <Typography variant="subtitle1">{team.name}</Typography>
+                            </Box>
+
+                            <Box
+                                sx={{
+                                    display: "flex",
+                                    justifyContent: "center",
+                                    gap: 1.5,
+                                    borderTop: "1px solid",
+                                    borderColor: "divider",
+                                    pt: 1,
+                                    mb: 1,
+                                }}
+                            >
+                                <Jersey kit={team.homeKit} number={null} size={40} />
+                                <Jersey kit={team.awayKit} number={null} size={40} />
+                                <Jersey kit={team.goalkeeperKit} number={null} size={40} />
                             </Box>
 
                             <Box sx={{ borderTop: "1px solid", borderColor: "divider", pt: 1, mb: 1 }}>

@@ -1,5 +1,6 @@
 import { Box, Typography, Paper, Avatar } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
+import { Jersey } from "../components/Jersey";
 import type { TeamSummary } from '../types/team';
 import { BACKEND_ORIGIN } from '../api/axiosInstance';
 
@@ -24,7 +25,21 @@ export function DashboardPageView({ tiles, team }: DashboardPageViewProps) {
                     ) : (
                         <Avatar variant="rounded" sx={{ width: 52, height: 52 }}>{team.name[0]}</Avatar>
                     )}
-                    <Typography variant="h6">{team.name}</Typography>
+                    <Typography variant="h6" sx={{ flex: 1 }}>{team.name}</Typography>
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                        {[
+                            { label: 'Domowa', kit: team.homeKit },
+                            { label: 'Wyjazdowa', kit: team.awayKit },
+                            { label: 'Bramkarz', kit: team.goalkeeperKit },
+                        ].map((item) => (
+                            <Box key={item.label} sx={{ textAlign: 'center' }}>
+                                <Jersey kit={item.kit} number={null} size={48} />
+                                <Typography variant="caption" color="text.secondary" sx={{ display: "block" }}>
+                                    {item.label}
+                                </Typography>
+                            </Box>
+                        ))}
+                    </Box>
                 </Paper>
             )}
 
