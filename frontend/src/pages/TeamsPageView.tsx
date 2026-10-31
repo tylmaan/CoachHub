@@ -10,14 +10,17 @@ import {
     DialogTitle,
     DialogContent,
     DialogActions,
+    Autocomplete,
 } from '@mui/material';
 import type { TeamSummary } from '../types/team';
 import { BACKEND_ORIGIN } from '../api/axiosInstance';
 import { ROLE_LABELS } from '../constants/labels';
+import { COUNTRIES } from '../constants/countries';
 import { ConfirmDeleteDialog } from '../components/ConfirmDeleteDialog';
 import { KitEditor } from '../components/KitEditor';
 import { Jersey } from "../components/Jersey";
 import type { TeamKits } from '../types/kit';
+import type { Country } from '../constants/countries';
 
 interface TeamsPageViewProps {
     teams: TeamSummary[];
@@ -26,10 +29,12 @@ interface TeamsPageViewProps {
     canDelete: boolean;
 
     name: string;
+    countryCode: string | null;
     logoUrl: string | null;
     kits: TeamKits;
     formError: string | null;
     onNameChange: (value: string) => void;
+    onCountryCodeChange: (value: string | null) => void;
     onLogoSelect: (e: React.ChangeEvent<HTMLInputElement>) => void;
     onKitsChange: (kits: TeamKits) => void;
     onCreate: (e: React.SyntheticEvent) => void;
@@ -39,11 +44,13 @@ interface TeamsPageViewProps {
     
     editingId: number | null;
     editName: string;
+    editCountryCode: string | null;
     editLogoUrl: string | null;
     editKits: TeamKits;
     actionError: string | null;
     onStartEdit: (team: TeamSummary) => void;
     onEditNameChange: (value: string) => void;
+    onEditCountryCodeChange: (value: string | null) => void;
     onEditLogoSelect: (e: React.ChangeEvent<HTMLInputElement>) => void;
     onEditKitsChange: (kits: TeamKits) => void;
     onSaveEdit: (teamId: number) => void;
@@ -60,10 +67,12 @@ export function TeamsPageView({
     canEdit,
     canDelete,
     name,
+    countryCode,
     logoUrl,
     kits,
     formError,
     onNameChange,
+    onCountryCodeChange,
     onLogoSelect,
     onKitsChange,
     onCreate,
@@ -72,11 +81,13 @@ export function TeamsPageView({
     onCloseCreate,
     editingId,
     editName,
+    editCountryCode,
     editLogoUrl,
     editKits,
     actionError,
     onStartEdit,
     onEditNameChange,
+    onEditCountryCodeChange,
     onEditLogoSelect,
     onEditKitsChange,
     onSaveEdit,
@@ -115,6 +126,7 @@ export function TeamsPageView({
                                     <Avatar variant="rounded" sx={{ width: 44, height: 44 }}>{team.name[0]}</Avatar>
                                 )}
                                 <Typography variant="subtitle1">{team.name}</Typography>
+                                {team.countryCode && <span className={`fi fi-${team.countryCode}`} />}
                             </Box>
 
                             <Box
@@ -188,6 +200,19 @@ export function TeamsPageView({
                             onChange={(e) => onNameChange(e.target.value)}
                             required
                         />
+                        <Autocomplete
+                            options={COUNTRIES}
+                            getOptionLabel={(option) => option.name}
+                            value={COUNTRIES.find((c) => c.code === countryCode) ?? null}
+                            onChange={(_, newValue: Country | null) => onCountryCodeChange(newValue?.code ?? null)}
+                            renderOption={(props, option) => (
+                                <Box component="li" {...props} key={option.code} sx={{ display: "flex", gap: 1 }}>
+                                    <span className={`fi fi-${option.code}`} />
+                                    {option.name}
+                                </Box>
+                            )}
+                            renderInput={(params) => <TextField {...params} label="Kraj" />}
+                        />
                         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                             {logoUrl && <Avatar src={`${BACKEND_ORIGIN}${logoUrl}`} variant="rounded" />}
                             <Button component="label" variant="outlined">
@@ -228,6 +253,19 @@ export function TeamsPageView({
                             value={editName}
                             onChange={(e) => onEditNameChange(e.target.value)}
                             required
+                        />
+                        <Autocomplete
+                            options={COUNTRIES}
+                            getOptionLabel={(option) => option.name}
+                            value={COUNTRIES.find((c) => c.code === editCountryCode) ?? null}
+                            onChange={(_, newValue: Country | null) => onEditCountryCodeChange(newValue?.code ?? null)}
+                            renderOption={(props, option) => (
+                                <Box component="li" {...props} key={option.code} sx={{ display: "flex", gap: 1 }}>
+                                    <span className={`fi fi-${option.code}`} />
+                                    {option.name}
+                                </Box>
+                            )}
+                            renderInput={(params) => <TextField {...params} label="Kraj" />}
                         />
                         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                             {editLogoUrl && <Avatar src={`${BACKEND_ORIGIN}${editLogoUrl}`} variant="rounded" />}
