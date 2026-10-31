@@ -4,6 +4,7 @@ public class Team
 {
     public int Id { get; set; }
     public required string Name { get; set; }
+    public string? CountryCode { get; set; }
     public string? LogoUrl { get; set; }
     public Kit HomeKit { get; set; } = new() { Pattern = "Solid", PrimaryColor = "#7c3aed", SecondaryColor = "#ffffff" };
     public Kit AwayKit { get; set; } = new() { Pattern = "Solid", PrimaryColor = "#ffffff", SecondaryColor = "#7c3aed" };

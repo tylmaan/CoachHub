@@ -40,6 +40,7 @@ public class TeamService : ITeamService
         var oldLogoUrl = existing.LogoUrl;
 
         existing.Name = team.Name;
+        existing.CountryCode = team.CountryCode;
         existing.LogoUrl = team.LogoUrl;
         existing.HomeKit = team.HomeKit;
         existing.AwayKit = team.AwayKit;
