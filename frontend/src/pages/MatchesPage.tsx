@@ -2,9 +2,11 @@ import { useEffect, useState } from "react";
 import { Alert, CircularProgress } from "@mui/material";
 import axios from "axios";
 import { getMatches, createMatch, updateMatch, deleteMatch } from "../api/matchesApi";
+import { getTeams } from "../api/teamsApi";
 import type { Match } from "../types/match";
 import { useAuth } from "../context/AuthContext";
 import { uploadFile } from "../api/filesApi";
+import { groupCompetitions } from "../constants/competitions";
 import { MatchesPageView } from "./MatchesPageView";
 
 function toNullableNumber(value: string): number | null {
@@ -20,6 +22,7 @@ export function MatchesPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+    const [teamCountryCode, setTeamCountryCode] = useState<string | null>(null);
     const [date, setDate] = useState("");
     const [opponent, setOpponent] = useState("");
     const [season, setSeason] = useState("");
@@ -61,6 +64,9 @@ export function MatchesPage() {
 
     useEffect(() => {
         loadMatches();
+        getTeams()
+            .then((teams) => setTeamCountryCode(teams[0]?.countryCode ?? null))
+            .catch(() => {});
     }, []);
 
     async function handleOpponentLogoSelect(e: React.ChangeEvent<HTMLInputElement>) {
@@ -189,12 +195,15 @@ export function MatchesPage() {
     if (loading) return <CircularProgress />;
     if (error) return <Alert severity="error">{error}</Alert>;
 
+    const competitionGroups = groupCompetitions(teamCountryCode);
+
     return (
         <MatchesPageView
             matchesBySeason={matchesBySeason}
             canCreate={!!canCreate}
             canEdit={!!canEdit}
             canDelete={!!canDelete}
+            competitionGroups={competitionGroups}
             date={date}
             opponent={opponent}
             season={season}

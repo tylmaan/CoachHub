@@ -11,12 +11,15 @@ import {
     DialogTitle,
     DialogContent,
     DialogActions,
-    Chip
+    Chip,
+    ListSubheader
 } from "@mui/material";
 import type { Match } from "../types/match";
-import { MATCH_TYPE_LABELS, COMPETITIONS } from "../constants/labels";
+import { MATCH_TYPE_LABELS } from "../constants/labels";
+import {  CATEGORY_COLORS, categoryOfMatch} from "../constants/competitions";
 import { BACKEND_ORIGIN } from "../api/axiosInstance";
 import { Link as RouterLink} from "react-router-dom";
+import type { CompetitionGroup } from "../constants/competitions";
 
 const MATCH_TYPES = ["League", "Cup", "Friendly"];
 
@@ -25,7 +28,7 @@ interface MatchesPageViewProps {
     canCreate: boolean;
     canEdit: boolean;
     canDelete: boolean;
-
+    competitionGroups: CompetitionGroup[];
     date: string;
     opponent: string;
     season: string;
@@ -85,6 +88,7 @@ export function MatchesPageView({
     canCreate,
     canEdit,
     canDelete,
+    competitionGroups,
     date,
     opponent,
     season,
@@ -143,7 +147,27 @@ export function MatchesPageView({
         return "-";
     }
 
+    function renderCompetitionOptions() {
+        return competitionGroups.flatMap((group) => [
+            <ListSubheader 
+                key={`h-${group.key}`}
+                sx={{ 
+                    bgcolor: CATEGORY_COLORS[group.category].bg,
+                    color: CATEGORY_COLORS[group.category].fg,
+                    fontWeight: 500,
+                }}
+            >
+                {group.label}
+            </ListSubheader>,
+            ...group.names.map((name) => (
+                <MenuItem key={name} value={name}>{name}</MenuItem>
+            )),
+        ]);
+    }
+
     function renderMatchRow(match: Match) {
+        const category = categoryOfMatch(match.matchType, match.competition);
+        const colors = CATEGORY_COLORS[category];
         return (
             <Box
                 key={match.id}
@@ -155,6 +179,8 @@ export function MatchesPageView({
                     py: 1.5,
                     borderBottom: "1px solid",
                     borderColor: "divider",
+                    borderLeft: "5px solid",
+                    borderLeftColor: colors.bar,
                     "&:last-of-type": { borderBottom: "none" },
                 }}
             >
@@ -170,7 +196,7 @@ export function MatchesPageView({
                     </Typography>
                 </Box>
                 <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
-                    {match.matchType && <Chip size="small" label={typeChipLabel(match)} />}
+                    {match.matchType && <Chip size="small" label={typeChipLabel(match)} sx={{ bgcolor: colors.bg, color: colors.fg }} />}
                     {match.round && <Chip size="small" label={match.round} variant="outlined" />}
                 </Box>
                 <Typography variant="body1" sx={{ minWidth: 56, textAlign: "center" }}>
@@ -277,9 +303,7 @@ export function MatchesPageView({
                                 sx={{ width: 220 }}
                             >
                                 <MenuItem value="">--</MenuItem>
-                                {COMPETITIONS.map((c) => (
-                                    <MenuItem key={c} value={c}>{c}</MenuItem>
-                                ))}
+                                {renderCompetitionOptions()}
                             </TextField>
                         )}
                         {(matchType === "League" || matchType === "Cup") && (
@@ -376,9 +400,7 @@ export function MatchesPageView({
                                 sx={{ width: 220 }}
                             >
                                 <MenuItem value="">--</MenuItem>
-                                {COMPETITIONS.map((c) => (
-                                    <MenuItem key={c} value={c}>{c}</MenuItem>
-                                ))}
+                                {renderCompetitionOptions()}
                             </TextField>
                         )}
                         {(editMatchType === "League" || editMatchType === "Cup") && (

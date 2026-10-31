@@ -33,10 +33,10 @@ export const CATEGORY_LABELS: Record<CompetitionCategory, string> = {
 };
 
 export const CATEGORY_COLORS: Record<CompetitionCategory, { bg: string; fg: string; bar: string }> = {
-    league: { bg: "#E6F1FB", fg: "#0C447C", bar: "#378ADD" },
-    cup: { bg: "#FAEEDA", fg: "#633806", bar: "#BA7517" },
-    international: { bg: "#EEEDFE", fg: "#3C3489", bar: "#7F77DD" },
-    friendly: { bg: "#F1EFE8", fg: "#444441", bar: "#B4B2A9" },
+    league: { bg: "#9FE1CB", fg: "#04342C", bar: "#1D9E75" },
+    cup: { bg: "#FAC775", fg: "#412402", bar: "#BA7517" },
+    international: { bg: "#85B7EB", fg: "#042C53", bar: "#378ADD" },
+    friendly: { bg: "#D3D1C7", fg: "#2C2C2A", bar: "#B4B2A9" },
 }
 
 export function categoryOfMatch(matchType: string | null, competition: string | null): CompetitionCategory {
