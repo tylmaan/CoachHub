@@ -4,6 +4,7 @@ import type { Kit } from "./kit";
 export interface Team {
     id: number;
     name: string;
+    countryCode: string | null;
     logoUrl: string | null;
     homeKit: Kit;
     awayKit: Kit;
@@ -13,6 +14,7 @@ export interface Team {
 export interface TeamSummary {
     id: number;
     name: string;
+    countryCode: string | null;
     logoUrl: string | null;
     homeKit: Kit;
     awayKit: Kit;

@@ -42,6 +42,7 @@ import type { DropTarget } from "../types/lineupDrag";
 import type { PickerOption } from "../types/pickerOption";
 import { MATCH_TYPE_LABELS, EVENT_TYPE_LABELS, POSITION_GROUPS } from "../constants/labels";
 import { FORMATIONS, FORMATION_LABELS, type FormationSlot } from "../constants/formations";
+import { CATEGORY_COLORS, CATEGORY_LABELS, categoryOfMatch } from "../constants/competitions";
 import { BACKEND_ORIGIN } from "../api/axiosInstance";
 
 const EVENT_TYPES = ["Goal", "OwnGoal", "YellowCard", "RedCard", "Substitution", "PenaltyMissed"];
@@ -236,6 +237,8 @@ export function MatchDetailPageView({
     const pitchSlots = buildPitchSlots(formation);
     const benchAppearances = appearances.filter((a) => !a.isStarting);
     const benchTiles = Array.from({ length: BENCH_SIZE }, (_, i) => benchAppearances[i] ?? null);
+    const category = categoryOfMatch(match.matchType, match.competition);
+    const categoryColors = CATEGORY_COLORS[category];
 
         function eventTypeIcon(eventType: string, isSecondYellow?: boolean) {
         if (eventType === "Goal") return <SportsSoccerIcon sx={{ color: "success.main" }} fontSize="small" />;
@@ -392,6 +395,11 @@ export function MatchDetailPageView({
                 )}
                 <Box>
                     <Typography variant="h5">{match.opponent}</Typography>
+                    <Chip
+                        size="small"
+                        label={match.competition ? `${match.competition} · ${CATEGORY_LABELS[category]}` : CATEGORY_LABELS[category]}
+                        sx={{ bgcolor: categoryColors.bg, color: categoryColors.fg, mt: 0.5, mb: 0.5 }}
+                    />
                     <Typography variant="body2" color="textSecondary">
                         {match.date} &middot; {match.season}
                         {match.matchType && ` ·  ${MATCH_TYPE_LABELS[match.matchType] ?? match.matchType}`}

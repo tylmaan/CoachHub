@@ -15,6 +15,7 @@ export function TeamsPage() {
     const [error, setError] = useState<string | null>(null);
 
     const [name, setName] = useState("");
+    const [countryCode, setCountryCode] = useState<string | null>(null);
     const [logoUrl, setLogoUrl] = useState<string | null>(null);
     const [kits, setKits] = useState<TeamKits>(DEFAULT_KITS);
     const [formError, setFormError] = useState<string | null>(null);
@@ -22,6 +23,7 @@ export function TeamsPage() {
 
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editName, setEditName] = useState("");
+    const [editCountryCode, setEditCountryCode] = useState<string | null>(null);
     const [editLogoUrl, setEditLogoUrl] = useState<string | null>(null);
     const [editKits, setEditKits] = useState<TeamKits>(DEFAULT_KITS);
     const [actionError, setActionError] = useState<string | null>(null);
@@ -69,8 +71,9 @@ export function TeamsPage() {
         e.preventDefault();
         setFormError(null);
         try {
-            await createTeam({ name, logoUrl, ...kits });
+            await createTeam({ name, countryCode, logoUrl, ...kits });
             setName("");
+            setCountryCode(null);
             setLogoUrl(null);
             setKits(DEFAULT_KITS);
             setCreateOpen(false);
@@ -87,6 +90,7 @@ export function TeamsPage() {
     function startEdit(team: TeamSummary) {
         setEditingId(team.id);
         setEditName(team.name);
+        setEditCountryCode(team.countryCode);
         setEditLogoUrl(team.logoUrl);
         setEditKits({
             homeKit: team.homeKit,
@@ -99,7 +103,7 @@ export function TeamsPage() {
     async function saveEdit(id: number) {
         setActionError(null);
         try {
-            await updateTeam(id, { name: editName, logoUrl: editLogoUrl, ...editKits });
+            await updateTeam(id, { name: editName, countryCode: editCountryCode, logoUrl: editLogoUrl, ...editKits });
             setEditingId(null);
             loadTeams();
         } catch {
@@ -141,10 +145,12 @@ export function TeamsPage() {
             canEdit={!!canEdit}
             canDelete={!!canDelete}
             name={name}
+            countryCode={countryCode}
             logoUrl={logoUrl}
             kits={kits}
             formError={formError}
             onNameChange={setName}
+            onCountryCodeChange={setCountryCode}
             onLogoSelect={handleLogoSelect}
             onKitsChange={setKits}
             createOpen={createOpen}
@@ -153,11 +159,13 @@ export function TeamsPage() {
             onCreate={handleCreate}
             editingId={editingId}
             editName={editName}
+            editCountryCode={editCountryCode}
             editLogoUrl={editLogoUrl}
             editKits={editKits}
             actionError={actionError}
             onStartEdit={startEdit}
             onEditNameChange={setEditName}
+            onEditCountryCodeChange={setEditCountryCode}
             onEditLogoSelect={handleEditLogoSelect}
             onEditKitsChange={setEditKits}
             onSaveEdit={saveEdit}

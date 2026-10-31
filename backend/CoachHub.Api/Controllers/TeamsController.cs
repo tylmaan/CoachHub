@@ -34,6 +34,10 @@ public class TeamsController : ControllerBase
     };
     
     private static readonly System.Text.RegularExpressions.Regex HexColor = new(@"^#([0-9A-Fa-f]{6})$");
+    private static readonly System.Text.RegularExpressions.Regex CountryCodePattern = new(@"^[a-z]{2}$");
+
+    private static bool HasValidCountry(Team team)=>
+        team.CountryCode is null || CountryCodePattern.IsMatch(team.CountryCode);
 
     private static bool IsValidKit(Kit kit) =>
         KitPatterns.Contains(kit.Pattern)
@@ -84,6 +88,7 @@ public class TeamsController : ControllerBase
             {
                 Id = team.Id,
                 Name = team.Name,
+                CountryCode = team.CountryCode,
                 LogoUrl = team.LogoUrl,
                 HomeKit = team.HomeKit,
                 AwayKit = team.AwayKit,
@@ -112,6 +117,9 @@ public class TeamsController : ControllerBase
     [Authorize(Roles = Roles.Admin)]
     public async Task<ActionResult<Team>> Create(Team team)
     {
+        if (!HasValidCountry(team))
+            return BadRequest(new[] { "Nieprawidłowy kod kraju." });
+
         if (!HasValidKits(team))
             return BadRequest(new[] { "Nieprawidłowy wzór lub kolor koszulki." });
 
@@ -123,6 +131,9 @@ public class TeamsController : ControllerBase
     [Authorize(Roles = Roles.Admin)]
     public async Task<IActionResult> Update(int id, Team team)
     {
+        if (!HasValidCountry(team))
+            return BadRequest(new[] { "Nieprawidłowy kod kraju." });
+
         if (!HasValidKits(team))
             return BadRequest(new[] { "Nieprawidłowy wzór lub kolor koszulki." });
             

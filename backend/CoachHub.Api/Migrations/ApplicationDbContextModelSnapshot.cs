@@ -358,6 +358,9 @@ namespace CoachHub.Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("CountryCode")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("LogoUrl")
                         .HasColumnType("TEXT");
 
