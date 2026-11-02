@@ -20,4 +20,5 @@ public class Match
 
     public ICollection<MatchAppearance> Appearances { get; set; } = new List<MatchAppearance>();
     public ICollection<MatchEvent> Events { get; set; } = new List<MatchEvent>();
+    public ICollection<Report> Reports { get; set; } = new List<Report>();
 }

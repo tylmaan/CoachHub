@@ -13,6 +13,9 @@ public class Report
     public int? TeamId { get; set; }
     public Team? Team { get; set; }
 
+    public int? MatchId { get; set; }
+    public Match? Match { get; set; }
+
     public required string CreatedByUserId { get; set; }
     public ApplicationUser? CreatedByUser { get; set; }
 }
