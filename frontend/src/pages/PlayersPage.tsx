@@ -14,12 +14,17 @@ function toNullableNumber(value: string): number | null {
     return value === "" ? null : Number(value);
 }
 
+function normalize(value: string): string {
+    return value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+
 export function PlayersPage() {
     const [players, setPlayers] = useState<Player[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [sortField, setSortField] = useState<SortField>("lastName");
     const [sortAsc, setSortAsc] = useState(true);
+    const [search, setSearch] = useState("");
 
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
@@ -190,7 +195,12 @@ export function PlayersPage() {
         setDeleteTargetId(null);
     }
 
-    const sortedPlayers = [...players].sort((a, b) => {
+    const query = normalize(search.trim());
+    const filteredPlayers = players.filter((p) =>
+        normalize(`${p.firstName} ${p.lastName}`).includes(query) 
+    );
+
+    const sortedPlayers = [...filteredPlayers].sort((a, b) => {
         let result = 0;
         if (sortField === "lastName") result = a.lastName.localeCompare(b.lastName);
         if (sortField === "position") result = POSITIONS.indexOf(a.position) - POSITIONS.indexOf(b.position);
@@ -209,6 +219,8 @@ export function PlayersPage() {
             canDelete={!!canDelete}
             sortField={sortField}
             sortAsc={sortAsc}
+            search={search}
+            onSearchChange={setSearch}
             onSort={handleSort}
             firstName={firstName}
             lastName={lastName}
