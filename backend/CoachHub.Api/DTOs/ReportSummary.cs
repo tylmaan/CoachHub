@@ -17,4 +17,5 @@ public class ReportSummary
 
     public required string AuthorId { get; set; }
     public required string AuthorName { get; set; }
+    public bool CanEdit { get; set; }
 }

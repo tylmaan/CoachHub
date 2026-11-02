@@ -72,13 +72,25 @@ public class ReportsController : ControllerBase
         return null;
     }
 
+    private void ApplyPermissions(IEnumerable<ReportSummary> summaries)
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var isCoach = User.IsInRole(Roles.Coach);
+        foreach (var summary in summaries)
+        {
+            summary.CanEdit = isCoach || summary.AuthorId == userId;
+        }
+    }
+
     [HttpGet]
     public async Task<ActionResult<List<ReportSummary>>> GetAll()
     {
         var callerTeamId = User.FindFirstValue("teamId");
         if (callerTeamId is null) return Ok(new List<ReportSummary>());
 
-        return await _reportService.GetSummariesForTeamAsync(int.Parse(callerTeamId));
+        var summaries = await _reportService.GetSummariesForTeamAsync(int.Parse(callerTeamId));
+        ApplyPermissions(summaries);
+        return summaries;
     }
 
     [HttpGet("{id}")]
@@ -151,6 +163,7 @@ public class ReportsController : ControllerBase
         });
 
         var summary = await _reportService.GetSummaryByIdAsync(created.Id);
+        if (summary is not null) ApplyPermissions(new[] { summary });
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, summary);
     }
 
