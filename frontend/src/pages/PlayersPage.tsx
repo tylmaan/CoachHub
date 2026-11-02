@@ -8,7 +8,7 @@ import { uploadFile } from '../api/filesApi';
 import { PlayersPageView } from './PlayersPageView';
 import {POSITIONS} from "../constants/labels";
 
-type SortField = "lastName" | "position" | "jerseyNumber";
+type SortField = "lastName" | "position" | "jerseyNumber" | "age";
 
 function toNullableNumber(value: string): number | null {
     return value === "" ? null : Number(value);
@@ -205,6 +205,7 @@ export function PlayersPage() {
         if (sortField === "lastName") result = a.lastName.localeCompare(b.lastName);
         if (sortField === "position") result = POSITIONS.indexOf(a.position) - POSITIONS.indexOf(b.position);
         if (sortField === "jerseyNumber") result = (a.jerseyNumber ?? 0) - (b.jerseyNumber ?? 0);
+        if (sortField === "age") result = b.dateOfBirth.localeCompare(a.dateOfBirth); 
         return sortAsc ? result : -result;
     });
 

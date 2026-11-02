@@ -35,9 +35,9 @@ interface PlayersPageViewProps {
     canCreate: boolean;
     canEdit: boolean;
     canDelete: boolean;
-    sortField: "lastName" | "position" | "jerseyNumber";
+    sortField: "lastName" | "position" | "jerseyNumber" | "age";
     sortAsc: boolean;
-    onSort: (field: "lastName" | "position" | "jerseyNumber") => void;
+    onSort: (field: "lastName" | "position" | "jerseyNumber" | "age") => void;
     search: string;
     onSearchChange: (value: string) => void;
 
@@ -448,7 +448,15 @@ export function PlayersPageView({
                                 </TableSortLabel>
                             </TableCell>
                             <TableCell>Narodowość</TableCell>
-                            <TableCell sx={{ whiteSpace: "nowrap" }}>Data urodzenia (wiek)</TableCell>
+                            <TableCell sx={{ whiteSpace: "nowrap" }}>
+                                <TableSortLabel
+                                    active={sortField === "age"}
+                                    direction={sortAsc ? "asc" : "desc"}
+                                    onClick={() => onSort("age")}
+                                >
+                                    Data urodzenia (wiek)
+                                </TableSortLabel>
+                            </TableCell>
                             <TableCell>
                                 <TableSortLabel
                                     active={sortField === "position"}
