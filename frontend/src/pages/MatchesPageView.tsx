@@ -16,10 +16,11 @@ import {
 } from "@mui/material";
 import type { Match } from "../types/match";
 import { MATCH_TYPE_LABELS } from "../constants/labels";
-import {  CATEGORY_COLORS, categoryOfMatch} from "../constants/competitions";
+import { CATEGORY_COLORS, categoryOfMatch } from "../constants/competitions";
 import { BACKEND_ORIGIN } from "../api/axiosInstance";
 import { Link as RouterLink} from "react-router-dom";
 import type { CompetitionGroup } from "../constants/competitions";
+import { ConfirmDeleteDialog } from "../components/ConfirmDeleteDialog";
 
 const MATCH_TYPES = ["League", "Cup", "Friendly"];
 
@@ -80,7 +81,10 @@ interface MatchesPageViewProps {
     onEditOpponentLogoSelect: (e: React.ChangeEvent<HTMLInputElement>) => void;
     onSaveEdit: (id: number) => void;
     onCancelEdit: () => void;
-    onDelete: (id: number) => void;
+    deleteDialogOpen: boolean;
+    onRequestDelete: (id: number) => void;
+    onCancelDelete: () => void;
+    onConfirmDelete: () => void;
 }
 
 export function MatchesPageView({
@@ -139,7 +143,10 @@ export function MatchesPageView({
     onEditOpponentLogoSelect,
     onSaveEdit,
     onCancelEdit,
-    onDelete
+    deleteDialogOpen,
+    onRequestDelete,
+    onCancelDelete,
+    onConfirmDelete
 }: MatchesPageViewProps) {
     function typeChipLabel(match: Match): string {
         if (match.matchType === "Cup") return match.competition ?? MATCH_TYPE_LABELS.Cup;
@@ -205,7 +212,7 @@ export function MatchesPageView({
                 <Box sx={{ display: "flex", gap: 1, flexShrink: 0 }}>
                     <Button size="small" component={RouterLink} to={`/matches/${match.id}`}>Szczegóły</Button>
                     {canEdit && <Button size="small" onClick={() => onStartEdit(match)}>Edytuj</Button>}
-                    {canDelete && <Button size="small" color="error" onClick={() => onDelete(match.id)}>Usuń</Button>}
+                    {canDelete && <Button size="small" color="error" onClick={() => onRequestDelete(match.id)}>Usuń</Button>}
                 </Box>
             </Box>
         );
@@ -425,6 +432,14 @@ export function MatchesPageView({
                     </DialogActions>
                 </Box>
             </Dialog>
+
+            <ConfirmDeleteDialog
+                open={deleteDialogOpen}
+                title="Usunąć mecz?"
+                message="Usunięcie tego meczu skasuje też jego skład, wszystkie zdarzenia meczowe i raporty o tym meczu. Tej operacji nie można cofnąć."
+                onConfirm={onConfirmDelete}
+                onCancel={onCancelDelete}
+            />
         </>
     );
 }

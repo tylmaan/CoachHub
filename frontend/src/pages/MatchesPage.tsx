@@ -53,6 +53,7 @@ export function MatchesPage() {
     const canCreate = roles?.includes("Coach") || roles?.includes("AssistantCoach");
     const canEdit = canCreate;
     const canDelete = roles?.includes("Coach");
+    const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
 
     function loadMatches() {
         setLoading(true);
@@ -180,6 +181,20 @@ export function MatchesPage() {
         }
     }
 
+    function requestDelete(id: number) {
+        setDeleteTargetId(id);
+    }
+
+    function cancelDelete() {
+        setDeleteTargetId(null);
+    }
+
+    async function confirmDelete() {
+        if (deleteTargetId === null) return;
+        await handleDelete(deleteTargetId);
+        setDeleteTargetId(null);
+    }
+
     const matchesBySeason = [...matches]
         .sort((a ,b) => b.season.localeCompare(a.season) || b.date.localeCompare(a.date))
         .reduce<{ season: string; matches: Match[] }[]>((groups, match) => {
@@ -254,7 +269,10 @@ export function MatchesPage() {
             onEditOpponentLogoSelect={handleEditOpponentLogoSelect}
             onSaveEdit={saveEdit}
             onCancelEdit={() => setEditingId(null)}
-            onDelete={handleDelete}
+            deleteDialogOpen={deleteTargetId !== null}
+            onRequestDelete={requestDelete}
+            onCancelDelete={cancelDelete}
+            onConfirmDelete={confirmDelete}
         />
     );
 }
