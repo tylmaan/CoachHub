@@ -1,12 +1,20 @@
 import {
     Alert,
     Box,
+    Button,
     Chip,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
     MenuItem,
     Paper,
     TextField,
+    ToggleButton,
+    ToggleButtonGroup,
     Typography,
 } from "@mui/material";
+import { ConfirmDeleteDialog } from "../components/ConfirmDeleteDialog";
 import type { Report, ReportKind } from "../types/report";
 import { REPORT_KIND_LABELS, reportKind } from "../types/report";
 
@@ -27,6 +35,31 @@ interface ReportsPageViewProps {
     onKindFilterChange: (value: ReportKind | "") => void;
     authorFilter: string;
     onAuthorFilterChange: (value: string) => void;
+        canDelete: boolean;
+    actionError: string | null;
+    formOpen: boolean;
+    isEditing: boolean;
+    title: string;
+    onTitleChange: (value: string) => void;
+    content: string;
+    onContentChange: (value: string) => void;
+    targetType: "team" | "player";
+    onTargetTypeChange: (value: "team" | "player") => void;
+    playerId: number | "";
+    onPlayerIdChange: (value: number | "") => void;
+    matchId: number | "";
+    onMatchIdChange: (value: number | "") => void;
+    playerOptions: { id: number; label: string }[];
+    matchOptions: { id: number; label: string }[];
+    formError: string | null;
+    onOpenCreate: () => void;
+    onOpenEdit: (report: Report) => void;
+    onCloseForm: () => void;
+    onSubmit: (e: React.SyntheticEvent) => void;
+    deleteDialogOpen: boolean;
+    onRequestDelete: (id: number) => void;
+    onCancelDelete: () => void;
+    onConfirmDelete: () => void;
 }
 
 export function ReportsPageView({
@@ -39,12 +72,40 @@ export function ReportsPageView({
     onKindFilterChange,
     authorFilter,
     onAuthorFilterChange,
+    canDelete,
+    actionError,
+    formOpen,
+    isEditing,
+    title,
+    onTitleChange,
+    content,
+    onContentChange,
+    targetType,
+    onTargetTypeChange,
+    playerId,
+    onPlayerIdChange,
+    matchId,
+    onMatchIdChange,
+    playerOptions,
+    matchOptions,
+    formError,
+    onOpenCreate,
+    onOpenEdit,
+    onCloseForm,
+    onSubmit,
+    deleteDialogOpen,
+    onRequestDelete,
+    onCancelDelete,
+    onConfirmDelete
 }: ReportsPageViewProps) {
     return (
         <>
             <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
                 <Typography variant="h4">Raporty</Typography>
+                <Button variant="contained" onClick={onOpenCreate}>Dodaj raport</Button>
             </Box>
+
+            {actionError && <Alert severity="error" sx={{ mb: 2 }}>{actionError}</Alert>}
 
             <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", mb: 2 }}>
                 <TextField
@@ -124,10 +185,89 @@ export function ReportsPageView({
                             >
                                 {report.content}
                             </Typography>
+                            {(report.canEdit || canDelete) && (
+                                <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
+                                    {report.canEdit && (
+                                        <Button size="small" onClick={() => onOpenEdit(report)}>Edytuj</Button>
+                                    )}
+                                    {canDelete && (
+                                        <Button size="small" color="error" onClick={() => onRequestDelete(report.id)}>Usuń</Button>
+                                    )}
+                                </Box>
+                            )}
                         </Paper>
                     )
                 })}
             </Box>
+
+            <Dialog open={formOpen} onClose={onCloseForm} fullWidth maxWidth="sm">
+                <Box component="form" onSubmit={onSubmit}>
+                    <DialogTitle>{isEditing ? "Edytuj raport" : "Nowy raport"}</DialogTitle>
+                    <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 2, pt: 1 }}>
+                        {formError && <Alert severity="error">{formError}</Alert>}
+                        <TextField
+                            label="Tytuł"
+                            value={title}
+                            onChange={(e) => onTitleChange(e.target.value)}
+                            required
+                            slotProps={{ htmlInput: { maxLength: 200 } }}
+                        />
+                        <ToggleButtonGroup
+                            exclusive
+                            fullWidth
+                            value={targetType}
+                            onChange={(_, value) => value && onTargetTypeChange(value)}
+                        >
+                            <ToggleButton value="team">Cała drużyna</ToggleButton>
+                            <ToggleButton value="player">Zawodnik</ToggleButton>
+                        </ToggleButtonGroup>
+                        {targetType === "player" && (
+                            <TextField
+                                select
+                                label="Zawodnik"
+                                value={playerId}
+                                onChange={(e) => onPlayerIdChange(Number(e.target.value))}
+                                required
+                            >
+                                {playerOptions.map((p) => (
+                                    <MenuItem key={p.id} value={p.id}>{p.label}</MenuItem>
+                                ))}
+                            </TextField>
+                        )}
+                        <TextField
+                            select
+                            label="Dotyczy meczu (opcjonalnie)"
+                            value={matchId}
+                            onChange={(e) => onMatchIdChange(e.target.value === "" ? "" : Number(e.target.value))}
+                        >
+                            <MenuItem value="">Bez meczu</MenuItem>
+                            {matchOptions.map((m) => (
+                                <MenuItem key={m.id} value={m.id}>{m.label}</MenuItem>
+                            ))}
+                        </TextField>
+                        <TextField
+                            label="Treść"
+                            value={content}
+                            onChange={(e) => onContentChange(e.target.value)}
+                            required
+                            multiline
+                            minRows={5}
+                        />
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={onCloseForm}>Anuluj</Button>
+                        <Button type="submit" variant="contained">{isEditing ? "Zapisz" : "Dodaj"}</Button>
+                    </DialogActions>
+                </Box>
+            </Dialog>
+
+            <ConfirmDeleteDialog
+                open={deleteDialogOpen}
+                title="Usunąć raport?"
+                message="Raport zostanie trwale usunięty. Tej operacji nie można cofnąć."
+                onConfirm={onConfirmDelete}
+                onCancel={onCancelDelete}
+            />
         </>
     );
 }
