@@ -10,6 +10,7 @@ import { UsersPage } from './pages/UsersPage';
 import { MatchesPage } from './pages/MatchesPage';
 import { MatchDetailPage } from './pages/MatchDetailPage';
 import { PlayerStatsPage } from './pages/PlayerStatsPage';
+import { ReportsPage } from './pages/ReportsPage';
 
 function App() {
   return (
@@ -29,6 +30,7 @@ function App() {
         <Route path="/matches" element={<MatchesPage />} />
         <Route path="/matches/:id" element={<MatchDetailPage />} />
         <Route path="/player-stats" element={<PlayerStatsPage />} />
+        <Route path="/reports" element={<ReportsPage />} />
       </Route>
     </Routes>
   );

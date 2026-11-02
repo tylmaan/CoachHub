@@ -1,6 +1,8 @@
 using CoachHub.Api.Models;
 using CoachHub.Api.Data;
+using CoachHub.Api.DTOs;
 using Microsoft.EntityFrameworkCore;
+using System.Linq.Expressions;
 
 namespace CoachHub.Api.Services;
 
@@ -12,6 +14,22 @@ public class ReportService : IReportService
     {
         _context = context;
     }
+
+    private static readonly Expression<Func<Report, ReportSummary>> ToSummary = r => new ReportSummary
+    {
+        Id = r.Id,
+        Title = r.Title,
+        Content = r.Content,
+        CreatedAt = r.CreatedAt,
+        PlayerId = r.PlayerId,
+        PlayerName = r.Player == null ? null : r.Player.FirstName + " " + r.Player.LastName,
+        TeamId = r.TeamId,
+        MatchId = r.MatchId,
+        MatchOpponent = r.Match == null ? null : r.Match.Opponent,
+        MatchDate = r.Match == null ? null : r.Match.Date,
+        AuthorId = r.CreatedByUserId,
+        AuthorName = r.CreatedByUser == null ? r.CreatedByUserId : (r.CreatedByUser.FullName ?? r.CreatedByUser.Email ?? r.CreatedByUserId)
+    };
 
     public async Task<Report> CreateReportAsync(Report report)
     {
@@ -59,6 +77,25 @@ public class ReportService : IReportService
             .ToListAsync();
     }
 
+    public async Task<List<ReportSummary>> GetSummariesForTeamAsync(int teamId)
+    {
+        return await _context.Reports
+            .AsNoTracking()
+            .Where(r => r.TeamId == teamId || (r.Player != null && r.Player.TeamId == teamId))
+            .OrderByDescending(r => r.CreatedAt)
+            .Select(ToSummary)
+            .ToListAsync();
+    }
+
+    public async Task<ReportSummary?> GetSummaryByIdAsync(int id)
+    {
+        return await _context.Reports
+            .AsNoTracking()
+            .Where(r => r.Id == id)
+            .Select(ToSummary)
+            .FirstOrDefaultAsync();
+    }
+
     public async Task<bool> UpdateReportAsync(int id, Report report)
     {
         var existing = await _context.Reports.FindAsync(id);
@@ -68,7 +105,7 @@ public class ReportService : IReportService
         existing.Content = report.Content;
         existing.PlayerId = report.PlayerId;
         existing.TeamId = report.TeamId;
-        existing.CreatedByUserId = report.CreatedByUserId;
+        existing.MatchId = report.MatchId;
 
         await _context.SaveChangesAsync();
         return true;

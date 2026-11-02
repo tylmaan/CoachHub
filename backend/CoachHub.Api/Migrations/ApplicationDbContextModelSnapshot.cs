@@ -298,6 +298,9 @@ namespace CoachHub.Api.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<int?>("MatchId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<int?>("PlayerId")
                         .HasColumnType("INTEGER");
 
@@ -311,6 +314,8 @@ namespace CoachHub.Api.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("CreatedByUserId");
+
+                    b.HasIndex("MatchId");
 
                     b.HasIndex("PlayerId");
 
@@ -638,6 +643,11 @@ namespace CoachHub.Api.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("CoachHub.Api.Models.Match", "Match")
+                        .WithMany("Reports")
+                        .HasForeignKey("MatchId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
                     b.HasOne("CoachHub.Api.Models.Player", "Player")
                         .WithMany("Reports")
                         .HasForeignKey("PlayerId")
@@ -649,6 +659,8 @@ namespace CoachHub.Api.Migrations
                         .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("CreatedByUser");
+
+                    b.Navigation("Match");
 
                     b.Navigation("Player");
 
@@ -730,6 +742,8 @@ namespace CoachHub.Api.Migrations
                     b.Navigation("Appearances");
 
                     b.Navigation("Events");
+
+                    b.Navigation("Reports");
                 });
 
             modelBuilder.Entity("CoachHub.Api.Models.Player", b =>
