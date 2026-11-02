@@ -35,9 +35,11 @@ interface PlayersPageViewProps {
     canCreate: boolean;
     canEdit: boolean;
     canDelete: boolean;
-    sortField: "lastName" | "position" | "jerseyNumber";
+    sortField: "lastName" | "position" | "jerseyNumber" | "age";
     sortAsc: boolean;
-    onSort: (field: "lastName" | "position" | "jerseyNumber") => void;
+    onSort: (field: "lastName" | "position" | "jerseyNumber" | "age") => void;
+    search: string;
+    onSearchChange: (value: string) => void;
 
     firstName: string;
     lastName: string;
@@ -90,6 +92,17 @@ interface PlayersPageViewProps {
     onRequestDelete: (id: number) => void;
     onCancelDelete: () => void;
     onConfirmDelete: () => void;
+}
+
+function calculateAge(dateOfBirth: string): number {
+    const birth = new Date(dateOfBirth);
+    const today = new Date();
+    let age = today.getFullYear() - birth.getFullYear();
+    const hadBirthday =
+        today.getMonth() > birth.getMonth() ||
+        (today.getMonth() === birth.getMonth() && today.getDate() >= birth.getDate());
+    if (!hadBirthday) age--;
+    return age;
 }
 
 function renderFoot(foot: string | null) {
@@ -152,6 +165,8 @@ export function PlayersPageView({
     sortField,
     sortAsc,
     onSort,
+    search,
+    onSearchChange,
     firstName,
     lastName,
     nationality,
@@ -209,11 +224,19 @@ export function PlayersPageView({
                 <Typography variant="h4">
                     Zawodnicy
                 </Typography>
-                {canCreate && (
-                    <Button variant="contained" onClick={onOpenCreate}>
-                        Dodaj zawodnika
-                    </Button>
-                )}
+                <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+                    <TextField
+                        size="small"
+                        placeholder="Szukaj zawodnika..."
+                        value={search}
+                        onChange={(e) => onSearchChange(e.target.value)}
+                    />
+                    {canCreate && (
+                        <Button variant="contained" onClick={onOpenCreate}>
+                            Dodaj zawodnika
+                        </Button>
+                    )}
+                </Box>
             </Box>
 
             <Dialog open={createOpen} onClose={onCloseCreate} fullWidth maxWidth="sm">
@@ -406,7 +429,11 @@ export function PlayersPageView({
             {actionError && <Alert severity="error" sx={{ mb:2 }}>{actionError}</Alert>}
 
             <TableContainer component={Paper}>
-                <Table>
+                <Table 
+                    sx={{ 
+                        "& .MuiTableCell-root": { px: 1 },
+                        "& .MuiTableCell-root:first-of-type": { pr: 6 },
+                    }}>
                     <TableHead>
                         <TableRow>
                             <TableCell>Zdjęcie</TableCell>
@@ -421,7 +448,15 @@ export function PlayersPageView({
                                 </TableSortLabel>
                             </TableCell>
                             <TableCell>Narodowość</TableCell>
-                            <TableCell>Data urodzenia</TableCell>
+                            <TableCell sx={{ whiteSpace: "nowrap" }}>
+                                <TableSortLabel
+                                    active={sortField === "age"}
+                                    direction={sortAsc ? "asc" : "desc"}
+                                    onClick={() => onSort("age")}
+                                >
+                                    Data urodzenia (wiek)
+                                </TableSortLabel>
+                            </TableCell>
                             <TableCell>
                                 <TableSortLabel
                                     active={sortField === "position"}
@@ -446,13 +481,22 @@ export function PlayersPageView({
                         </TableRow>
                     </TableHead>
                     <TableBody>
+                        {players.length === 0 && (
+                            <TableRow>
+                                <TableCell colSpan={(canEdit || canDelete) ? 10 : 9} align="center">
+                                    Brak zawodników spełniających kryteria
+                                </TableCell>
+                            </TableRow>
+                        )}
                         {players.map((player) => (
                             <TableRow key={player.id}>
                                 <TableCell>
                                     {player.photoUrl ? (
-                                        <Avatar src={`${BACKEND_ORIGIN}${player.photoUrl}`} />
+                                        <Avatar src={`${BACKEND_ORIGIN}${player.photoUrl}`} sx={{ width: 52, height: 52 }} />
                                     ) : (
-                                        <Avatar>{player.firstName[0]}{player.lastName[0]}</Avatar>
+                                        <Avatar sx={{ width: 52, height: 52 }}>
+                                            {player.firstName[0]}{player.lastName[0]}
+                                        </Avatar>
                                     )}
                                 </TableCell>
                                 <TableCell>{player.firstName}</TableCell>
@@ -465,7 +509,7 @@ export function PlayersPageView({
                                         </Box>
                                     ) : "-"}
                                 </TableCell>
-                                <TableCell>{player.dateOfBirth}</TableCell>
+                                <TableCell sx={{ whiteSpace: "nowrap" }}>{player.dateOfBirth} ({calculateAge(player.dateOfBirth)})</TableCell>
                                 <TableCell>
                                     <Chip
                                         label={POSITION_LABELS[player.position] ?? player.position}
