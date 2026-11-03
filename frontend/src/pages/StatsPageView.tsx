@@ -11,6 +11,7 @@ import type { SeasonSummary, TeamMatchResult, TeamSeasonStats } from "../types/t
 import { GoalsByPeriodChart } from "../components/stats/GoalsByPeriodChart";
 import { FormStrip } from "../components/stats/FormStrip";
 import { LeaguePointsChart } from "../components/stats/LeaguePointsChart";
+import { HomeAwayChart } from "../components/stats/HomeAwayChart";
 
 interface StatsPageViewProps {
     seasons: string[];
@@ -20,6 +21,8 @@ interface StatsPageViewProps {
     summary: SeasonSummary | null;
     recentResults: TeamMatchResult[];
     leaguePoints: number[];
+    homeSummary: SeasonSummary;
+    awaySummary: SeasonSummary;
 }
 
 function KpiTile({ label, value, caption }: { label: string; value: string; caption: string }) {
@@ -39,7 +42,9 @@ export function StatsPageView({
     current, 
     summary,
     recentResults,
-    leaguePoints
+    leaguePoints,
+    homeSummary,
+    awaySummary
 }: StatsPageViewProps) {
     return (
         <>
@@ -98,6 +103,9 @@ export function StatsPageView({
                             <LeaguePointsChart points={leaguePoints} />
                         </Box>
                     )}
+                    <Box sx={{ mt: 2 }}>
+                        <HomeAwayChart home={homeSummary} away={awaySummary} />
+                    </Box>
                     <Box sx={{ mt: 2 }}>
                         <GoalsByPeriodChart
                             scored={current.goalsScoredByPeriod}

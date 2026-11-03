@@ -35,7 +35,7 @@ export function StatsPage() {
     const seasons = stats.map(s => s.season);
     const current = stats.find(s => s.season === season) ?? null;
     const summary = current ? summarize(current.results) : null;
-    
+
     const recentResults = current ? current.results.slice(-10) : [];
     const leaguePoints = current ? current.results
         .filter((r) => r.matchType === "League")
@@ -44,6 +44,8 @@ export function StatsPage() {
             return [...points, (points[points.length - 1] ?? 0) + earned];
         }, []) 
     : [];
+    const homeSummary = summarize(current?.results.filter(r => r.isHome === true) ?? []);
+    const awaySummary = summarize(current?.results.filter(r => r.isHome === false) ?? []);
 
     if (loading) return <CircularProgress />;
     if (error) return <Alert severity="error">{error}</Alert>;
@@ -57,6 +59,8 @@ export function StatsPage() {
             summary={summary}
             recentResults={recentResults}
             leaguePoints={leaguePoints}
+            homeSummary={homeSummary}
+            awaySummary={awaySummary}
         />
     );
 }
