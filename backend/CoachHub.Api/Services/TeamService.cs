@@ -41,6 +41,7 @@ public class TeamService : ITeamService
 
         existing.Name = team.Name;
         existing.CountryCode = team.CountryCode;
+        existing.League = team.League;
         existing.LogoUrl = team.LogoUrl;
         existing.HomeKit = team.HomeKit;
         existing.AwayKit = team.AwayKit;

@@ -39,6 +39,9 @@ public class TeamsController : ControllerBase
     private static bool HasValidCountry(Team team)=>
         team.CountryCode is null || CountryCodePattern.IsMatch(team.CountryCode);
 
+    private static bool HasValidLeague(Team team) =>
+        team.League is null || (team.League.Length > 0 && team.League.Length <= 100);
+
     private static bool IsValidKit(Kit kit) =>
         KitPatterns.Contains(kit.Pattern)
         && HexColor.IsMatch(kit.PrimaryColor)
@@ -89,6 +92,7 @@ public class TeamsController : ControllerBase
                 Id = team.Id,
                 Name = team.Name,
                 CountryCode = team.CountryCode,
+                League = team.League,
                 LogoUrl = team.LogoUrl,
                 HomeKit = team.HomeKit,
                 AwayKit = team.AwayKit,
@@ -119,6 +123,9 @@ public class TeamsController : ControllerBase
     {
         if (!HasValidCountry(team))
             return BadRequest(new[] { "Nieprawidłowy kod kraju." });
+            
+        if (!HasValidLeague(team))
+            return BadRequest(new[] { "Nieprawidłowa nazwa ligi." });
 
         if (!HasValidKits(team))
             return BadRequest(new[] { "Nieprawidłowy wzór lub kolor koszulki." });
@@ -133,6 +140,9 @@ public class TeamsController : ControllerBase
     {
         if (!HasValidCountry(team))
             return BadRequest(new[] { "Nieprawidłowy kod kraju." });
+
+        if (!HasValidLeague(team))
+            return BadRequest(new[] { "Nieprawidłowa nazwa ligi." });
 
         if (!HasValidKits(team))
             return BadRequest(new[] { "Nieprawidłowy wzór lub kolor koszulki." });
