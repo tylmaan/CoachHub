@@ -119,16 +119,18 @@ export function StatsPageView({
                             caption="żółte · czerwone"
                         />
                     </Box>
-                    <Box sx={{ mt: 2 }}>
-                        <FormStrip results={recentResults} />
-                    </Box>
-                    {leaguePoints.length > 0 && (
-                        <Box sx={{ mt: 2 }}>
-                            <LeaguePointsChart points={leaguePoints} />
+                    <Box sx={{ mt: 2, display: "grid", gridTemplateColumns: { xs: "1fr", md: "5fr 7fr" }, gap: 2 }}>
+                        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                            <FormStrip results={recentResults} />
+                            <HomeAwayChart home={homeSummary} away={awaySummary} />
                         </Box>
-                    )}
+                        {leaguePoints.length > 0 && <LeaguePointsChart points={leaguePoints} />}
+                    </Box>
                     <Box sx={{ mt: 2 }}>
-                        <HomeAwayChart home={homeSummary} away={awaySummary} />
+                        <GoalsByPeriodChart
+                            scored={current.goalsScoredByPeriod}
+                            conceded={current.goalsConcededByPeriod}
+                        />
                     </Box>
                     <Box sx={{ mt: 2, display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(2, 1fr)" }, gap: 2 }}>
                         <PlayerRankingChart
@@ -144,12 +146,6 @@ export function StatsPageView({
                             metric={rankingMetric}
                             onMetricChange={onRankingMetricChange}
                             rows={rankingRows}
-                        />
-                    </Box>
-                    <Box sx={{ mt: 2 }}>
-                        <GoalsByPeriodChart
-                            scored={current.goalsScoredByPeriod}
-                            conceded={current.goalsConcededByPeriod}
                         />
                     </Box>
                 </>
