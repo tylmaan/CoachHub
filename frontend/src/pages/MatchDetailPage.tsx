@@ -23,6 +23,7 @@ export function MatchDetailPage() {
     const { id } = useParams<{ id: string }>();
     const { roles } = useAuth();
     const [team, setTeam] = useState<TeamSummary | null>(null);
+    const [teamLeague, setTeamLeague] = useState<string | null>(null);
     const [match, setMatch] = useState<Match | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -77,7 +78,10 @@ export function MatchDetailPage() {
             .then(setPlayers)
             .catch(() => {});
         getTeams()
-            .then((teams) => setTeam(teams[0] ?? null))
+            .then((teams) => {
+                setTeam(teams[0] ?? null);
+                setTeamLeague(teams[0]?.league ?? null);
+            })
             .catch(() => {});
         loadAppearances(Number(id));
         loadEvents(Number(id));
@@ -360,6 +364,7 @@ export function MatchDetailPage() {
 
     return (
         <MatchDetailPageView
+            teamLeague={teamLeague}
             match={match}
             players={players}
             appearances={appearances}

@@ -40,7 +40,7 @@ import type { MatchAppearance } from "../types/matchAppearance";
 import type { MatchEvent } from "../types/matchEvent";
 import type { DropTarget } from "../types/lineupDrag";
 import type { PickerOption } from "../types/pickerOption";
-import { MATCH_TYPE_LABELS, EVENT_TYPE_LABELS, POSITION_GROUPS } from "../constants/labels";
+import { EVENT_TYPE_LABELS, POSITION_GROUPS } from "../constants/labels";
 import { FORMATIONS, FORMATION_LABELS, type FormationSlot } from "../constants/formations";
 import { CATEGORY_COLORS, CATEGORY_LABELS, categoryOfMatch } from "../constants/competitions";
 import { BACKEND_ORIGIN } from "../api/axiosInstance";
@@ -49,6 +49,7 @@ const EVENT_TYPES = ["Goal", "OwnGoal", "YellowCard", "RedCard", "Substitution",
 const BENCH_SIZE = 12;
 
 interface MatchDetailPageViewProps {
+    teamLeague: string | null;
     match: Match;
     players: Player[];
     appearances: MatchAppearance[];
@@ -129,6 +130,7 @@ function renderPlayerOption(p: Player) {
 }
 
 export function MatchDetailPageView({ 
+    teamLeague,
     match,
     players,
     appearances,
@@ -234,6 +236,7 @@ export function MatchDetailPageView({
         });
     } 
 
+    const competitionName = match.matchType === "League" ? teamLeague : match.competition;
     const pitchSlots = buildPitchSlots(formation);
     const benchAppearances = appearances.filter((a) => !a.isStarting);
     const benchTiles = Array.from({ length: BENCH_SIZE }, (_, i) => benchAppearances[i] ?? null);
@@ -397,12 +400,11 @@ export function MatchDetailPageView({
                     <Typography variant="h5">{match.opponent}</Typography>
                     <Chip
                         size="small"
-                        label={match.competition ? `${match.competition} · ${CATEGORY_LABELS[category]}` : CATEGORY_LABELS[category]}
+                        label={competitionName ?? CATEGORY_LABELS[category]}
                         sx={{ bgcolor: categoryColors.bg, color: categoryColors.fg, mt: 0.5, mb: 0.5 }}
                     />
                     <Typography variant="body2" color="textSecondary">
                         {match.date} &middot; {match.season}
-                        {match.matchType && ` ·  ${MATCH_TYPE_LABELS[match.matchType] ?? match.matchType}`}
                         {match.round && ` · ${match.round}`}
                         {match.isHome !== null && ` · ${match.isHome ? "Dom" : "Wyjazd"}`}
                     </Typography>

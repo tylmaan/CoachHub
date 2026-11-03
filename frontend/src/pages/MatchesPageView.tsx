@@ -30,6 +30,7 @@ interface MatchesPageViewProps {
     canEdit: boolean;
     canDelete: boolean;
     competitionGroups: CompetitionGroup[];
+    teamLeague: string | null;
     date: string;
     opponent: string;
     season: string;
@@ -93,6 +94,7 @@ export function MatchesPageView({
     canEdit,
     canDelete,
     competitionGroups,
+    teamLeague,
     date,
     opponent,
     season,
@@ -149,6 +151,7 @@ export function MatchesPageView({
     onConfirmDelete
 }: MatchesPageViewProps) {
     function typeChipLabel(match: Match): string {
+        if (match.matchType === "League") return teamLeague ?? MATCH_TYPE_LABELS.League;
         if (match.matchType === "Cup") return match.competition ?? MATCH_TYPE_LABELS.Cup;
         if (match.matchType) return MATCH_TYPE_LABELS[match.matchType] ?? match.matchType;
         return "-";
