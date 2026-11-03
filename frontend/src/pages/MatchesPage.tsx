@@ -23,6 +23,7 @@ export function MatchesPage() {
     const [error, setError] = useState<string | null>(null);
 
     const [teamCountryCode, setTeamCountryCode] = useState<string | null>(null);
+    const [teamLeague, setTeamLeague] = useState<string | null>(null);
     const [date, setDate] = useState("");
     const [opponent, setOpponent] = useState("");
     const [season, setSeason] = useState("");
@@ -66,7 +67,10 @@ export function MatchesPage() {
     useEffect(() => {
         loadMatches();
         getTeams()
-            .then((teams) => setTeamCountryCode(teams[0]?.countryCode ?? null))
+            .then((teams) => {
+                setTeamCountryCode(teams[0]?.countryCode ?? null);
+                setTeamLeague(teams[0]?.league ?? null);
+            })
             .catch(() => {});
     }, []);
 
@@ -219,6 +223,7 @@ export function MatchesPage() {
             canEdit={!!canEdit}
             canDelete={!!canDelete}
             competitionGroups={competitionGroups}
+            teamLeague={teamLeague}
             date={date}
             opponent={opponent}
             season={season}
