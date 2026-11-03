@@ -8,6 +8,7 @@ import {
 } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
 import type { SeasonSummary, TeamSeasonStats } from "../types/teamStats";
+import { GoalsByPeriodChart } from "../components/stats/GoalsByPeriodChart";
 
 interface StatsPageViewProps {
     seasons: string[];
@@ -60,28 +61,36 @@ export function StatsPageView({
             {!current || !summary ? (
                 <Typography color="text.secondary">Brak rozegranych meczów.</Typography>
             ) : (
-                <Box sx={{ display: "grid", gridTemplateColumns: { xs: "repeat(2, 1fr)", md: "repeat(4, 1fr)" }, gap: 2 }}>
-                    <KpiTile 
-                        label="Mecze"
-                        value={String(summary.matches)}
-                        caption={`${summary.wins} W · ${summary.draws} R · ${summary.losses} P`}
-                    />
-                    <KpiTile
-                        label="Bramki"
-                        value={`${summary.goalsFor}:${summary.goalsAgainst}`}
-                        caption={`${summary.goalsFor - summary.goalsAgainst > 0 ? "+" : ""}${summary.goalsFor - summary.goalsAgainst}, ${(summary.goalsFor / summary.matches).toFixed(2).replace(".", ",")} na mecz`}
-                    />
-                    <KpiTile
-                        label="Czyste konta"
-                        value={String(summary.cleanSheets)}
-                        caption={`${Math.round((summary.cleanSheets / summary.matches) * 100)}% meczów`}
-                    />
-                    <KpiTile
-                        label="Kartki"
-                        value={`${current.yellowCards} · ${current.redCards}`}
-                        caption="żółte · czerwone"
-                    />
-                </Box>
+                <>
+                    <Box sx={{ display: "grid", gridTemplateColumns: { xs: "repeat(2, 1fr)", md: "repeat(4, 1fr)" }, gap: 2 }}>
+                        <KpiTile 
+                            label="Mecze"
+                            value={String(summary.matches)}
+                            caption={`${summary.wins} W · ${summary.draws} R · ${summary.losses} P`}
+                        />
+                        <KpiTile
+                            label="Bramki"
+                            value={`${summary.goalsFor}:${summary.goalsAgainst}`}
+                            caption={`${summary.goalsFor - summary.goalsAgainst > 0 ? "+" : ""}${summary.goalsFor - summary.goalsAgainst}, ${(summary.goalsFor / summary.matches).toFixed(2).replace(".", ",")} na mecz`}
+                        />
+                        <KpiTile
+                            label="Czyste konta"
+                            value={String(summary.cleanSheets)}
+                            caption={`${Math.round((summary.cleanSheets / summary.matches) * 100)}% meczów`}
+                        />
+                        <KpiTile
+                            label="Kartki"
+                            value={`${current.yellowCards} · ${current.redCards}`}
+                            caption="żółte · czerwone"
+                        />
+                    </Box>
+                    <Box sx={{ mt: 2 }}>
+                        <GoalsByPeriodChart
+                            scored={current.goalsScoredByPeriod}
+                            conceded={current.goalsConcededByPeriod}
+                        />
+                    </Box>
+                </>
             )}
         </>
     );
