@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { Alert, CircularProgress } from "@mui/material";
 import { getTeamStats } from "../api/teamStatsApi";
-import type { SeasonSummary, TeamSeasonStats, TeamMatchResult } from "../types/teamStats";
+import { getPlayerStats } from "../api/playerStatsApi";
+import type { PlayerSeasonStats } from "../types/playerStats";
+import type { SeasonSummary, TeamSeasonStats, TeamMatchResult, RankingRow, MinutesMetric, RankingMetric } from "../types/teamStats";
 import { StatsPageView } from "./StatsPageView";
 
 function summarize(results: TeamMatchResult[]): SeasonSummary {
@@ -16,17 +18,34 @@ function summarize(results: TeamMatchResult[]): SeasonSummary {
     };
 }
 
+function topPlayers(
+    stats: PlayerSeasonStats[],
+    season: string,
+    metric: MinutesMetric | RankingMetric,
+    limit: number
+): RankingRow[] {
+    return stats
+        .filter(s => s.season === season && s[metric] > 0)
+        .sort((a, b) => b[metric] - a[metric])
+        .slice(0, limit)
+        .map(s => ({ name: s.lastName.trim(), value: s[metric] }));
+}
+
 export function StatsPage() {
     const [stats, setStats] = useState<TeamSeasonStats[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [season, setSeason] = useState("");
+    const [playerStats, setPlayerStats] = useState<PlayerSeasonStats[]>([]);
+    const [minutesMetric, setMinutesMetric] = useState<MinutesMetric>("minutes");
+    const [rankingMetric, setRankingMetric] = useState<RankingMetric>("goals");
 
     useEffect(() => {
-        getTeamStats()
-            .then((data) => {
-                setStats(data);
-                setSeason(data[0]?.season ?? "");
+        Promise.all([getTeamStats(), getPlayerStats()])
+            .then(([teamData, playerData]) => {
+                setStats(teamData);
+                setPlayerStats(playerData);
+                setSeason(teamData[0]?.season ?? "");
             })
             .catch(() => setError("Nie udało się pobrać statystyk"))
             .finally(() => setLoading(false));
@@ -46,6 +65,8 @@ export function StatsPage() {
     : [];
     const homeSummary = summarize(current?.results.filter(r => r.isHome === true) ?? []);
     const awaySummary = summarize(current?.results.filter(r => r.isHome === false) ?? []);
+    const minutesRows = topPlayers(playerStats, season, minutesMetric, 8);
+    const rankingRows = topPlayers(playerStats, season, rankingMetric, 8);
 
     if (loading) return <CircularProgress />;
     if (error) return <Alert severity="error">{error}</Alert>;
@@ -61,6 +82,12 @@ export function StatsPage() {
             leaguePoints={leaguePoints}
             homeSummary={homeSummary}
             awaySummary={awaySummary}
+            minutesMetric={minutesMetric}
+            onMinutesMetricChange={setMinutesMetric}
+            minutesRows={minutesRows}
+            rankingMetric={rankingMetric}
+            onRankingMetricChange={setRankingMetric}
+            rankingRows={rankingRows}
         />
     );
 }

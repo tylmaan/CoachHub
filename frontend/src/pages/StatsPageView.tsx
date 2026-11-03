@@ -7,11 +7,12 @@ import {
     Typography,
 } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
-import type { SeasonSummary, TeamMatchResult, TeamSeasonStats } from "../types/teamStats";
+import type { SeasonSummary, TeamMatchResult, TeamSeasonStats, RankingRow, MinutesMetric, RankingMetric } from "../types/teamStats";
 import { GoalsByPeriodChart } from "../components/stats/GoalsByPeriodChart";
 import { FormStrip } from "../components/stats/FormStrip";
 import { LeaguePointsChart } from "../components/stats/LeaguePointsChart";
 import { HomeAwayChart } from "../components/stats/HomeAwayChart";
+import { PlayerRankingChart } from "../components/stats/PlayerRankingChart";
 
 interface StatsPageViewProps {
     seasons: string[];
@@ -23,6 +24,12 @@ interface StatsPageViewProps {
     leaguePoints: number[];
     homeSummary: SeasonSummary;
     awaySummary: SeasonSummary;
+    minutesMetric: MinutesMetric;
+    onMinutesMetricChange: (metric: MinutesMetric) => void;
+    minutesRows: RankingRow[];
+    rankingMetric: RankingMetric;
+    onRankingMetricChange: (metric: RankingMetric) => void;
+    rankingRows: RankingRow[];
 }
 
 function KpiTile({ label, value, caption }: { label: string; value: string; caption: string }) {
@@ -35,6 +42,17 @@ function KpiTile({ label, value, caption }: { label: string; value: string; capt
     );
 }
 
+const MINUTES_OPTIONS: { value: MinutesMetric; label: string }[] = [
+    { value: "minutes", label: "Minuty" },
+    { value: "matches", label: "Mecze" },
+];
+
+const RANKING_OPTIONS: { value: RankingMetric; label: string }[] = [
+    { value: "goals", label: "Bramki" },
+    { value: "assists", label: "Asysty" },
+    { value: "yellowCards", label: "Kartki" },
+];
+
 export function StatsPageView({ 
     seasons, 
     season, 
@@ -44,7 +62,13 @@ export function StatsPageView({
     recentResults,
     leaguePoints,
     homeSummary,
-    awaySummary
+    awaySummary,
+    minutesMetric,
+    onMinutesMetricChange,
+    minutesRows,
+    rankingMetric,
+    onRankingMetricChange,
+    rankingRows,
 }: StatsPageViewProps) {
     return (
         <>
@@ -105,6 +129,22 @@ export function StatsPageView({
                     )}
                     <Box sx={{ mt: 2 }}>
                         <HomeAwayChart home={homeSummary} away={awaySummary} />
+                    </Box>
+                    <Box sx={{ mt: 2, display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(2, 1fr)" }, gap: 2 }}>
+                        <PlayerRankingChart
+                            title="Minuty zawodników"
+                            options={MINUTES_OPTIONS}
+                            metric={minutesMetric}
+                            onMetricChange={onMinutesMetricChange}
+                            rows={minutesRows}
+                        />
+                        <PlayerRankingChart
+                            title="Ranking zawodników"
+                            options={RANKING_OPTIONS}
+                            metric={rankingMetric}
+                            onMetricChange={onRankingMetricChange}
+                            rows={rankingRows}
+                        />
                     </Box>
                     <Box sx={{ mt: 2 }}>
                         <GoalsByPeriodChart

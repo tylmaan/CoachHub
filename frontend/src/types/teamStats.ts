@@ -26,3 +26,11 @@ export interface SeasonSummary {
     goalsAgainst: number;
     cleanSheets: number;
 }
+
+export interface RankingRow {
+    name: string;
+    value: number;
+}
+
+export type MinutesMetric = "minutes" | "matches";
+export type RankingMetric = "goals" | "assists" | "yellowCards";
