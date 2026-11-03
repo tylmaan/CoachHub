@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
 import { CircularProgress, Alert } from '@mui/material';
 import axios from "axios";
-import { getTeams, createTeam, updateTeam, deleteTeam } from '../api/teamsApi';
-import type { TeamSummary } from '../types/team';
 import { useAuth } from "../context/AuthContext";
+import { getTeams, createTeam, updateTeam, deleteTeam } from '../api/teamsApi';
 import { uploadFile } from '../api/filesApi';
-import { TeamsPageView } from './TeamsPageView';
-import { DEFAULT_KITS } from '../types/kit';
+import type { TeamSummary } from '../types/team';
 import type { TeamKits } from '../types/kit';
+import { DEFAULT_KITS } from '../types/kit';
+import { leaguesOf } from '../constants/leagues';
+import { TeamsPageView } from './TeamsPageView';
 
 export function TeamsPage() {
     const [teams, setTeams] = useState<TeamSummary[]>([]);
@@ -16,6 +17,7 @@ export function TeamsPage() {
 
     const [name, setName] = useState("");
     const [countryCode, setCountryCode] = useState<string | null>(null);
+    const [league, setLeague] = useState<string | null>(null);
     const [logoUrl, setLogoUrl] = useState<string | null>(null);
     const [kits, setKits] = useState<TeamKits>(DEFAULT_KITS);
     const [formError, setFormError] = useState<string | null>(null);
@@ -24,6 +26,7 @@ export function TeamsPage() {
     const [editingId, setEditingId] = useState<number | null>(null);
     const [editName, setEditName] = useState("");
     const [editCountryCode, setEditCountryCode] = useState<string | null>(null);
+    const [editLeague, setEditLeague] = useState<string | null>(null);
     const [editLogoUrl, setEditLogoUrl] = useState<string | null>(null);
     const [editKits, setEditKits] = useState<TeamKits>(DEFAULT_KITS);
     const [actionError, setActionError] = useState<string | null>(null);
@@ -67,13 +70,24 @@ export function TeamsPage() {
         }
     }
 
+    function handleCountryChange(code: string | null) {
+        setCountryCode(code);
+        setLeague(null);
+    }
+
+    function handleEditCountryChange(code: string | null) {
+        setEditCountryCode(code);
+        setEditLeague(null);
+    }
+
     async function handleCreate(e: React.SyntheticEvent) {
         e.preventDefault();
         setFormError(null);
         try {
-            await createTeam({ name, countryCode, logoUrl, ...kits });
+            await createTeam({ name, countryCode, league, logoUrl, ...kits });
             setName("");
             setCountryCode(null);
+            setLeague(null);
             setLogoUrl(null);
             setKits(DEFAULT_KITS);
             setCreateOpen(false);
@@ -91,6 +105,7 @@ export function TeamsPage() {
         setEditingId(team.id);
         setEditName(team.name);
         setEditCountryCode(team.countryCode);
+        setEditLeague(team.league);
         setEditLogoUrl(team.logoUrl);
         setEditKits({
             homeKit: team.homeKit,
@@ -103,7 +118,7 @@ export function TeamsPage() {
     async function saveEdit(id: number) {
         setActionError(null);
         try {
-            await updateTeam(id, { name: editName, countryCode: editCountryCode, logoUrl: editLogoUrl, ...editKits });
+            await updateTeam(id, { name: editName, countryCode: editCountryCode, league: editLeague, logoUrl: editLogoUrl, ...editKits });
             setEditingId(null);
             loadTeams();
         } catch {
@@ -135,6 +150,9 @@ export function TeamsPage() {
         setDeleteTargetId(null);
     }
 
+    const leagueOptions = leaguesOf(countryCode);
+    const editLeagueOptions = leaguesOf(editCountryCode);
+
     if (loading) return <CircularProgress />;
     if (error) return <Alert severity="error">{error}</Alert>;
 
@@ -146,11 +164,14 @@ export function TeamsPage() {
             canDelete={!!canDelete}
             name={name}
             countryCode={countryCode}
+            league={league}
+            leagueOptions={leagueOptions}
             logoUrl={logoUrl}
             kits={kits}
             formError={formError}
             onNameChange={setName}
-            onCountryCodeChange={setCountryCode}
+            onCountryCodeChange={handleCountryChange}
+            onLeagueChange={setLeague}
             onLogoSelect={handleLogoSelect}
             onKitsChange={setKits}
             createOpen={createOpen}
@@ -160,12 +181,15 @@ export function TeamsPage() {
             editingId={editingId}
             editName={editName}
             editCountryCode={editCountryCode}
+            editLeague={editLeague}
+            editLeagueOptions={editLeagueOptions}
             editLogoUrl={editLogoUrl}
             editKits={editKits}
             actionError={actionError}
             onStartEdit={startEdit}
             onEditNameChange={setEditName}
-            onEditCountryCodeChange={setEditCountryCode}
+            onEditCountryCodeChange={handleEditCountryChange}
+            onEditLeagueChange={setEditLeague}
             onEditLogoSelect={handleEditLogoSelect}
             onEditKitsChange={setEditKits}
             onSaveEdit={saveEdit}

@@ -5,6 +5,7 @@ export interface Team {
     id: number;
     name: string;
     countryCode: string | null;
+    league: string | null;
     logoUrl: string | null;
     homeKit: Kit;
     awayKit: Kit;
@@ -15,6 +16,7 @@ export interface TeamSummary {
     id: number;
     name: string;
     countryCode: string | null;
+    league: string | null;
     logoUrl: string | null;
     homeKit: Kit;
     awayKit: Kit;

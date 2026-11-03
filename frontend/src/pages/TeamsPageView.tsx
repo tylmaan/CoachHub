@@ -11,6 +11,7 @@ import {
     DialogContent,
     DialogActions,
     Autocomplete,
+    MenuItem,
 } from '@mui/material';
 import type { TeamSummary } from '../types/team';
 import { BACKEND_ORIGIN } from '../api/axiosInstance';
@@ -30,11 +31,14 @@ interface TeamsPageViewProps {
 
     name: string;
     countryCode: string | null;
+    league: string | null;
+    leagueOptions: string[];
     logoUrl: string | null;
     kits: TeamKits;
     formError: string | null;
     onNameChange: (value: string) => void;
     onCountryCodeChange: (value: string | null) => void;
+    onLeagueChange: (value: string | null) => void;
     onLogoSelect: (e: React.ChangeEvent<HTMLInputElement>) => void;
     onKitsChange: (kits: TeamKits) => void;
     onCreate: (e: React.SyntheticEvent) => void;
@@ -45,12 +49,15 @@ interface TeamsPageViewProps {
     editingId: number | null;
     editName: string;
     editCountryCode: string | null;
+    editLeague: string | null;
+    editLeagueOptions: string[];
     editLogoUrl: string | null;
     editKits: TeamKits;
     actionError: string | null;
     onStartEdit: (team: TeamSummary) => void;
     onEditNameChange: (value: string) => void;
     onEditCountryCodeChange: (value: string | null) => void;
+    onEditLeagueChange: (value: string | null) => void;
     onEditLogoSelect: (e: React.ChangeEvent<HTMLInputElement>) => void;
     onEditKitsChange: (kits: TeamKits) => void;
     onSaveEdit: (teamId: number) => void;
@@ -68,11 +75,14 @@ export function TeamsPageView({
     canDelete,
     name,
     countryCode,
+    league,
+    leagueOptions,
     logoUrl,
     kits,
     formError,
     onNameChange,
     onCountryCodeChange,
+    onLeagueChange,
     onLogoSelect,
     onKitsChange,
     onCreate,
@@ -82,12 +92,15 @@ export function TeamsPageView({
     editingId,
     editName,
     editCountryCode,
+    editLeague,
+    editLeagueOptions,
     editLogoUrl,
     editKits,
     actionError,
     onStartEdit,
     onEditNameChange,
     onEditCountryCodeChange,
+    onEditLeagueChange,
     onEditLogoSelect,
     onEditKitsChange,
     onSaveEdit,
@@ -125,8 +138,20 @@ export function TeamsPageView({
                                 ) : (
                                     <Avatar variant="rounded" sx={{ width: 44, height: 44 }}>{team.name[0]}</Avatar>
                                 )}
-                                <Typography variant="subtitle1">{team.name}</Typography>
-                                {team.countryCode && <span className={`fi fi-${team.countryCode}`} />}
+                                <Box>
+                                    <Typography variant="subtitle1">{team.name}</Typography>
+                                    {(team.countryCode || team.league) && (
+                                        <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, color: "text.secondary" }}>
+                                            {team.countryCode && <span className={`fi fi-${team.countryCode}`} />}
+                                            <Typography variant="caption">
+                                                {[
+                                                    COUNTRIES.find((c) => c.code === team.countryCode)?.name,
+                                                    team.league,
+                                                ].filter(Boolean).join(" · ")}
+                                            </Typography>
+                                        </Box>
+                                    )}
+                                </Box>
                             </Box>
 
                             <Box
@@ -213,6 +238,19 @@ export function TeamsPageView({
                             )}
                             renderInput={(params) => <TextField {...params} label="Kraj" />}
                         />
+                        <TextField
+                            select
+                            label="Liga"
+                            value={league ?? ""}
+                            onChange={(e) => onLeagueChange(e.target.value || null)}
+                            disabled={leagueOptions.length === 0}
+                            helperText={leagueOptions.length === 0 ? "Wybierz kraj, aby zobaczyć dostępne ligi." : undefined}
+                        >
+                            <MenuItem value="">Brak</MenuItem>
+                            {leagueOptions.map((name) => (
+                                <MenuItem key={name} value={name}>{name}</MenuItem>
+                            ))}
+                        </TextField>
                         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                             {logoUrl && <Avatar src={`${BACKEND_ORIGIN}${logoUrl}`} variant="rounded" />}
                             <Button component="label" variant="outlined">
@@ -267,6 +305,19 @@ export function TeamsPageView({
                             )}
                             renderInput={(params) => <TextField {...params} label="Kraj" />}
                         />
+                        <TextField
+                            select
+                            label="Liga"
+                            value={editLeague ?? ""}
+                            onChange={(e) => onEditLeagueChange(e.target.value || null)}
+                            disabled={editLeagueOptions.length === 0}
+                            helperText={editLeagueOptions.length === 0 ? "Wybierz kraj, aby zobaczyć dostępne ligi." : undefined}
+                        >
+                            <MenuItem value="">Brak</MenuItem>
+                            {editLeagueOptions.map((name) => (
+                                <MenuItem key={name} value={name}>{name}</MenuItem>
+                            ))}
+                        </TextField>
                         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                             {editLogoUrl && <Avatar src={`${BACKEND_ORIGIN}${editLogoUrl}`} variant="rounded" />}
                             <Button component="label" variant="outlined">
