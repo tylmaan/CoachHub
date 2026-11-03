@@ -35,6 +35,15 @@ export function StatsPage() {
     const seasons = stats.map(s => s.season);
     const current = stats.find(s => s.season === season) ?? null;
     const summary = current ? summarize(current.results) : null;
+    
+    const recentResults = current ? current.results.slice(-10) : [];
+    const leaguePoints = current ? current.results
+        .filter((r) => r.matchType === "League")
+        .reduce<number[]>((points, r) => {
+            const earned = r.scoreFor > r.scoreAgainst ? 3 : r.scoreFor === r.scoreAgainst ? 1 : 0;
+            return [...points, (points[points.length - 1] ?? 0) + earned];
+        }, []) 
+    : [];
 
     if (loading) return <CircularProgress />;
     if (error) return <Alert severity="error">{error}</Alert>;
@@ -46,6 +55,8 @@ export function StatsPage() {
             onSeasonChange={setSeason}
             current={current}
             summary={summary}
+            recentResults={recentResults}
+            leaguePoints={leaguePoints}
         />
     );
 }

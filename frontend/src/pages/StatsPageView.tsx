@@ -7,8 +7,10 @@ import {
     Typography,
 } from "@mui/material";
 import { Link as RouterLink } from "react-router-dom";
-import type { SeasonSummary, TeamSeasonStats } from "../types/teamStats";
+import type { SeasonSummary, TeamMatchResult, TeamSeasonStats } from "../types/teamStats";
 import { GoalsByPeriodChart } from "../components/stats/GoalsByPeriodChart";
+import { FormStrip } from "../components/stats/FormStrip";
+import { LeaguePointsChart } from "../components/stats/LeaguePointsChart";
 
 interface StatsPageViewProps {
     seasons: string[];
@@ -16,6 +18,8 @@ interface StatsPageViewProps {
     onSeasonChange: (season: string) => void;
     current: TeamSeasonStats | null;
     summary: SeasonSummary | null;
+    recentResults: TeamMatchResult[];
+    leaguePoints: number[];
 }
 
 function KpiTile({ label, value, caption }: { label: string; value: string; caption: string }) {
@@ -33,7 +37,9 @@ export function StatsPageView({
     season, 
     onSeasonChange, 
     current, 
-    summary
+    summary,
+    recentResults,
+    leaguePoints
 }: StatsPageViewProps) {
     return (
         <>
@@ -84,6 +90,14 @@ export function StatsPageView({
                             caption="żółte · czerwone"
                         />
                     </Box>
+                    <Box sx={{ mt: 2 }}>
+                        <FormStrip results={recentResults} />
+                    </Box>
+                    {leaguePoints.length > 0 && (
+                        <Box sx={{ mt: 2 }}>
+                            <LeaguePointsChart points={leaguePoints} />
+                        </Box>
+                    )}
                     <Box sx={{ mt: 2 }}>
                         <GoalsByPeriodChart
                             scored={current.goalsScoredByPeriod}
