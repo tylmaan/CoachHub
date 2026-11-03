@@ -10,6 +10,7 @@ import { UsersPage } from './pages/UsersPage';
 import { MatchesPage } from './pages/MatchesPage';
 import { MatchDetailPage } from './pages/MatchDetailPage';
 import { PlayerStatsPage } from './pages/PlayerStatsPage';
+import { StatsPage } from './pages/StatsPage';
 import { ReportsPage } from './pages/ReportsPage';
 
 function App() {
@@ -29,7 +30,8 @@ function App() {
         <Route path="/users" element={<AdminRoute><UsersPage /></AdminRoute>} />
         <Route path="/matches" element={<MatchesPage />} />
         <Route path="/matches/:id" element={<MatchDetailPage />} />
-        <Route path="/player-stats" element={<PlayerStatsPage />} />
+        <Route path="/stats" element={<StatsPage />} />
+        <Route path="/stats/players" element={<PlayerStatsPage />} />
         <Route path="/reports" element={<ReportsPage />} />
       </Route>
     </Routes>

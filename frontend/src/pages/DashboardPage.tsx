@@ -31,7 +31,7 @@ export function DashboardPage() {
         : [
             { label: 'Zawodnicy', path: '/players', icon: <GroupsOutlinedIcon sx={{ fontSize: 32 }} /> },
             { label: 'Mecze', path: '/matches', icon: <SportsSoccerOutlinedIcon sx={{ fontSize: 32 }} /> },
-            { label: 'Statystyki', path: '/player-stats', icon: <BarChartOutlinedIcon sx={{ fontSize: 32 }} /> },
+            { label: 'Statystyki', path: '/stats', icon: <BarChartOutlinedIcon sx={{ fontSize: 32 }} /> },
             { label: 'Raporty', path: '/reports', icon: <AssignmentOutlinedIcon sx={{ fontSize: 32 }} /> }
         ];
 

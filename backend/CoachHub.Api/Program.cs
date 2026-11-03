@@ -30,6 +30,7 @@ builder.Services.AddScoped<CoachHub.Api.Services.IMatchAppearanceService, CoachH
 builder.Services.AddScoped<CoachHub.Api.Services.IMatchEventService, CoachHub.Api.Services.MatchEventService>();
 builder.Services.AddScoped<CoachHub.Api.Services.IFileStorageService, CoachHub.Api.Services.FileStorageService>();
 builder.Services.AddScoped<CoachHub.Api.Services.IPlayerStatsService, CoachHub.Api.Services.PlayerStatsService>();
+builder.Services.AddScoped<CoachHub.Api.Services.ITeamStatsService, CoachHub.Api.Services.TeamStatsService>();
 
 builder.Services.AddIdentity<CoachHub.Api.Models.ApplicationUser, Microsoft.AspNetCore.Identity.IdentityRole>()
     .AddEntityFrameworkStores<CoachHub.Api.Data.ApplicationDbContext>()
