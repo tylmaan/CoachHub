@@ -19,6 +19,24 @@ public class MatchesController : ControllerBase
         _matchservice = matchService;
     }
 
+    private static string? ValidateStatus(Match match)
+    {
+        if (match.Status is not ("Planned" or "Played"))
+            return "Nieprawidłowy status meczu.";
+        
+        if (match.Status == "Played")
+        {
+            if (match.ScoreFor is null or < 0 || match.ScoreAgainst is null or < 0)
+                return "Rozegrany mecz musi mieć podany wynik.";
+        }
+        else if (match.ScoreFor is not null || match.ScoreAgainst is not null)
+        {
+            return "Zaplanowany mecz nie może mieć podanego wyniku.";
+        }
+
+        return null;
+    }
+
     [HttpGet]
     public async Task<ActionResult<List<Match>>> GetAll()
     {
@@ -48,6 +66,9 @@ public class MatchesController : ControllerBase
         var callerTeamId = User.FindFirstValue("teamId");
         if (callerTeamId is null || int.Parse(callerTeamId) != match.TeamId) return Forbid();
 
+        var statusError = ValidateStatus(match);
+        if (statusError is not null) return BadRequest(new[] { statusError });
+
         var created = await _matchservice.CreateAsync(match);
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
@@ -61,6 +82,9 @@ public class MatchesController : ControllerBase
 
         var callerTeamId = User.FindFirstValue("teamId");
         if (callerTeamId is null || int.Parse(callerTeamId) != existing.TeamId) return Forbid();
+        
+        var statusError = ValidateStatus(match);
+        if (statusError is not null) return BadRequest(new[] { statusError });
 
         var success = await _matchservice.UpdateAsync(id, match);
         if (!success) return NotFound();

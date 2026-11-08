@@ -40,6 +40,7 @@ public class MatchService : IMatchService
         var oldOpponentLogoUrl = existing.OpponentLogoUrl;
 
         existing.Date = match.Date;
+        existing.Status = match.Status;
         existing.Opponent = match.Opponent;
         existing.Season = match.Season;
         existing.ScoreFor = match.ScoreFor;
