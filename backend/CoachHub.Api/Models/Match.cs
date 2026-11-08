@@ -4,6 +4,7 @@ public class Match
 {
     public int Id { get; set; }
     public DateOnly Date { get; set; }
+    public string Status { get; set; } = "Planned";
     public required string Opponent { get; set; }
     public required string Season { get; set; }
     public int? ScoreFor { get; set; }

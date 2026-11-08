@@ -1,6 +1,7 @@
 export interface Match {
     id: number;
     date: string;
+    status: "Planned" | "Played";
     opponent: string;
     season: string;
     teamId: number;

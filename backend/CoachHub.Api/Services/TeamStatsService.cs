@@ -21,7 +21,7 @@ public class TeamStatsService : ITeamStatsService
     public async Task<List<TeamSeasonStats>> GetStatsForTeamAsync(int teamId)
     {
         var matches = await _context.Matches
-            .Where(m => m.TeamId == teamId && m.ScoreFor != null && m.ScoreAgainst != null)
+            .Where(m => m.TeamId == teamId && m.ScoreFor != null && m.ScoreAgainst != null && m.Status == "Played")
             .Include(m => m.Events)
             .ToListAsync();
 

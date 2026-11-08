@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Alert, CircularProgress } from "@mui/material";
 import axios from "axios";
 import { getMatches, createMatch, updateMatch, deleteMatch } from "../api/matchesApi";
@@ -24,6 +25,8 @@ export function MatchesPage() {
 
     const [teamCountryCode, setTeamCountryCode] = useState<string | null>(null);
     const [teamLeague, setTeamLeague] = useState<string | null>(null);
+    const [tab, setTab] = useState<Match["status"]>("Played");
+    const [selectedSeason, setSelectedSeason] = useState("");
     const [date, setDate] = useState("");
     const [opponent, setOpponent] = useState("");
     const [season, setSeason] = useState("");
@@ -50,11 +53,16 @@ export function MatchesPage() {
     const [editOpponentLogoUrl, setEditOpponentLogoUrl] = useState("");
     const [actionError, setActionError] = useState<string | null>(null);
 
+    const navigate = useNavigate();
     const { roles, teamId } = useAuth();
     const canCreate = roles?.includes("Coach") || roles?.includes("AssistantCoach");
     const canEdit = canCreate;
     const canDelete = roles?.includes("Coach");
     const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+    const [finishTargetId, setFinishTargetId] = useState<number | null>(null);
+    const [finishScoreFor, setFinishScoreFor] = useState("");
+    const [finishScoreAgainst, setFinishScoreAgainst] = useState("");
+    const [finishError, setFinishError]= useState<string | null>(null);
 
     function loadMatches() {
         setLoading(true);
@@ -101,12 +109,13 @@ export function MatchesPage() {
         setFormError(null);
         try {
             await createMatch({
+                status: tab,
                 date,
                 opponent,
                 season,
                 teamId: teamId as number,
-                scoreFor: toNullableNumber(scoreFor),
-                scoreAgainst: toNullableNumber(scoreAgainst),
+                scoreFor: tab === "Played" ? toNullableNumber(scoreFor) : null,
+                scoreAgainst: tab === "Played" ? toNullableNumber(scoreAgainst) : null,
                 isHome: toNullableBool(isHome),
                 matchType: matchType || null,
                 competition: matchType === "Cup" ? (competition || null) : null,
@@ -114,6 +123,7 @@ export function MatchesPage() {
                 formation: null,
                 opponentLogoUrl: opponentLogoUrl || null,
             });
+            setSelectedSeason(season);
             setDate("");
             setOpponent("");
             setSeason("");
@@ -155,6 +165,7 @@ export function MatchesPage() {
         try {
             const editingMatch = matches.find((m) => m.id === id);
             await updateMatch(id, {
+                status: editingMatch?.status ?? "Played",
                 date: editDate,
                 opponent: editOpponent,
                 season: editSeason,
@@ -199,17 +210,53 @@ export function MatchesPage() {
         setDeleteTargetId(null);
     }
 
-    const matchesBySeason = [...matches]
-        .sort((a ,b) => b.season.localeCompare(a.season) || b.date.localeCompare(a.date))
-        .reduce<{ season: string; matches: Match[] }[]>((groups, match) => {
-            const group = groups.find(g => g.season === match.season);
-            if (group) {
-                group.matches.push(match);
-            } else {
-                groups.push({ season: match.season, matches: [match] });
-            }
-            return groups;
-        }, []);
+    function requestFinish(id: number) {
+        setFinishTargetId(id);
+        setFinishScoreFor("");
+        setFinishScoreAgainst("");
+        setFinishError(null);
+    }
+
+    function cancelFinish() {
+        setFinishTargetId(null);
+    }
+
+    async function confirmFinish() {
+        const match = matches.find((m) => m.id === finishTargetId);
+        if (!match) return;
+
+        const goalsFor = toNullableNumber(finishScoreFor);
+        const goalsAgainst = toNullableNumber(finishScoreAgainst);
+        if (goalsFor === null || goalsAgainst === null || goalsFor < 0 || goalsAgainst < 0) {
+            setFinishError("Podaj wynik meczu.");
+            return;
+        }
+
+        try {
+            await updateMatch(match.id, {
+                ...match,
+                status: "Played",
+                scoreFor: goalsFor,
+                scoreAgainst: goalsAgainst,
+            });
+            setFinishTargetId(null);
+            navigate(`/matches/${match.id}`);
+        } catch {
+            setFinishError("Nie udało się zakończyć meczu.");
+        }
+    }
+
+    const playedCount = matches.filter((m) => m.status === "Played").length;
+    const plannedCount = matches.filter((m) => m.status === "Planned").length;
+    const visibleMatches = matches.filter((m) => m.status === tab);
+    const finishMatch = matches.find((m) => m.id === finishTargetId) ?? null;
+    const editScoreEnabled = matches.find((m) => m.id === editingId)?.status === "Played";
+    
+    const seasons = [...new Set(visibleMatches.map((m) => m.season))].sort().reverse();
+    const seasonFilter = seasons.includes(selectedSeason) ? selectedSeason : (seasons[0] ?? "");
+    const seasonMatches = visibleMatches
+        .filter((m) => m.season === seasonFilter)
+        .sort((a, b) => (tab === "Planned" ? 1 : -1) * a.date.localeCompare(b.date));
 
     if (loading) return <CircularProgress />;
     if (error) return <Alert severity="error">{error}</Alert>;
@@ -218,12 +265,18 @@ export function MatchesPage() {
 
     return (
         <MatchesPageView
-            matchesBySeason={matchesBySeason}
+            matches={seasonMatches}
+            seasons={seasons}
+            seasonFilter={seasonFilter}
+            onSeasonFilterChange={setSelectedSeason}
             canCreate={!!canCreate}
             canEdit={!!canEdit}
             canDelete={!!canDelete}
             competitionGroups={competitionGroups}
             teamLeague={teamLeague}
+            tab={tab}
+            playedCount={playedCount}
+            plannedCount={plannedCount}
             date={date}
             opponent={opponent}
             season={season}
@@ -235,6 +288,7 @@ export function MatchesPage() {
             round={round}
             opponentLogoUrl={opponentLogoUrl}
             formError={formError}
+            onTabChange={setTab}
             onDateChange={setDate}
             onOpponentChange={setOpponent}
             onSeasonChange={setSeason}
@@ -272,12 +326,22 @@ export function MatchesPage() {
             onEditCompetitionChange={setEditCompetition}
             onEditRoundChange={setEditRound}
             onEditOpponentLogoSelect={handleEditOpponentLogoSelect}
+            editScoreEnabled={editScoreEnabled}
             onSaveEdit={saveEdit}
             onCancelEdit={() => setEditingId(null)}
             deleteDialogOpen={deleteTargetId !== null}
             onRequestDelete={requestDelete}
             onCancelDelete={cancelDelete}
             onConfirmDelete={confirmDelete}
+            finishMatch={finishMatch}
+            finishScoreFor={finishScoreFor}
+            finishScoreAgainst={finishScoreAgainst}
+            finishError={finishError}
+            onFinishScoreForChange={setFinishScoreFor}
+            onFinishScoreAgainstChange={setFinishScoreAgainst}
+            onRequestFinish={requestFinish}
+            onCancelFinish={cancelFinish}
+            onConfirmFinish={confirmFinish}
         />
     );
 }
