@@ -37,7 +37,6 @@ export function TeamsPage() {
     const canDelete = roles?.includes("Admin");
 
     function loadTeams() {
-        setLoading(true);
         getTeams()
             .then(setTeams)
             .catch(() => setError("Nie udało się pobrać drużyn"))

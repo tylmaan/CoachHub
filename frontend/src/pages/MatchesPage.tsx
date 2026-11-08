@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { usePersistentState } from "../hooks/usePersistentState";
 import { Alert, CircularProgress } from "@mui/material";
 import axios from "axios";
 import { getMatches, createMatch, updateMatch, deleteMatch } from "../api/matchesApi";
@@ -25,8 +26,8 @@ export function MatchesPage() {
 
     const [teamCountryCode, setTeamCountryCode] = useState<string | null>(null);
     const [teamLeague, setTeamLeague] = useState<string | null>(null);
-    const [tab, setTab] = useState<Match["status"]>("Played");
-    const [selectedSeason, setSelectedSeason] = useState("");
+    const [tab, setTab] = usePersistentState<Match["status"]>("matches.tab", "Played");
+    const [selectedSeason, setSelectedSeason] = usePersistentState("matches.season", "");
     const [date, setDate] = useState("");
     const [opponent, setOpponent] = useState("");
     const [season, setSeason] = useState("");
@@ -65,7 +66,6 @@ export function MatchesPage() {
     const [finishError, setFinishError]= useState<string | null>(null);
 
     function loadMatches() {
-        setLoading(true);
         getMatches()
             .then(setMatches)
             .catch(() => setError("Nie udało się pobrać meczów."))

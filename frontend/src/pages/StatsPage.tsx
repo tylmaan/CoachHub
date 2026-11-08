@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { usePersistentState } from "../hooks/usePersistentState";
 import { Alert, CircularProgress } from "@mui/material";
 import { getTeamStats } from "../api/teamStatsApi";
 import { getPlayerStats } from "../api/playerStatsApi";
@@ -35,23 +36,23 @@ export function StatsPage() {
     const [stats, setStats] = useState<TeamSeasonStats[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [season, setSeason] = useState("");
+    const [selectedSeason, setSelectedSeason] = usePersistentState("stats.season", "");
     const [playerStats, setPlayerStats] = useState<PlayerSeasonStats[]>([]);
-    const [minutesMetric, setMinutesMetric] = useState<MinutesMetric>("minutes");
-    const [rankingMetric, setRankingMetric] = useState<RankingMetric>("goals");
+    const [minutesMetric, setMinutesMetric] = usePersistentState<MinutesMetric>("stats.minutesMetric", "minutes");
+    const [rankingMetric, setRankingMetric] = usePersistentState<RankingMetric>("stats.rankingMetric", "goals");
 
     useEffect(() => {
         Promise.all([getTeamStats(), getPlayerStats()])
             .then(([teamData, playerData]) => {
                 setStats(teamData);
                 setPlayerStats(playerData);
-                setSeason(teamData[0]?.season ?? "");
             })
             .catch(() => setError("Nie udało się pobrać statystyk"))
             .finally(() => setLoading(false));
     }, []);
 
     const seasons = stats.map(s => s.season);
+    const season = seasons.includes(selectedSeason) ? selectedSeason : (seasons[0] || "");
     const current = stats.find(s => s.season === season) ?? null;
     const summary = current ? summarize(current.results) : null;
 
@@ -75,7 +76,7 @@ export function StatsPage() {
         <StatsPageView
             seasons={seasons}
             season={season}
-            onSeasonChange={setSeason}
+            onSeasonChange={setSelectedSeason}
             current={current}
             summary={summary}
             recentResults={recentResults}

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { usePersistentState } from '../hooks/usePersistentState';
 import { Alert, CircularProgress } from '@mui/material';
 import axios from 'axios';
 import { getReports, createReport, updateReport, deleteReport } from '../api/reportsApi';
@@ -22,9 +23,9 @@ export function ReportsPage() {
     const [error, setError] = useState<string | null>(null);
     const [actionError, setActionError] = useState<string | null>(null);
 
-    const [search, setSearch] = useState("");
-    const [kindFilter, setKindFilter] = useState<ReportKind | "">("");
-    const [authorFilter, setAuthorFilter] = useState("");
+    const [search, setSearch] = usePersistentState("reports.search", "");
+    const [kindFilter, setKindFilter] = usePersistentState<ReportKind | "">("reports.kind", "");
+    const [authorFilter, setAuthorFilter] = usePersistentState("reports.author", "");
 
     const [formOpen, setFormOpen] = useState(false);
     const [editingId, setEditingId] = useState<number | null>(null);
@@ -38,7 +39,6 @@ export function ReportsPage() {
     const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
 
     function loadReports() {
-        setLoading(true);
         getReports()
             .then(setReports)
             .catch(() => setError("Nie udało się pobrać raportów."))
