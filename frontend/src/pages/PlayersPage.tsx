@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { usePersistentState } from '../hooks/usePersistentState';
 import { Alert, CircularProgress } from '@mui/material';
 import axios from "axios";
 import { getPlayers, createPlayer, updatePlayer, deletePlayer } from '../api/playersApi';
@@ -22,9 +23,9 @@ export function PlayersPage() {
     const [players, setPlayers] = useState<Player[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [sortField, setSortField] = useState<SortField>("lastName");
-    const [sortAsc, setSortAsc] = useState(true);
-    const [search, setSearch] = useState("");
+    const [sortField, setSortField] = usePersistentState<SortField>("players.sortField", "lastName");
+    const [sortAsc, setSortAsc] = usePersistentState("players.sortAsc", true);
+    const [search, setSearch] = usePersistentState("players.search", "");
 
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { usePersistentState } from '../hooks/usePersistentState';
 import { Alert, CircularProgress } from '@mui/material';
 import { getPlayerStats } from '../api/playerStatsApi';
 import type { PlayerSeasonStats } from '../types/playerStats';
@@ -11,16 +12,14 @@ export function PlayerStatsPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    const [season, setSeason] = useState<string>("");
-    const [sortField, setSortField] = useState<SortField>("goals");
-    const [sortAsc, setSortAsc] = useState(false);
+    const [selectedSeason, setSelectedSeason] = usePersistentState("playerStats.season", "");
+    const [sortField, setSortField] = usePersistentState<SortField>("playerStats.sortField", "goals");
+    const [sortAsc, setSortAsc] = usePersistentState("playerStats.sortAsc", false);
 
     useEffect(() => {
         getPlayerStats()
             .then(data => {
                 setStats(data);
-                const seasons = [...new Set(data.map((s) => s.season))].sort().reverse();
-                setSeason(seasons[0] ?? "");
             })
             .catch(() => setError("Nie udało się pobrać statystyk"))
             .finally(() => setLoading(false));
@@ -36,6 +35,7 @@ export function PlayerStatsPage() {
     }
 
     const seasons = [...new Set(stats.map((s) => s.season))].sort().reverse();
+    const season = seasons.includes(selectedSeason) ? selectedSeason : (seasons[0] || "");
 
     const filteredSorted = stats
         .filter((s) => s.season === season)
@@ -52,7 +52,7 @@ export function PlayerStatsPage() {
             stats={filteredSorted}
             seasons={seasons}
             season={season}
-            onSeasonChange={setSeason}
+            onSeasonChange={setSelectedSeason}
             sortField={sortField}
             sortAsc={sortAsc}
             onSort={handleSort}

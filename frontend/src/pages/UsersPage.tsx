@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { usePersistentState } from "../hooks/usePersistentState";
 import { Alert, CircularProgress } from "@mui/material";
 import axios from "axios";
 import { getUsers, updateUser, deleteUser } from "../api/usersApi";
@@ -16,8 +17,8 @@ export function UsersPage() {
     const [teams, setTeams] = useState<Team[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [sortField, setSortField] = useState<SortField>("email");
-    const [sortAsc, setSortAsc] = useState(true);
+    const [sortField, setSortField] = usePersistentState<SortField>("users.sortField", "email");
+    const [sortAsc, setSortAsc] = usePersistentState("users.sortAsc", true);
 
     const [editingId, setEditingId] = useState<string | null>(null);
     const [editRole, setEditRole] = useState("Coach");
