@@ -65,7 +65,6 @@ export function MatchesPage() {
     const [finishError, setFinishError]= useState<string | null>(null);
 
     function loadMatches() {
-        setLoading(true);
         getMatches()
             .then(setMatches)
             .catch(() => setError("Nie udało się pobrać meczów."))

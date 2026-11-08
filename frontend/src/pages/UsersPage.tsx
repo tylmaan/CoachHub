@@ -37,7 +37,6 @@ export function UsersPage() {
     const [registerError, setRegisterError] = useState<string | null>(null);
 
     function loadUsers() {
-        setLoading(true);
         getUsers() 
             .then(setUsers)
             .catch(() => setError("Nie udało się pobrać użytkowników."))

@@ -57,7 +57,6 @@ export function PlayersPage() {
     const canDelete = roles?.includes("Coach");
 
     function loadPlayers() {
-        setLoading(true);
         getPlayers()
             .then(setPlayers)
             .catch(() => setError("Nie udało się pobrać zawodników."))

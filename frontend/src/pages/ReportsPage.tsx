@@ -38,7 +38,6 @@ export function ReportsPage() {
     const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
 
     function loadReports() {
-        setLoading(true);
         getReports()
             .then(setReports)
             .catch(() => setError("Nie udało się pobrać raportów."))
