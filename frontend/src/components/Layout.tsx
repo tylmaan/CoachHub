@@ -3,6 +3,7 @@ import { Outlet, useLocation, Link as RouterLink } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { ROLE_LABELS } from "../constants/labels";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { Logo } from "./Logo";
 
 const PAGE_TITLES: Record<string, string> = {
     "/": "Dashboard",
@@ -43,17 +44,18 @@ export function Layout() {
                             <ArrowBackIcon />
                         </IconButton>
                     )}
-                    <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                         <Typography 
                             variant="h6"
                             component={RouterLink}
                             to="/"
-                            sx={{ textDecoration: "none", color: "inherit" }}
+                            sx={{ textDecoration: "none", color: "inherit", display: "flex", alignItems: "center", gap: 1 }}
                             >
+                                <Logo size={28} />
                                 CoachHub
                             </Typography>
                         {pageTitle && (
-                            <Typography variant="body2" sx={{ opacity: 0.8 }}>
+                            <Typography variant="body2" sx={{ opacity: 0.8, pl: 1.5, borderLeft: "1px solid", borderColor: "divider"}}>
                                 {pageTitle}
                             </Typography>
                         )}
