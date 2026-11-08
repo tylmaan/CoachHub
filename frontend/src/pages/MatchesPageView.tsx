@@ -12,7 +12,9 @@ import {
     DialogContent,
     DialogActions,
     Chip,
-    ListSubheader
+    ListSubheader,
+    ToggleButton,
+    ToggleButtonGroup,
 } from "@mui/material";
 import type { Match } from "../types/match";
 import { MATCH_TYPE_LABELS } from "../constants/labels";
@@ -31,6 +33,9 @@ interface MatchesPageViewProps {
     canDelete: boolean;
     competitionGroups: CompetitionGroup[];
     teamLeague: string | null;
+    tab: Match["status"];
+    playedCount: number;
+    plannedCount: number;
     date: string;
     opponent: string;
     season: string;
@@ -42,6 +47,7 @@ interface MatchesPageViewProps {
     round: string;
     opponentLogoUrl: string | null;
     formError: string | null;
+    onTabChange: (tab: Match["status"]) => void;
     onDateChange: (value: string) => void;
     onOpponentChange: (value: string) => void;
     onSeasonChange: (value: string) => void;
@@ -52,6 +58,7 @@ interface MatchesPageViewProps {
     onCompetitionChange: (value: string) => void;
     onRoundChange: (value: string) => void;
     onOpponentLogoSelect: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    editScoreEnabled: boolean;
     createOpen: boolean;
     onOpenCreate: () => void;
     onCloseCreate: () => void;
@@ -86,6 +93,15 @@ interface MatchesPageViewProps {
     onRequestDelete: (id: number) => void;
     onCancelDelete: () => void;
     onConfirmDelete: () => void;
+    finishMatch: Match | null;
+    finishScoreFor: string;
+    finishScoreAgainst: string;
+    finishError: string | null;
+    onFinishScoreForChange: (value: string) => void;
+    onFinishScoreAgainstChange: (value: string) => void;
+    onRequestFinish: (id: number) => void;
+    onCancelFinish: () => void;
+    onConfirmFinish: () => void;
 }
 
 export function MatchesPageView({
@@ -95,6 +111,9 @@ export function MatchesPageView({
     canDelete,
     competitionGroups,
     teamLeague,
+    tab,
+    playedCount,
+    plannedCount,
     date,
     opponent,
     season,
@@ -106,6 +125,7 @@ export function MatchesPageView({
     round,
     opponentLogoUrl,
     formError,
+    onTabChange,
     onDateChange,
     onOpponentChange,
     onSeasonChange,
@@ -131,6 +151,7 @@ export function MatchesPageView({
     editCompetition,
     editRound,
     editOpponentLogoUrl,
+    editScoreEnabled,
     actionError,
     onStartEdit,
     onEditDateChange,
@@ -148,7 +169,16 @@ export function MatchesPageView({
     deleteDialogOpen,
     onRequestDelete,
     onCancelDelete,
-    onConfirmDelete
+    onConfirmDelete,
+    finishMatch,
+    finishScoreFor,
+    finishScoreAgainst,
+    finishError,
+    onFinishScoreForChange,
+    onFinishScoreAgainstChange,
+    onRequestFinish,
+    onCancelFinish,
+    onConfirmFinish,
 }: MatchesPageViewProps) {
     function typeChipLabel(match: Match): string {
         if (match.matchType === "League") return teamLeague ?? MATCH_TYPE_LABELS.League;
@@ -173,6 +203,16 @@ export function MatchesPageView({
                 <MenuItem key={name} value={name}>{name}</MenuItem>
             )),
         ]);
+    }
+
+    function planningLabel(date: string): string {
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const days = Math.round((new Date(date).getTime() - today.getTime()) / 864e5);
+        if (days < 0) return "po terminie";
+        if (days === 0) return "dzisiaj";
+        if (days === 1) return "jutro";
+        return `za ${days} dni`;
     }
 
     function renderMatchRow(match: Match) {
@@ -209,11 +249,20 @@ export function MatchesPageView({
                     {match.matchType && <Chip size="small" label={typeChipLabel(match)} sx={{ bgcolor: colors.bg, color: colors.fg }} />}
                     {match.round && <Chip size="small" label={match.round} variant="outlined" />}
                 </Box>
-                <Typography variant="body1" sx={{ minWidth: 56, textAlign: "center" }}>
-                    {match.scoreFor ?? "-"} : {match.scoreAgainst ?? "-"}
-                </Typography>
+                {match.status === "Played" ? (
+                    <Typography variant="body1" sx={{ minWidth: 56, textAlign: "center" }}>
+                        {match.scoreFor ?? "-"} : {match.scoreAgainst ?? "-"}
+                    </Typography>
+                ) : (
+                    <Typography variant="body2" color="text.secondary" sx={{ minWidth: 80, textAlign: "center" }}>
+                        {planningLabel(match.date)}
+                    </Typography>
+                )}
                 <Box sx={{ display: "flex", gap: 1, flexShrink: 0 }}>
                     <Button size="small" component={RouterLink} to={`/matches/${match.id}`}>Szczegóły</Button>
+                    {match.status === "Planned" && canEdit && (
+                        <Button size="small" onClick={() => onRequestFinish(match.id)}>Zakończ mecz</Button>
+                    )}
                     {canEdit && <Button size="small" onClick={() => onStartEdit(match)}>Edytuj</Button>}
                     {canDelete && <Button size="small" color="error" onClick={() => onRequestDelete(match.id)}>Usuń</Button>}
                 </Box>
@@ -223,14 +272,33 @@ export function MatchesPageView({
     
     return (
             <>
-            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 2, mb: 2 }}>
                 <Typography variant="h4">Mecze</Typography>
-                {canCreate && (
-                    <Button variant="contained" onClick={onOpenCreate}>Dodaj mecz</Button>
-                )}
+                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                    <ToggleButtonGroup
+                        exclusive
+                        size="small"
+                        value={tab}
+                        onChange={(_, value: Match["status"] | null) => value && onTabChange(value)}
+                    >
+                        <ToggleButton value="Played">Wyniki ({playedCount})</ToggleButton>
+                        <ToggleButton value="Planned">Zaplanowane ({plannedCount})</ToggleButton>
+                    </ToggleButtonGroup>
+                    {canCreate && (
+                        <Button variant="contained" onClick={onOpenCreate}>
+                            {tab === "Planned" ? "Zaplanuj mecz" : "Dodaj mecz"}
+                        </Button>
+                    )}
+                </Box>
             </Box>
 
             {actionError && <Alert severity="error" sx={{ mb: 2 }}>{actionError}</Alert>}
+
+            {matchesBySeason.length === 0 && (
+                <Typography color="text.secondary">
+                    {tab === "Planned" ? "Brak zaplanowanych meczów." : "Brak rozegranych meczów."}
+                </Typography>
+            )}
 
             {matchesBySeason.map((group) => (
                 <Box key={group.season} sx={{ mb: 4 }}>
@@ -243,7 +311,7 @@ export function MatchesPageView({
 
             <Dialog open={createOpen} onClose={onCloseCreate} fullWidth maxWidth="sm">
                 <Box component="form" onSubmit={onCreate}>
-                    <DialogTitle>Nowy mecz</DialogTitle>
+                    <DialogTitle>{tab === "Planned" ? "Zaplanuj mecz" : "Nowy mecz"}</DialogTitle>
                     <DialogContent sx={{ display: "flex", flexWrap: "wrap", gap: 2, pt: 1 }}>
                         {formError && <Alert severity="error" sx={{ width: "100%" }}>{formError}</Alert>}
                         <TextField
@@ -269,18 +337,22 @@ export function MatchesPageView({
                             required
                             sx={{ width: 120 }}
                         />
-                        <TextField
-                            label="Bramki strzelone"
-                            value={scoreFor}
-                            onChange={(e) => onScoreForChange(e.target.value)}
-                            sx={{ width: 140 }}
-                        />
-                        <TextField
-                            label="Bramki stracone"
-                            value={scoreAgainst}
-                            onChange={(e) => onScoreAgainstChange(e.target.value)}
-                            sx={{ width: 140 }}
-                        />
+                        {tab === "Played" && (
+                            <>
+                                <TextField
+                                    label="Bramki strzelone"
+                                    value={scoreFor}
+                                    onChange={(e) => onScoreForChange(e.target.value)}
+                                    sx={{ width: 140 }}
+                                />
+                                <TextField
+                                    label="Bramki stracone"
+                                    value={scoreAgainst}
+                                    onChange={(e) => onScoreAgainstChange(e.target.value)}
+                                    sx={{ width: 140 }}
+                                />
+                            </>
+                        )}
                         <TextField
                             select
                             label="Dom/Wyjazd"
@@ -366,18 +438,22 @@ export function MatchesPageView({
                             required
                             sx={{ width: 120 }}
                         />
-                        <TextField
-                            label="Bramki strzelone"
-                            value={editScoreFor}
-                            onChange={(e) => onEditScoreForChange(e.target.value)}
-                            sx={{ width: 140 }}
-                        />
-                        <TextField
-                            label="Bramki stracone"
-                            value={editScoreAgainst}
-                            onChange={(e) => onEditScoreAgainstChange(e.target.value)}
-                            sx={{ width: 140 }}
-                        />
+                        {editScoreEnabled && (
+                            <>
+                                <TextField
+                                    label="Bramki strzelone"
+                                    value={editScoreFor}
+                                    onChange={(e) => onEditScoreForChange(e.target.value)}
+                                    sx={{ width: 140 }}
+                                />
+                                <TextField
+                                    label="Bramki stracone"
+                                    value={editScoreAgainst}
+                                    onChange={(e) => onEditScoreAgainstChange(e.target.value)}
+                                    sx={{ width: 140 }}
+                                />
+                            </>
+                        )}
                         <TextField
                             select
                             label="Dom/Wyjazd"
@@ -443,6 +519,29 @@ export function MatchesPageView({
                 onConfirm={onConfirmDelete}
                 onCancel={onCancelDelete}
             />
+
+            <Dialog open={finishMatch !== null} onClose={onCancelFinish} fullWidth maxWidth="xs">
+                <DialogTitle>Zakończ mecz: {finishMatch?.opponent}</DialogTitle>
+                <DialogContent sx={{ display: "flex", flexWrap: "wrap", gap: 2, pt: 1 }}>
+                    {finishError && <Alert severity="error" sx={{ width: "100%" }}>{finishError}</Alert>}
+                    <TextField
+                        label="Bramki strzelone"
+                        value={finishScoreFor}
+                        onChange={(e) => onFinishScoreForChange(e.target.value)}
+                        sx={{ width: 140 }}
+                    />
+                    <TextField
+                        label="Bramki stracone"
+                        value={finishScoreAgainst}
+                        onChange={(e) => onFinishScoreAgainstChange(e.target.value)}
+                        sx={{ width: 140 }}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={onCancelFinish}>Anuluj</Button>
+                    <Button variant="contained" onClick={onConfirmFinish}>Zapisz wynik</Button>
+                </DialogActions>
+            </Dialog>
         </>
     );
 }
