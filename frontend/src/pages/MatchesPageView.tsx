@@ -27,7 +27,10 @@ import { ConfirmDeleteDialog } from "../components/ConfirmDeleteDialog";
 const MATCH_TYPES = ["League", "Cup", "Friendly"];
 
 interface MatchesPageViewProps {
-    matchesBySeason: { season: string; matches: Match[] }[];
+    matches: Match[];
+    seasons: string[];
+    seasonFilter: string;
+    onSeasonFilterChange: (value: string) => void;
     canCreate: boolean;
     canEdit: boolean;
     canDelete: boolean;
@@ -105,7 +108,10 @@ interface MatchesPageViewProps {
 }
 
 export function MatchesPageView({
-    matchesBySeason,
+    matches,
+    seasons,
+    seasonFilter,
+    onSeasonFilterChange,
     canCreate,
     canEdit,
     canDelete,
@@ -278,6 +284,7 @@ export function MatchesPageView({
                     <ToggleButtonGroup
                         exclusive
                         size="small"
+                        sx={{ height: 40 }}
                         value={tab}
                         onChange={(_, value: Match["status"] | null) => value && onTabChange(value)}
                     >
@@ -289,25 +296,34 @@ export function MatchesPageView({
                             {tab === "Planned" ? "Zaplanuj mecz" : "Dodaj mecz"}
                         </Button>
                     )}
+                    {seasons.length > 0 && (
+                        <TextField
+                            select
+                            size="small"
+                            label="Sezon"
+                            value={seasonFilter}
+                            onChange={(e) => onSeasonFilterChange(e.target.value)}
+                            sx={{ minWidth: 140 }}
+                        >
+                            {seasons.map((s) => (
+                                <MenuItem key={s} value={s}>{s}</MenuItem>
+                            ))}
+                        </TextField>
+                    )}
                 </Box>
             </Box>
 
             {actionError && <Alert severity="error" sx={{ mb: 2 }}>{actionError}</Alert>}
 
-            {matchesBySeason.length === 0 && (
+            {matches.length === 0 ? (
                 <Typography color="text.secondary">
                     {tab === "Planned" ? "Brak zaplanowanych meczów." : "Brak rozegranych meczów."}
                 </Typography>
+            ) : (
+                <Paper sx={{ overflow: "hidden" }}>
+                    {matches.map(renderMatchRow)}
+                </Paper>
             )}
-
-            {matchesBySeason.map((group) => (
-                <Box key={group.season} sx={{ mb: 4 }}>
-                    <Typography variant="h6" sx={{ mb: 1 }}>Sezon: {group.season}</Typography>
-                    <Paper sx={{ overflow: "hidden" }}>
-                        {group.matches.map(renderMatchRow)}
-                    </Paper>
-                </Box>
-            ))}
 
             <Dialog open={createOpen} onClose={onCloseCreate} fullWidth maxWidth="sm">
                 <Box component="form" onSubmit={onCreate}>

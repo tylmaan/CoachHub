@@ -26,6 +26,7 @@ export function MatchesPage() {
     const [teamCountryCode, setTeamCountryCode] = useState<string | null>(null);
     const [teamLeague, setTeamLeague] = useState<string | null>(null);
     const [tab, setTab] = useState<Match["status"]>("Played");
+    const [selectedSeason, setSelectedSeason] = useState("");
     const [date, setDate] = useState("");
     const [opponent, setOpponent] = useState("");
     const [season, setSeason] = useState("");
@@ -122,6 +123,7 @@ export function MatchesPage() {
                 formation: null,
                 opponentLogoUrl: opponentLogoUrl || null,
             });
+            setSelectedSeason(season);
             setDate("");
             setOpponent("");
             setSeason("");
@@ -250,20 +252,11 @@ export function MatchesPage() {
     const finishMatch = matches.find((m) => m.id === finishTargetId) ?? null;
     const editScoreEnabled = matches.find((m) => m.id === editingId)?.status === "Played";
     
-    const matchesBySeason = [...visibleMatches]
-        .sort((a ,b) => 
-            b.season.localeCompare(a.season) || 
-            (tab === "Planned" ? 1 : -1) * a.date.localeCompare(b.date)
-        )
-        .reduce<{ season: string; matches: Match[] }[]>((groups, match) => {
-            const group = groups.find(g => g.season === match.season);
-            if (group) {
-                group.matches.push(match);
-            } else {
-                groups.push({ season: match.season, matches: [match] });
-            }
-            return groups;
-        }, []);
+    const seasons = [...new Set(visibleMatches.map((m) => m.season))].sort().reverse();
+    const seasonFilter = seasons.includes(selectedSeason) ? selectedSeason : (seasons[0] ?? "");
+    const seasonMatches = visibleMatches
+        .filter((m) => m.season === seasonFilter)
+        .sort((a, b) => (tab === "Planned" ? 1 : -1) * a.date.localeCompare(b.date));
 
     if (loading) return <CircularProgress />;
     if (error) return <Alert severity="error">{error}</Alert>;
@@ -272,7 +265,10 @@ export function MatchesPage() {
 
     return (
         <MatchesPageView
-            matchesBySeason={matchesBySeason}
+            matches={seasonMatches}
+            seasons={seasons}
+            seasonFilter={seasonFilter}
+            onSeasonFilterChange={setSelectedSeason}
             canCreate={!!canCreate}
             canEdit={!!canEdit}
             canDelete={!!canDelete}
