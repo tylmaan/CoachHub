@@ -1,7 +1,8 @@
-import { AppBar, Toolbar, Typography, Button, Box, Chip } from "@mui/material";
+import { AppBar, Toolbar, Typography, Button, Box, Chip, IconButton } from "@mui/material";
 import { Outlet, useLocation, Link as RouterLink } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { ROLE_LABELS } from "../constants/labels";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
 const PAGE_TITLES: Record<string, string> = {
     "/": "Dashboard",
@@ -14,15 +15,34 @@ const PAGE_TITLES: Record<string, string> = {
     "/reports": "Raporty",
 };
 
+function ParentOf(pathname: string): string | null {
+    if (pathname === "/") return null;
+    if (pathname.startsWith("/matches/")) return "/matches";
+    if (pathname.startsWith("/stats/players")) return "/stats";
+    return "/";
+}
+
 export function Layout() {
     const { email, roles, logout } = useAuth();
     const location = useLocation();
     const pageTitle = PAGE_TITLES[location.pathname];
+    const parentPath = ParentOf(location.pathname);
 
     return (
         <Box>
             <AppBar position="static">
                 <Toolbar sx={{ gap: 2 }}>
+                    {parentPath && (
+                        <IconButton
+                            color="inherit"
+                            edge="start"
+                            component={RouterLink}
+                            to={parentPath}
+                            aria-label="Wróć"
+                        >
+                            <ArrowBackIcon />
+                        </IconButton>
+                    )}
                     <Box sx={{ display: "flex", alignItems: "baseline", gap: 1 }}>
                         <Typography 
                             variant="h6"
