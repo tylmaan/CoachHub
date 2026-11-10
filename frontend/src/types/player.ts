@@ -10,4 +10,11 @@ export interface Player {
     jerseyNumber: number | null;
     preferredFoot: string | null;
     photoUrl: string | null;
+    archivedAt: string | null;
+}
+
+export interface PlayerDeletionImpact {
+    appearances: number;
+    events: number;
+    reports: number;
 }

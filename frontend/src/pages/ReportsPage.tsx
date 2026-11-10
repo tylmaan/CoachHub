@@ -144,6 +144,7 @@ export function ReportsPage() {
         .sort((a, b) => a.name.localeCompare(b.name));
 
     const playerOptions = [...players]
+        .filter((p) => p.archivedAt === null || p.id === playerId)
         .sort((a, b) => a.lastName.localeCompare(b.lastName))
         .map((p) => ({ id: p.id, label: `${p.firstName} ${p.lastName}`.trim() }));
     

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { usePersistentState } from '../hooks/usePersistentState';
 import { Alert, CircularProgress } from '@mui/material';
 import axios from "axios";
-import { getPlayers, createPlayer, updatePlayer, deletePlayer } from '../api/playersApi';
+import { getPlayers, createPlayer, updatePlayer, deletePlayer, archivePlayer, restorePlayer, getPlayerDeletionImpact } from '../api/playersApi';
 import type { Player } from '../types/player';
 import { useAuth } from "../context/AuthContext";
 import { uploadFile } from '../api/filesApi';
@@ -26,6 +26,7 @@ export function PlayersPage() {
     const [sortField, setSortField] = usePersistentState<SortField>("players.sortField", "lastName");
     const [sortAsc, setSortAsc] = usePersistentState("players.sortAsc", true);
     const [search, setSearch] = usePersistentState("players.search", "");
+    const [view, setView] = usePersistentState<"active" | "archived">("players.view", "active");
 
     const [firstName, setFirstName] = useState("");
     const [lastName, setLastName] = useState("");
@@ -51,6 +52,7 @@ export function PlayersPage() {
     const [editPhotoUrl, setEditPhotoUrl] = useState<string | null>(null);
     const [actionError, setActionError] = useState<string | null>(null);
     const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
+    const [deleteReports, setDeleteReports] = useState(0);
 
     const { roles, teamId } = useAuth();
     const canCreate = roles?.includes("Coach") || roles?.includes("AssistantCoach");
@@ -176,13 +178,48 @@ export function PlayersPage() {
         try {
             await deletePlayer(id);
             loadPlayers();
-        } catch {
-            setActionError("Nie udało się usunąć zawodnika.")
+        } catch (err){
+            setActionError(
+                axios.isAxiosError(err) && typeof err.response?.data === "string"
+                    ? err.response.data
+                    : "Nie udało się usunąć zawodnika."
+            );
         }
     }
 
-    function requestDelete(id: number) {
-        setDeleteTargetId(id);
+    async function requestDelete(id: number) {
+        setActionError(null)
+        try {
+            const impact = await getPlayerDeletionImpact(id);
+            if (impact.appearances > 0 || impact.events > 0) {
+                setActionError(`Zawodnik ma dane meczowe (występy: ${impact.appearances}, zdarzenia: ${impact.events}), więc musi zostać w archiwum.`);
+                return;
+            }
+            setDeleteReports(impact.reports);
+            setDeleteTargetId(id);
+        } catch {
+            setActionError("Nie udało się sprawdzić skutków usunięcia zawodnika.");
+        }
+    }
+
+    async function handleArchive(id: number) {
+        setActionError(null);
+        try {
+            await archivePlayer(id);
+            loadPlayers();
+        } catch {
+            setActionError("Nie udało się przenieść zawodnika do archiwum.");
+        }
+    }
+
+    async function handleRestore(id: number) {
+        setActionError(null);
+        try {
+            await restorePlayer(id);
+            loadPlayers();
+        } catch {
+            setActionError("Nie udało się przywrócić zawodnika z archiwum.");
+        }
     }
 
     function cancelDelete() {
@@ -195,8 +232,12 @@ export function PlayersPage() {
         setDeleteTargetId(null);
     }
 
+    const activePlayers = players.filter((p) => p.archivedAt === null);
+    const archivedPlayers = players.filter((p) => p.archivedAt !== null);
+    const viewPlayers = view === "active" ? activePlayers : archivedPlayers;
+
     const query = normalize(search.trim());
-    const filteredPlayers = players.filter((p) =>
+    const filteredPlayers = viewPlayers.filter((p) =>
         normalize(`${p.firstName} ${p.lastName}`).includes(query) 
     );
 
@@ -208,6 +249,10 @@ export function PlayersPage() {
         if (sortField === "age") result = b.dateOfBirth.localeCompare(a.dateOfBirth); 
         return sortAsc ? result : -result;
     });
+
+    const deleteMessage = deleteReports > 0
+        ? `Zawodnik zostanie usunięty bezpowrotnie razem z raportami (${deleteReports}). Czy na pewno chcesz kontynuować?`
+        : "Zawodnik zostanie usunięty bezpowrotnie. Czy na pewno chcesz kontynuować?";
 
     if (loading) return <CircularProgress />;
     if (error) return <Alert severity="error">{error}</Alert>;
@@ -273,6 +318,13 @@ export function PlayersPage() {
             onRequestDelete={requestDelete}
             onCancelDelete={cancelDelete}
             onConfirmDelete={confirmDelete}
+            view={view}
+            onViewChange={setView}
+            activeCount={activePlayers.length}
+            archivedCount={archivedPlayers.length}
+            onArchive={handleArchive}
+            onRestore={handleRestore}
+            deleteMessage={deleteMessage}
         />
     );
 }

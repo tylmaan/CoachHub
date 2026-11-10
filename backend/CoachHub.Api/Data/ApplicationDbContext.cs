@@ -13,7 +13,6 @@ base(options)
     }
     public DbSet<Team> Teams { get; set; }
     public DbSet<Player> Players { get; set; }
-    public DbSet<CareerHistoryEntry> CareerHistoryEntries { get; set; }
     public DbSet<TacticalScheme> TacticalSchemes { get; set; }
     public DbSet<Match> Matches { get; set; }
     public DbSet<MatchAppearance> MatchAppearances { get; set; }
@@ -41,6 +40,18 @@ base(options)
             .WithMany(m => m.Reports)
             .HasForeignKey(r => r.MatchId)
             .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<MatchAppearance>()
+            .HasOne(a => a.Player)
+            .WithMany(p => p.MatchAppearances)
+            .HasForeignKey(a => a.PlayerId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<MatchEvent>()
+            .HasOne(e => e.Player)
+            .WithMany(p => p.MatchEvents)
+            .HasForeignKey(e => e.PlayerId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Team>(entity =>
         {

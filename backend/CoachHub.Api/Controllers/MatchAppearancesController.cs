@@ -14,11 +14,13 @@ public class MatchAppearancesController: ControllerBase
 {
     private readonly IMatchAppearanceService _appearanceService;
     private readonly IMatchService _matchService;
+    private readonly IPlayerService _playerService;
 
-    public MatchAppearancesController(IMatchAppearanceService appearanceService, IMatchService matchService)
+    public MatchAppearancesController(IMatchAppearanceService appearanceService, IMatchService matchService, IPlayerService playerService)
     {
         _appearanceService = appearanceService;
         _matchService = matchService;
+        _playerService = playerService;
     }
 
     [HttpGet("match/{matchId}")]
@@ -38,6 +40,12 @@ public class MatchAppearancesController: ControllerBase
         var match = await _matchService.GetByIdAsync(appearance.MatchId);
         var callerTeamId = User.FindFirstValue("teamId");
         if (match is null || callerTeamId is null || int.Parse(callerTeamId) != match.TeamId) return Forbid();
+
+        var player = await _playerService.GetByIdAsync(appearance.PlayerId);
+        if (player is null || player.TeamId != match.TeamId)
+            return BadRequest(new[] { "Nie znaleziono zawodnika w drużynie tego meczu." });
+        if (player.ArchivedAt is not null)
+            return BadRequest(new[] { "Zawodnik z archiwum nie może zostać dodany do składu." });
 
         var created = await _appearanceService.CreateAsync(appearance);
         return CreatedAtAction(nameof(GetByMatchId), new { matchId = created.MatchId }, created);

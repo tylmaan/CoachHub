@@ -348,6 +348,7 @@ export function MatchDetailPage() {
     const rosterPlayers = players.filter((p) => rosterPlayerIds.has(p.id));
     const searchTerm = pickerSearch.trim().toLowerCase();
     const pickerOptions: PickerOption[] = players
+        .filter((p) => p.archivedAt === null)
         .filter((p) => searchTerm !== "" || POSITION_GROUPS[pickerTab].codes.includes(p.position))
         .filter((p) => `${p.firstName} ${p.lastName}`.toLowerCase().includes(searchTerm))
         .map((p) => ({

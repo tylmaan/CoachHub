@@ -19,7 +19,9 @@ import {
     DialogTitle,
     DialogContent,
     DialogActions,
-    Autocomplete
+    Autocomplete,
+    Tabs,
+    Tab,
 } from '@mui/material';
 import type { Player } from '../types/player';
 import { FOOT_LABELS, POSITION_LABELS, POSITIONS } from '../constants/labels';
@@ -92,6 +94,14 @@ interface PlayersPageViewProps {
     onRequestDelete: (id: number) => void;
     onCancelDelete: () => void;
     onConfirmDelete: () => void;
+    
+    view: "active" | "archived";
+    onViewChange: (view: "active" | "archived") => void;
+    activeCount: number;
+    archivedCount: number;
+    onArchive: (id: number) => void;
+    onRestore: (id: number) => void;
+    deleteMessage: string;
 }
 
 function calculateAge(dateOfBirth: string): number {
@@ -217,6 +227,13 @@ export function PlayersPageView({
     onRequestDelete,
     onCancelDelete,
     onConfirmDelete,
+    view,
+    onViewChange,
+    activeCount,
+    archivedCount,
+    onArchive,
+    onRestore,
+    deleteMessage
 }: PlayersPageViewProps) {
     return (
         <>
@@ -231,7 +248,7 @@ export function PlayersPageView({
                         value={search}
                         onChange={(e) => onSearchChange(e.target.value)}
                     />
-                    {canCreate && (
+                    {canCreate && view === "active" && (
                         <Button variant="contained" onClick={onOpenCreate}>
                             Dodaj zawodnika
                         </Button>
@@ -420,13 +437,18 @@ export function PlayersPageView({
 
             <ConfirmDeleteDialog
                 open={deleteDialogOpen}
-                title="Usunąć zawodnika?"
-                message="Usunięcie tego zawodnika skasuje też jego historię kariery i raporty. Jeśli zawodnik ma zarejestrowane zdarzenia meczowe, usunięcie może się nie powieść."
+                title="Usunąć zawodnika trwale?"
+                message={deleteMessage}
                 onConfirm={onConfirmDelete}
                 onCancel={onCancelDelete}
             />
 
             {actionError && <Alert severity="error" sx={{ mb:2 }}>{actionError}</Alert>}
+
+            <Tabs value={view} onChange={(_, newValue) => onViewChange(newValue)} sx={{ mb: 2 }}>
+                <Tab value="active" label={`Aktywni (${activeCount})`} />
+                <Tab value="archived" label={`Archiwum (${archivedCount})`} />
+            </Tabs>
 
             <TableContainer component={Paper}>
                 <Table 
@@ -477,14 +499,15 @@ export function PlayersPageView({
                                 </TableSortLabel>
                             </TableCell>
                             <TableCell>Noga</TableCell>
+                            {view === "archived" && <TableCell>W archiwum od</TableCell>}
                             {(canEdit || canDelete) && <TableCell>Akcje</TableCell>}
                         </TableRow>
                     </TableHead>
                     <TableBody>
                         {players.length === 0 && (
                             <TableRow>
-                                <TableCell colSpan={(canEdit || canDelete) ? 10 : 9} align="center">
-                                    Brak zawodników spełniających kryteria
+                                <TableCell colSpan={9 + ((canEdit || canDelete) ? 1 : 0) + (view === "archived" ? 1 : 0)} align="center">
+                                    {view === "archived" ? "Brak zawodników w archiwum." : "Brak zawodników spełniających kryteria."}
                                 </TableCell>
                             </TableRow>
                         )}
@@ -520,11 +543,14 @@ export function PlayersPageView({
                                 <TableCell>{player.heightCm ?? "-"}</TableCell>
                                 <TableCell><JerseyNumber number={player.jerseyNumber} /></TableCell>
                                 <TableCell>{renderFoot(player.preferredFoot)}</TableCell>
+                                {view === "archived" && <TableCell>{player.archivedAt}</TableCell>}
                                 {(canEdit || canDelete) && (
                                     <TableCell>
                                         <Box sx={{ display: "flex", gap: 1 }}>
-                                            {canEdit && <Button size="small" onClick={() => onStartEdit(player)}>Edytuj</Button>}
-                                            {canDelete && <Button size="small" color="error" onClick={() => onRequestDelete(player.id)}>Usuń</Button>}
+                                            {view === "active" && canEdit && <Button size="small" onClick={() => onStartEdit(player)}>Edytuj</Button>}
+                                            {view === "active" && canDelete && <Button size="small" color="warning" onClick={() => onArchive(player.id)}>Archiwizuj</Button>}
+                                            {view === "archived" && canDelete && <Button size="small" onClick={() => onRestore(player.id)}>Przywróć</Button>}
+                                            {view === "archived" && canDelete && <Button size="small" color="error" onClick={() => onRequestDelete(player.id)}>Usuń trwale</Button>}
                                         </Box>
                                     </TableCell>
                                 )}
