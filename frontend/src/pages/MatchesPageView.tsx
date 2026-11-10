@@ -221,6 +221,13 @@ export function MatchesPageView({
         return `za ${days} dni`;
     }
 
+    function resultStyle(match: Match) {
+        if (match.scoreFor === null || match.scoreAgainst === null) return {};
+        if (match.scoreFor > match.scoreAgainst) return { color: "#4ade80", bgcolor: "rgba(74, 222, 128, 0.15)" };
+        if (match.scoreFor < match.scoreAgainst) return { color: "#f87171", bgcolor: "rgba(248, 113, 113, 0.15)" };
+        return { color: "#fbbf24", bgcolor: "rgba(251, 191, 36, 0.15)" };
+    }
+
     function renderMatchRow(match: Match) {
         const category = categoryOfMatch(match.matchType, match.competition);
         const colors = CATEGORY_COLORS[category];
@@ -256,7 +263,7 @@ export function MatchesPageView({
                     {match.round && <Chip size="small" label={match.round} variant="outlined" />}
                 </Box>
                 {match.status === "Played" ? (
-                    <Typography variant="body1" sx={{ minWidth: 56, textAlign: "center" }}>
+                    <Typography variant="body1" sx={{ minWidth: 56, textAlign: "center", fontWeight: 600, borderRadius: 1, px: 1, py: 0.5, ...resultStyle(match) }}>
                         {match.scoreFor ?? "-"} : {match.scoreAgainst ?? "-"}
                     </Typography>
                 ) : (
