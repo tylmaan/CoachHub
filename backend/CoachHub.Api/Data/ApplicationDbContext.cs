@@ -42,6 +42,18 @@ base(options)
             .HasForeignKey(r => r.MatchId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        modelBuilder.Entity<MatchAppearance>()
+            .HasOne(a => a.Player)
+            .WithMany(p => p.MatchAppearances)
+            .HasForeignKey(a => a.PlayerId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<MatchEvent>()
+            .HasOne(e => e.Player)
+            .WithMany(p => p.MatchEvents)
+            .HasForeignKey(e => e.PlayerId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         modelBuilder.Entity<Team>(entity =>
         {
             entity.ComplexProperty(t => t.HomeKit);

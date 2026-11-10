@@ -1,6 +1,7 @@
 using CoachHub.Api.Models;
 using CoachHub.Api.Services;
 using CoachHub.Api.Data;
+using CoachHub.Api.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
@@ -17,6 +18,12 @@ public class PlayersController : ControllerBase
     public PlayersController(IPlayerService playerService)
     {
         _playerService = playerService;
+    }
+
+    private bool IsCallerTeam(int teamId)
+    {
+        var callerTeamId = User.FindFirstValue("teamId");
+        return callerTeamId is not null && int.Parse(callerTeamId) == teamId;
     }
 
     [HttpGet]
@@ -48,6 +55,7 @@ public class PlayersController : ControllerBase
         var callerTeamId = User.FindFirstValue("teamId");
         if (callerTeamId is null || player.TeamId != int.Parse(callerTeamId)) return Forbid();
 
+        player.ArchivedAt = null; 
         var created = await _playerService.CreateAsync(player);
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
@@ -73,12 +81,54 @@ public class PlayersController : ControllerBase
     {
         var existing = await _playerService.GetByIdAsync(id);
         if (existing is null) return NotFound();
+        if (!IsCallerTeam(existing.TeamId)) return Forbid();
 
-        var callerTeamId = User.FindFirstValue("teamId");
-        if (callerTeamId is null || int.Parse(callerTeamId) != existing.TeamId) return Forbid();
+        var result = await _playerService.DeleteAsync(id);
+        return result switch
+        {
+            DeletePlayerResult.Deleted => NoContent(),
+            DeletePlayerResult.NotFound => NotFound(),
+            DeletePlayerResult.NotArchived => Conflict("Najpierw przenieś zawodnika do archiwum."),
+            DeletePlayerResult.HasMatchData => Conflict("Nie można usunąć zawodnika, który ma dane meczowe."),
+            _ => StatusCode(500)
+        };
+    }
 
-        var success = await _playerService.DeleteAsync(id);
-        if (!success) return NotFound();
+    [HttpPost("{id}/archive")]
+    [Authorize(Roles = Roles.Coach)]
+    public async Task<IActionResult> Archive(int id)
+    {
+        var existing = await _playerService.GetByIdAsync(id);
+        if (existing is null) return NotFound();
+        if (!IsCallerTeam(existing.TeamId)) return Forbid();
+
+        await _playerService.ArchiveAsync(id);
         return NoContent();
+    }
+
+    [HttpPost("{id}/restore")]
+    [Authorize(Roles = Roles.Coach)]
+    public async Task<IActionResult> Restore(int id)
+    {
+        var existing = await _playerService.GetByIdAsync(id);
+        if (existing is null) return NotFound();
+        if (!IsCallerTeam(existing.TeamId)) return Forbid();
+
+        await _playerService.RestoreAsync(id);
+        return NoContent();
+    }
+
+    [HttpGet("{id}/deletion-impact")]
+    [Authorize(Roles = Roles.Coach)]
+    public async Task<ActionResult<PlayerDeletionImpact>> GetDeletionImpact(int id)
+    {
+        var existing = await _playerService.GetByIdAsync(id);
+        if (existing is null) return NotFound();
+        if (!IsCallerTeam(existing.TeamId)) return Forbid();
+
+        var impact = await _playerService.GetDeletionImpactAsync(id);
+        if (impact is null) return NotFound();
+
+        return impact;
     }
 }

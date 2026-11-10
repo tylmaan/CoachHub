@@ -245,6 +245,9 @@ namespace CoachHub.Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<DateOnly?>("ArchivedAt")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateOnly>("DateOfBirth")
                         .HasColumnType("TEXT");
 
@@ -606,7 +609,7 @@ namespace CoachHub.Api.Migrations
                     b.HasOne("CoachHub.Api.Models.Player", "Player")
                         .WithMany("MatchAppearances")
                         .HasForeignKey("PlayerId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("Match");
@@ -624,7 +627,8 @@ namespace CoachHub.Api.Migrations
 
                     b.HasOne("CoachHub.Api.Models.Player", "Player")
                         .WithMany("MatchEvents")
-                        .HasForeignKey("PlayerId");
+                        .HasForeignKey("PlayerId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Match");
 

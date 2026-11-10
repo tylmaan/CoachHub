@@ -1,5 +1,6 @@
 using CoachHub.Api.Data;
 using CoachHub.Api.Models;
+using CoachHub.Api.DTOs;
 using Microsoft.EntityFrameworkCore;
 
 namespace CoachHub.Api.Services;
@@ -59,14 +60,52 @@ public class PlayerService : IPlayerService
         return true;
     }
 
-    public async Task<bool> DeleteAsync(int id)
+    public async Task<DeletePlayerResult> DeleteAsync(int id)
     {
         var existing = await _context.Players.FindAsync(id);
-        if (existing is null) return false;
+        if (existing is null) return DeletePlayerResult.NotFound;
+        if (existing.ArchivedAt is null) return DeletePlayerResult.NotArchived;
+
+        var hasMatchData = await _context.MatchAppearances.AnyAsync(a => a.PlayerId == id) ||
+                           await _context.MatchEvents.AnyAsync(e => e.PlayerId == id);
+        if (hasMatchData) return DeletePlayerResult.HasMatchData;
 
         _context.Players.Remove(existing);
         await _context.SaveChangesAsync();
         _fileStorageService.DeleteFile(existing.PhotoUrl);
+        return DeletePlayerResult.Deleted;
+    }
+
+    public async Task<bool> ArchiveAsync(int id)
+    {
+        var existing = await _context.Players.FindAsync(id);
+        if (existing is null) return false;
+
+        existing.ArchivedAt ??= DateOnly.FromDateTime(DateTime.Today);
+        await _context.SaveChangesAsync();
         return true;
+    }
+
+    public async Task<bool> RestoreAsync(int id)
+    {
+        var existing = await _context.Players.FindAsync(id);
+        if (existing is null) return false;
+
+        existing.ArchivedAt = null;
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<PlayerDeletionImpact?> GetDeletionImpactAsync(int id)
+    {
+        var exists = await _context.Players.AnyAsync(p => p.Id == id);
+        if (!exists) return null;
+
+        return new PlayerDeletionImpact
+        {
+            Appearances = await _context.MatchAppearances.CountAsync(a => a.PlayerId == id),
+            Events = await _context.MatchEvents.CountAsync(e => e.PlayerId == id),
+            Reports = await _context.Reports.CountAsync(r => r.PlayerId == id)
+        };
     }
 }

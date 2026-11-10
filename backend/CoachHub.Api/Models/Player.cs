@@ -14,6 +14,7 @@ public class Player
     public int TeamId { get; set; }
     public Team? Team { get; set; }
     public string? PhotoUrl { get; set; } 
+    public DateOnly? ArchivedAt { get; set; }
 
     public ICollection<CareerHistoryEntry> CareerHistory { get; set; } = new List<CareerHistoryEntry>();
     public ICollection<MatchAppearance> MatchAppearances { get; set; } = new List<MatchAppearance>();
