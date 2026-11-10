@@ -93,32 +93,6 @@ namespace CoachHub.Api.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("CoachHub.Api.Models.CareerHistoryEntry", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("ClubName")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateOnly?>("EndDate")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("PlayerId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateOnly>("StartDate")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PlayerId");
-
-                    b.ToTable("CareerHistoryEntries");
-                });
-
             modelBuilder.Entity("CoachHub.Api.Models.Match", b =>
                 {
                     b.Property<int>("Id")
@@ -576,17 +550,6 @@ namespace CoachHub.Api.Migrations
                     b.Navigation("Team");
                 });
 
-            modelBuilder.Entity("CoachHub.Api.Models.CareerHistoryEntry", b =>
-                {
-                    b.HasOne("CoachHub.Api.Models.Player", "Player")
-                        .WithMany("CareerHistory")
-                        .HasForeignKey("PlayerId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Player");
-                });
-
             modelBuilder.Entity("CoachHub.Api.Models.Match", b =>
                 {
                     b.HasOne("CoachHub.Api.Models.Team", "Team")
@@ -759,8 +722,6 @@ namespace CoachHub.Api.Migrations
 
             modelBuilder.Entity("CoachHub.Api.Models.Player", b =>
                 {
-                    b.Navigation("CareerHistory");
-
                     b.Navigation("MatchAppearances");
 
                     b.Navigation("MatchEvents");
