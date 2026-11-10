@@ -246,14 +246,14 @@ export function MatchesPage() {
         }
     }
 
-    const playedCount = matches.filter((m) => m.status === "Played").length;
-    const plannedCount = matches.filter((m) => m.status === "Planned").length;
     const visibleMatches = matches.filter((m) => m.status === tab);
     const finishMatch = matches.find((m) => m.id === finishTargetId) ?? null;
     const editScoreEnabled = matches.find((m) => m.id === editingId)?.status === "Played";
     
     const seasons = [...new Set(visibleMatches.map((m) => m.season))].sort().reverse();
     const seasonFilter = seasons.includes(selectedSeason) ? selectedSeason : (seasons[0] ?? "");
+    const playedCount = matches.filter((m) => m.status === "Played" && m.season === seasonFilter).length;
+    const plannedCount = matches.filter((m) => m.status === "Planned" && m.season === seasonFilter).length;
     const seasonMatches = visibleMatches
         .filter((m) => m.season === seasonFilter)
         .sort((a, b) => (tab === "Planned" ? 1 : -1) * a.date.localeCompare(b.date));
