@@ -18,6 +18,7 @@ base(options)
     public DbSet<MatchAppearance> MatchAppearances { get; set; }
     public DbSet<MatchEvent> MatchEvents { get; set; }
     public DbSet<Report> Reports { get; set; }
+    public DbSet<ReportRead> ReportReads { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -39,6 +40,25 @@ base(options)
             .HasOne(r => r.Match)
             .WithMany(m => m.Reports)
             .HasForeignKey(r => r.MatchId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<Report>()
+            .Property(r => r.Priority)
+            .HasDefaultValue("Normal");
+
+        modelBuilder.Entity<ReportRead>()
+            .HasKey(rr => new { rr.ReportId, rr.UserId });
+        
+        modelBuilder.Entity<ReportRead>()
+            .HasOne<Report>()
+            .WithMany()
+            .HasForeignKey(rr => rr.ReportId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<ReportRead>()
+            .HasOne<ApplicationUser>()
+            .WithMany()
+            .HasForeignKey(rr => rr.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
         modelBuilder.Entity<MatchAppearance>()

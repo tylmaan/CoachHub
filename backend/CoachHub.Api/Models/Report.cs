@@ -5,6 +5,7 @@ public class Report
     public int Id { get; set; }
     public required string Title { get; set; }
     public required string Content { get; set; }
+    public string Priority { get; set; } = "Normal";
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
     public int? PlayerId { get; set; }
