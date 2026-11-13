@@ -103,6 +103,18 @@ public class ReportService : IReportService
         
         var unreadCount = await Unread(all, userId).CountAsync();
 
+        var authors = await all
+            .Select(r => new ReportAuthor
+            {
+                Id = r.CreatedByUserId,
+                Name = r.CreatedByUser == null
+                    ? r.CreatedByUserId
+                    : (r.CreatedByUser.FullName ?? r.CreatedByUser.Email ?? r.CreatedByUserId)
+            })
+            .Distinct()
+            .OrderBy(a => a.Name)
+            .ToListAsync();
+
         var filtered = all;
 
         if (query.Kinds.Count > 0)
@@ -140,7 +152,8 @@ public class ReportService : IReportService
             {
                 Items = found,
                 HasMore = false,
-                UnreadCount = unreadCount
+                UnreadCount = unreadCount,
+                Authors = authors
             };
         }
 
@@ -153,7 +166,8 @@ public class ReportService : IReportService
                 .ToListAsync(),
             HasMore = await filtered
                 .AnyAsync(r => r.CreatedAt < cutOff),
-            UnreadCount = unreadCount
+            UnreadCount = unreadCount,
+            Authors = authors
         };
     }
 
