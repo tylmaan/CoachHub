@@ -90,6 +90,9 @@ export function ReportsPage() {
     const hasActiveFilters = isSearching || kinds.length > 0 || authorIds.length > 0 || unreadOnly || highOnly;
     const count = data.items.length;
 
+    const canCollapse = days > DAYS_STEP && !isSearching;
+    const collapseLabel = `Zwiń do ostatnich ${DAYS_STEP} dni`;
+
     const countLabel = isSearching 
         ? `Znaleziono ${count} ${reportsWord(count)} (cała historia)`
         : `${count} ${reportsWord(count)} z ostatnich ${days} dni`;
@@ -123,6 +126,9 @@ export function ReportsPage() {
                 onHighOnlyChange={setHighOnly}
                 onClearFilters={clearFilters}
                 onLoadMore={() => setDays(days + DAYS_STEP)}
+                canCollapse={canCollapse}
+                collapseLabel={collapseLabel}
+                onCollapse={() => setDays(DAYS_STEP)}
                 onOpenReport={(id) => navigate(`/reports/${id}`)}
                 onOpenCreate={() => setFormOpen(true)}
             />

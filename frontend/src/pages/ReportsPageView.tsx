@@ -24,6 +24,9 @@ interface ReportsPageViewProps {
     onHighOnlyChange: (value: boolean) => void;
     onClearFilters: () => void;
     onLoadMore: () => void;
+    canCollapse: boolean;
+    collapseLabel: string;
+    onCollapse: () => void;
     onOpenReport: (id: number) => void;
     onOpenCreate: () => void;
 }
@@ -72,6 +75,9 @@ export function ReportsPageView({
     onHighOnlyChange,
     onClearFilters,
     onLoadMore,
+    canCollapse,
+    collapseLabel,
+    onCollapse,
     onOpenReport,
     onOpenCreate
 }: ReportsPageViewProps) {
@@ -142,9 +148,10 @@ export function ReportsPageView({
                 ))}
             </Box>
 
-            {hasMore && (
-                <Box sx={{ textAlign: "center", mt: 2 }}>
-                    <Button onClick={onLoadMore}>Załaduj starsze raporty</Button>
+            {(hasMore || canCollapse) && (
+                <Box sx={{ display: "flex", justifyContent: "center", gap: 1, mt: 2 }}>
+                    {hasMore && <Button onClick={onLoadMore}>Załaduj starsze raporty</Button>}
+                    {canCollapse && <Button color="inherit" onClick={onCollapse}>{collapseLabel}</Button>}
                 </Box>
             )}
         </>
