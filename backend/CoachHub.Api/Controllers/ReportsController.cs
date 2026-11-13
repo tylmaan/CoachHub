@@ -49,6 +49,8 @@ public class ReportsController : ControllerBase
             return "Tytuł jest wymagany (max 200 znaków).";
         if (string.IsNullOrWhiteSpace(request.Content)) 
             return "Treść raportu jest wymagana.";
+        if (request.Priority is not ("Low" or "Normal" or "High")) 
+            return "Nieprawidłowy priorytet.";
         if ((request.PlayerId is null) == (request.TeamId is null))
             return "Raport musi dotyczyć zawodnika albo drużyny.";
 
@@ -83,18 +85,19 @@ public class ReportsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<ActionResult<List<ReportSummary>>> GetAll()
+    public async Task<ActionResult<ReportPage>> GetAll([FromQuery] ReportQuery query)
     {
         var callerTeamId = User.FindFirstValue("teamId");
-        if (callerTeamId is null) return Ok(new List<ReportSummary>());
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (callerTeamId is null || userId is null) return Ok(new ReportPage());
 
-        var summaries = await _reportService.GetSummariesForTeamAsync(int.Parse(callerTeamId));
-        ApplyPermissions(summaries);
-        return summaries;
+        var page = await _reportService.GetPageAsync(int.Parse(callerTeamId), userId, query);
+        ApplyPermissions(page.Items);
+        return page;
     }
 
     [HttpGet("{id}")]
-    public async Task<ActionResult<Report>> GetById(int id)
+    public async Task<ActionResult<ReportSummary>> GetById(int id)
     {
         var report = await _reportService.GetReportByIdAsync(id);
         if (report is null) return NotFound();
@@ -102,7 +105,14 @@ public class ReportsController : ControllerBase
         var callerTeamId = User.FindFirstValue("teamId");
         if (!await IsInCallerTeamAsync(report, callerTeamId)) return Forbid();
 
-        return report;
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId is null) return Forbid();
+
+        var summary = await _reportService.GetSummaryByIdAsync(id, userId);
+        if (summary is null) return NotFound();
+
+        ApplyPermissions(new[] { summary });
+        return summary;
     }
 
     [HttpGet("player/{playerId}")]
@@ -141,7 +151,23 @@ public class ReportsController : ControllerBase
         
         return Ok(results);
     }
-    
+
+    [HttpPost("{id}/read")]
+    public async Task<IActionResult> MarkAsRead(int id)
+    {
+        var report = await _reportService.GetReportByIdAsync(id);
+        if (report is null) return NotFound();
+
+        var callerTeamId = User.FindFirstValue("teamId");
+        if (!await IsInCallerTeamAsync(report, callerTeamId)) return Forbid();
+
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (userId is null) return Forbid();
+
+        await _reportService.MarkAsReadAsync(id, userId);
+        return NoContent();
+    }
+
     [HttpPost]
     public async Task<ActionResult<Report>> Create(ReportRequest request)
     {
@@ -156,13 +182,14 @@ public class ReportsController : ControllerBase
         {
             Title = request.Title,
             Content = request.Content,
+            Priority = request.Priority,
             PlayerId = request.PlayerId,
             TeamId = request.TeamId,
             MatchId = request.MatchId,
             CreatedByUserId = userId
         });
 
-        var summary = await _reportService.GetSummaryByIdAsync(created.Id);
+        var summary = await _reportService.GetSummaryByIdAsync(created.Id, userId);
         if (summary is not null) ApplyPermissions(new[] { summary });
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, summary);
     }
@@ -186,6 +213,7 @@ public class ReportsController : ControllerBase
         {
             Title = request.Title,
             Content = request.Content,
+            Priority = request.Priority,
             PlayerId = request.PlayerId,
             TeamId = request.TeamId,
             MatchId = request.MatchId,

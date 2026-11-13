@@ -285,6 +285,12 @@ namespace CoachHub.Api.Migrations
                     b.Property<int?>("PlayerId")
                         .HasColumnType("INTEGER");
 
+                    b.Property<string>("Priority")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT")
+                        .HasDefaultValue("Normal");
+
                     b.Property<int?>("TeamId")
                         .HasColumnType("INTEGER");
 
@@ -303,6 +309,24 @@ namespace CoachHub.Api.Migrations
                     b.HasIndex("TeamId");
 
                     b.ToTable("Reports");
+                });
+
+            modelBuilder.Entity("CoachHub.Api.Models.ReportRead", b =>
+                {
+                    b.Property<int>("ReportId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("ReadAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("ReportId", "UserId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("ReportReads");
                 });
 
             modelBuilder.Entity("CoachHub.Api.Models.TacticalScheme", b =>
@@ -639,6 +663,21 @@ namespace CoachHub.Api.Migrations
                     b.Navigation("Player");
 
                     b.Navigation("Team");
+                });
+
+            modelBuilder.Entity("CoachHub.Api.Models.ReportRead", b =>
+                {
+                    b.HasOne("CoachHub.Api.Models.Report", null)
+                        .WithMany()
+                        .HasForeignKey("ReportId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("CoachHub.Api.Models.ApplicationUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("CoachHub.Api.Models.TacticalScheme", b =>

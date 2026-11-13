@@ -1,9 +1,28 @@
 import axiosInstance from "./axiosInstance";
-import type { Report, ReportRequest } from "../types/report";
+import type { Report, ReportFilters, ReportPage, ReportRequest } from "../types/report";
 
-export const getReports = async (): Promise<Report[]> => {
-    const response = await axiosInstance.get<Report[]>("/reports");
+export const getReports = async (filters: ReportFilters): Promise<ReportPage> => {
+    const response = await axiosInstance.get<ReportPage>("/reports", {
+        params: {
+            days: filters.days,
+            kinds: filters.kinds,
+            authors: filters.authors,
+            unreadOnly: filters.unreadOnly,
+            highPriorityOnly: filters.highPriorityOnly,
+            search: filters.search.trim() || undefined,
+        },
+        paramsSerializer: { indexes: null },
+    });
     return response.data;
+}
+
+export async function getReport(id: number): Promise<Report> {
+    const response = await axiosInstance.get<Report>(`/reports/${id}`);
+    return response.data;
+}
+
+export async function markReportAsRead(id: number): Promise<void> {
+    await axiosInstance.post(`/reports/${id}/read`);
 }
 
 export async function createReport(request: ReportRequest): Promise<Report> {

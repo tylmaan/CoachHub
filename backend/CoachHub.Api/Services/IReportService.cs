@@ -10,8 +10,9 @@ public interface IReportService
     Task<IEnumerable<Report>> GetReportsByPlayerIdAsync(int playerId);
     Task<IEnumerable<Report>> GetReportsByTeamIdAsync(int teamId);
     Task<IEnumerable<Report>> GetReportsByUserIdAsync(string userId);
-    Task<List<ReportSummary>> GetSummariesForTeamAsync(int teamId);
-    Task<ReportSummary?> GetSummaryByIdAsync(int id);
-    Task<bool> UpdateReportAsync(int id,Report report);
+    Task<ReportSummary?> GetSummaryByIdAsync(int id, string userId);
+    Task<ReportPage> GetPageAsync(int teamId, string userId, ReportQuery query);
+    Task MarkAsReadAsync(int reportId, string userId);
+    Task<bool> UpdateReportAsync(int id, Report report);
     Task<bool> DeleteReportAsync(int id);
 }
