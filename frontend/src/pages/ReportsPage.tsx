@@ -1,203 +1,134 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { usePersistentState } from '../hooks/usePersistentState';
 import { Alert, CircularProgress } from '@mui/material';
-import axios from 'axios';
-import { getReports, createReport, updateReport, deleteReport } from '../api/reportsApi';
-import { getPlayers } from '../api/playersApi';
-import { getMatches } from '../api/matchesApi';
-import { useAuth } from '../context/AuthContext';
-import type { Report, ReportKind } from '../types/report';
-import { reportKind } from '../types/report';
-import type { Player } from '../types/player';
-import type { Match } from '../types/match';
+import { getReports } from '../api/reportsApi';
+import type { ReportKind, ReportPage as ReportPageData } from '../types/report';
 import { ReportsPageView } from './ReportsPageView';
+import { ReportFormDialog } from '../components/reports/ReportFormDialog';
+
+const DAYS_STEP = 30;
+
+function reportsWord(n: number) {
+    if (n === 1) return "raport";
+    const lastTwo = n % 100;
+    const last = n % 10;
+    return last >= 2 && last <= 4 && !(lastTwo >= 12 && lastTwo <= 14) ? "raporty" : "raportów";
+}
 
 export function ReportsPage() {
-    const { roles, teamId } = useAuth();
-    const canDelete = !!roles?.includes('Coach');
+    const navigate = useNavigate();
 
-    const [reports, setReports] = useState<Report[]>([]);
-    const [players, setPlayers] = useState<Player[]>([]);
-    const [matches, setMatches] = useState<Match[]>([]);
-    const [loading, setLoading] = useState(true);
+    const [data, setData] = useState<ReportPageData | null>(null);
     const [error, setError] = useState<string | null>(null);
-    const [actionError, setActionError] = useState<string | null>(null);
+    const [reloadKey, setReloadKey] = useState(0);
+    const [formOpen, setFormOpen] = useState(false);
 
     const [search, setSearch] = usePersistentState("reports.search", "");
-    const [kindFilter, setKindFilter] = usePersistentState<ReportKind | "">("reports.kind", "");
-    const [authorFilter, setAuthorFilter] = usePersistentState("reports.author", "");
+    const [kinds, setKinds] = usePersistentState<ReportKind[]>("reports.kinds", []);
+    const [authorIds, setAuthorIds] = usePersistentState<string[]>("reports.authors", []);
+    const [unreadOnly, setUnreadOnly] = usePersistentState("reports.unread", false);
+    const [highOnly, setHighOnly] = usePersistentState("reports.high", false);
+    const [days, setDays] = usePersistentState("reports.days", DAYS_STEP);
 
-    const [formOpen, setFormOpen] = useState(false);
-    const [editingId, setEditingId] = useState<number | null>(null);
-    const [title, setTitle] = useState("");
-    const [content, setContent] = useState("");
-    const [targetType, setTargetType] = useState<"team" | "player">("team");
-    const [playerId, setPlayerId] = useState<number | "">("");
-    const [matchId, setMatchId] = useState<number | "">("");
-    const [formError, setFormError] = useState<string | null>(null);
-
-    const [deleteTargetId, setDeleteTargetId] = useState<number | null>(null);
-
-    function loadReports() {
-        getReports()
-            .then(setReports)
-            .catch(() => setError("Nie udało się pobrać raportów."))
-            .finally(() => setLoading(false));
-    }
+    const [debouncedSearch, setDebouncedSearch] = useState(search);
 
     useEffect(() => {
-        loadReports();
-        getPlayers()
-            .then(setPlayers)
-            .catch(() => {});
-        getMatches()
-            .then(setMatches)
-            .catch(() => {});
-    }, []);
+        const timer = setTimeout(() => setDebouncedSearch(search), 300);
+        return () => clearTimeout(timer);
+    }, [search]);
 
-    function resetForm() {
-        setEditingId(null);
-        setTitle("");
-        setContent("");
-        setTargetType("team");
-        setPlayerId("");
-        setMatchId("");
-        setFormError(null);
-    }
-
-    function openCreate() {
-        resetForm();
-        setFormOpen(true);
-    }
-
-    function openEdit(report: Report) {
-        setEditingId(report.id);
-        setTitle(report.title);
-        setContent(report.content);
-        setTargetType(report.playerId != null ? "player" : "team");
-        setPlayerId(report.playerId ?? "");
-        setMatchId(report.matchId ?? "");
-        setFormError(null);
-        setFormOpen(true);
-    }
-
-    function closeForm() {
-        setFormOpen(false);
-    }
-
-    async function handleSubmit(e: React.SyntheticEvent) {
-        e.preventDefault();
-        setFormError(null);
-
-        if (targetType === "player" && playerId === "") {
-            setFormError("Wybierz zawodnika.");
-            return;
-        }
-
-        const request = {
-            title,
-            content,
-            playerId: targetType === "player" ? (playerId as number) : null,
-            teamId: targetType === "team" ? teamId : null,
-            matchId: matchId === "" ? null : matchId,
+    useEffect(() => {
+        let cancelled = false;
+        getReports({ 
+            days,
+            kinds,
+            authors: authorIds,
+            unreadOnly,
+            highPriorityOnly: highOnly,
+            search: debouncedSearch,
+        })
+            .then((result) => {
+                if (cancelled) return;
+                setData(result);
+                setError(null);
+            })
+            .catch(() => {
+                if (!cancelled) setError("Nie udało się pobrać raportów.");
+            });
+        return () => { 
+            cancelled = true;
         };
+    }, [days, kinds, authorIds, unreadOnly, highOnly, debouncedSearch, reloadKey]);
 
-        try {
-            if (editingId === null) {
-                await createReport(request);
-            } else {
-                await updateReport(editingId, request);
-            }
-            setFormOpen(false);
-            loadReports();
-        } catch (err) {
-            if (axios.isAxiosError(err) && Array.isArray(err.response?.data)) {
-                setFormError(err.response.data.join(" "));
-            } else {
-                setFormError("Nie udało się zapisać raportu.");
-            }
-        }
+    function toggleKind(kind: ReportKind) {
+        setKinds(kinds.includes(kind) ? kinds.filter((k) => k !== kind) : [...kinds, kind]);
     }
 
-    function requestDelete(id: number) {
-        setDeleteTargetId(id);
+    function toggleAuthor(id: string) {
+        setAuthorIds(authorIds.includes(id) ? authorIds.filter((a) => a !== id) : [...authorIds, id]);
     }
 
-    function cancelDelete() {
-        setDeleteTargetId(null);
+    function clearFilters() {
+        setSearch("");
+        setKinds([]);
+        setAuthorIds([]);
+        setUnreadOnly(false);
+        setHighOnly(false);
     }
 
-    async function confirmDelete() {
-        if (deleteTargetId === null) return;
-        setActionError(null);
-        try {
-            await deleteReport(deleteTargetId);
-            loadReports();
-        } catch {
-            setActionError("Nie udało się usunąć raportu.");
-        }
-        setDeleteTargetId(null);
+    function handleSaved() {
+        setFormOpen(false);
+        setReloadKey(reloadKey + 1);
     }
 
-    const authors = [...new Map(reports.map((r) => [r.authorId, r.authorName])).entries()]
-        .map(([id, name]) => ({ id, name }))
-        .sort((a, b) => a.name.localeCompare(b.name));
+    if (data === null) {
+        return error ? <Alert severity="error">{error}</Alert> : <CircularProgress />;
+    }
 
-    const playerOptions = [...players]
-        .filter((p) => p.archivedAt === null || p.id === playerId)
-        .sort((a, b) => a.lastName.localeCompare(b.lastName))
-        .map((p) => ({ id: p.id, label: `${p.firstName} ${p.lastName}`.trim() }));
-    
-    const matchOptions = [...matches]
-        .sort((a, b) => b.date.localeCompare(a.date))
-        .map((m) => ({ id: m.id, label: `${m.date} · ${m.opponent}` }));
+    const isSearching = search.trim() !== "";
+    const hasActiveFilters = isSearching || kinds.length > 0 || authorIds.length > 0 || unreadOnly || highOnly;
+    const count = data.items.length;
 
-    const searchTerm = search.trim().toLowerCase();
-    const filteredReports = reports.filter((r) =>
-        (kindFilter === "" || reportKind(r) === kindFilter) &&
-        (authorFilter === "" || r.authorId === authorFilter) &&
-        (searchTerm === "" || `${r.title} ${r.content}`.toLowerCase().includes(searchTerm))
-    );
+    const countLabel = isSearching 
+        ? `Znaleziono ${count} ${reportsWord(count)} (cała historia)`
+        : `${count} ${reportsWord(count)} z ostatnich ${days} dni`;
 
-    if (loading) return <CircularProgress />;
-    if (error) return <Alert severity="error">{error}</Alert>;
+    const emptyMessage = hasActiveFilters
+        ? "Żaden raport nie pasuje do wybranych filtrów."
+        : data.hasMore
+            ? `Brak raportów z ostatnich ${days} dni.`
+            : "Nie ma jeszcze żadnych raportów.";
 
     return (
-        <ReportsPageView
-            reports={filteredReports}
-            totalCount={reports.length}
-            authors={authors}
-            search={search}
-            onSearchChange={setSearch}
-            kindFilter={kindFilter}
-            onKindFilterChange={setKindFilter}
-            authorFilter={authorFilter}
-            onAuthorFilterChange={setAuthorFilter}
-            canDelete={canDelete}
-            actionError={actionError}
-            formOpen={formOpen}
-            isEditing={editingId !== null}
-            title={title}
-            onTitleChange={setTitle}
-            content={content}
-            onContentChange={setContent}
-            targetType={targetType}
-            onTargetTypeChange={setTargetType}
-            playerId={playerId}
-            onPlayerIdChange={setPlayerId}
-            matchId={matchId}
-            onMatchIdChange={setMatchId}
-            playerOptions={playerOptions}
-            matchOptions={matchOptions}
-            formError={formError}
-            onOpenCreate={openCreate}
-            onOpenEdit={openEdit}
-            onCloseForm={closeForm}
-            onSubmit={handleSubmit}
-            deleteDialogOpen={deleteTargetId !== null}
-            onRequestDelete={requestDelete}
-            onCancelDelete={cancelDelete}
-            onConfirmDelete={confirmDelete}
-        />
+        <>
+            <ReportsPageView
+                reports={data.items}
+                authors={data.authors}
+                unreadCount={data.unreadCount}
+                hasMore={data.hasMore}
+                countLabel={countLabel}
+                emptyMessage={emptyMessage}
+                hasActiveFilters={hasActiveFilters}
+                error={error}
+                search={search}
+                onSearchChange={setSearch}
+                kinds={kinds}
+                onToggleKind={toggleKind}
+                authorIds={authorIds}
+                onToggleAuthor={toggleAuthor}
+                unreadOnly={unreadOnly}
+                onUnreadOnlyChange={setUnreadOnly}
+                highOnly={highOnly}
+                onHighOnlyChange={setHighOnly}
+                onClearFilters={clearFilters}
+                onLoadMore={() => setDays(days + DAYS_STEP)}
+                onOpenReport={(id) => navigate(`/reports/${id}`)}
+                onOpenCreate={() => setFormOpen(true)}
+            />
+            {formOpen && (
+                <ReportFormDialog report={null} onClose={() => setFormOpen(false)} onSaved={handleSaved} />
+            )}
+        </>
     );
 }
