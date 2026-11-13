@@ -20,6 +20,7 @@ function ParentOf(pathname: string): string | null {
     if (pathname === "/") return null;
     if (pathname.startsWith("/matches/")) return "/matches";
     if (pathname.startsWith("/stats/players")) return "/stats";
+    if (pathname.startsWith("/reports/")) return "/reports";
     return "/";
 }
 

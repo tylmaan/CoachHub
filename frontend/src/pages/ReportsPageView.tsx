@@ -127,17 +127,13 @@ export function ReportsPageView({
                 </FilterRow>
             </Box>
 
-            <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-                {countLabel}
-            </Typography>
+            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 1.5, minHeight: 32 }}>
+                <Typography variant="body2" color="text.secondary">{countLabel}</Typography>
+                {hasActiveFilters && <Button size="small" onClick={onClearFilters}>Wyczyść filtry</Button>}
+            </Box>
 
             {reports.length === 0 && (
-                <Alert
-                    severity="info"
-                    action={hasActiveFilters && <Button size="small" onClick={onClearFilters}>Wyczyść filtry</Button>}
-                >
-                    {emptyMessage}
-                </Alert>
+                <Alert severity="info">{emptyMessage}</Alert>
             )}
 
             <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))" }, gap: 1.5 }}>
