@@ -33,6 +33,7 @@ import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import SwapVertIcon from "@mui/icons-material/SwapVert";
 import AdjustIcon from "@mui/icons-material/Adjust";
 import { Jersey } from "../components/Jersey";
+import { Pitch } from "../components/Pitch";
 import type { Kit } from "../types/kit";
 import type { Match } from "../types/match";
 import type { Player } from "../types/player";
@@ -433,54 +434,42 @@ export function MatchDetailPageView({
 
             {rosterError && <Alert severity="error" sx={{ mb: 2 }}>{rosterError}</Alert>}
 
-            <Box
-                sx={{
-                    position: "relative",
-                    width: "100%",
-                    aspectRatio: "7 / 5",
-                    borderRadius: 2,
-                    border: "0.5px solid rgba(255,255,255,0.2)",
-                    overflow: "hidden",
-                    background: "repeating-linear-gradient(0deg, rgba(99,153,34,0.18) 0 10%, rgba(99,153,34,0.08) 10% 20%), #3b6d11",
-                    mb: 2,
-                }}
-            >
-                <Box sx={{ position: "absolute", top: "50%", left: 0, right: 0, height: "1px", bgcolor: "rgba(255,255,255,0.5)" }} />
-                <Box sx={{ position: "absolute", left: "50%", top: "50%", width: "15%", aspectRatio: "1 / 1", border: "1px solid rgba(255,255,255,0.5)", borderRadius: "50%", transform: "translate(-50%,-50%)" }} />
-                <Box sx={{ position: "absolute", inset: "3%", border: "1px solid rgba(255,255,255,0.4)", borderRadius: 1 }} />
-                {pitchSlots.map((slot, i) => {
-                    const player = slot.appearance ? playerFor(slot.appearance) : undefined;
-                    return (
-                        <Box
-                            key={i}
-                            onClick={() => onOpenPitchPicker(slot.pos, slot.slotKey, slot.appearance)}
-                            {...dragProps(slot.appearance)}
-                            {...dropProps(slot.slotKey, { kind: "pitch", slotKey: slot.slotKey })}
-                            sx={{
-                                position: "absolute",
-                                left: `${slot.x}%`,
-                                top: `${slot.y}%`,
-                                transform: "translate(-50%, -50%)",
-                                cursor: "pointer",
-                                display: "flex",
-                                flexDirection: "column",
-                                alignItems: "center",
-                                width: 92,
-                                opacity: slot.appearance && dragId === slot.appearance.id ? 0.4 : 1,
-                                outline: overKey === slot.slotKey ? "2px dashed #fff" : "none",
-                                borderRadius: 1,
-                            }}
-                        >
-                            <Jersey number={player?.jerseyNumber ?? null} muted={!player} kit={kitFor(player)} />
-                            <Typography
-                                variant="caption"
-                                sx={{ color: "#fff", mt: 0.5, textAlign: "center", maxWidth: 92, fontSize: 14, lineHeight: 1.15,  }}
+            <Box sx={{ mb: 2 }}>
+                <Pitch>
+                    {pitchSlots.map((slot, i) => {
+                        const player = slot.appearance ? playerFor(slot.appearance) : undefined;
+                        return (
+                            <Box
+                                key={i}
+                                onClick={() => onOpenPitchPicker(slot.pos, slot.slotKey, slot.appearance)}
+                                {...dragProps(slot.appearance)}
+                                {...dropProps(slot.slotKey, { kind: "pitch", slotKey: slot.slotKey })}
+                                sx={{
+                                    position: "absolute",
+                                    left: `${slot.x}%`,
+                                    top: `${slot.y}%`,
+                                    transform: "translate(-50%, -50%)",
+                                    cursor: "pointer",
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    alignItems: "center",
+                                    width: 92,
+                                    opacity: slot.appearance && dragId === slot.appearance.id ? 0.4 : 1,
+                                    outline: overKey === slot.slotKey ? "2px dashed #fff" : "none",
+                                    borderRadius: 1,
+                                }}
                             >
-                                {player ? player.lastName : slot.pos}
-                            </Typography>
-                        </Box>
-                    );
-                })}
+                                <Jersey number={player?.jerseyNumber ?? null} muted={!player} kit={kitFor(player)} />
+                                <Typography
+                                    variant="caption"
+                                    sx={{ color: "#fff", mt: 0.5, textAlign: "center", maxWidth: 92, fontSize: 14, lineHeight: 1.15,  }}
+                                >
+                                    {player ? player.lastName : slot.pos}
+                                </Typography>
+                            </Box>
+                        );
+                    })}
+                </Pitch>
             </Box>
 
             <Typography variant="subtitle2" sx={{ mb: 1 }}>Ławka rezerwowych</Typography>
