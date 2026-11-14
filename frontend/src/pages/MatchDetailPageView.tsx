@@ -34,6 +34,7 @@ import SwapVertIcon from "@mui/icons-material/SwapVert";
 import AdjustIcon from "@mui/icons-material/Adjust";
 import { Jersey } from "../components/Jersey";
 import { Pitch } from "../components/Pitch";
+import { MatchTacticsSection } from "../components/tactics/MatchTacticsSection";
 import type { Kit } from "../types/kit";
 import type { Match } from "../types/match";
 import type { Player } from "../types/player";
@@ -589,6 +590,7 @@ export function MatchDetailPageView({
                 </DialogActions>
             </Dialog>
 
+            {match.status === "Planned" && <MatchTacticsSection matchId={match.id} />}
             <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2, mt: 4 }}>
                 <Typography variant="h6">Zdarzenia meczowe</Typography>
                 <Button variant="contained" onClick={onOpenEvent}>

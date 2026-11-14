@@ -42,3 +42,16 @@ export interface TacticalBoardData {
     version: 1;
     objects: BoardObject[];
 }
+
+export const EMPTY_BOARD: TacticalBoardData = { version: 1, objects: [] };
+
+export function parseBoardData(json: string): TacticalBoardData {
+    try {
+        const parsed = JSON.parse(json);
+        if (parsed?.version === 1 && Array.isArray(parsed.objects)) return parsed as TacticalBoardData;
+    } catch {
+        // ignore
+    }
+
+    return EMPTY_BOARD;
+}
