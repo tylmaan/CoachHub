@@ -412,9 +412,11 @@ export function MatchDetailPageView({
                     </Typography>
                 </Box>
                 <Box sx={{ flexGrow: 1 }} />
-                <Typography variant="h4">
-                    {match.scoreFor ?? "-"} : {match.scoreAgainst ?? "-"}
-                </Typography>
+                {match.status === "Played" && (
+                    <Typography variant="h4">
+                        {match.scoreFor ?? "-"} : {match.scoreAgainst ?? "-"}
+                    </Typography>
+                )}
             </Paper>
 
             <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
@@ -591,41 +593,46 @@ export function MatchDetailPageView({
             </Dialog>
 
             {match.status === "Planned" && <MatchTacticsSection matchId={match.id} />}
-            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2, mt: 4 }}>
-                <Typography variant="h6">Zdarzenia meczowe</Typography>
-                <Button variant="contained" onClick={onOpenEvent}>
-                    Dodaj zdarzenie
-                </Button>
-            </Box>
 
-            {eventError && <Alert severity="error" sx={{ mb: 2 }}>{eventError}</Alert>}
+            {match.status === "Played" && (
+                <>
+                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2, mt: 4 }}>
+                        <Typography variant="h6">Zdarzenia meczowe</Typography>
+                        <Button variant="contained" onClick={onOpenEvent}>
+                            Dodaj zdarzenie
+                        </Button>
+                    </Box>
 
-                        <Paper sx={{ p: 2 }}>
-                {firstHalf.length > 0 && (
-                    <>
-                        <Typography variant="overline" color="text.secondary">1. połowa</Typography>
-                        {firstHalf.map((de) => renderDisplayEvent(de, sortedEvents))}
-                    </>
-                )}
-                {secondHalf.length > 0 && (
-                    <>
-                        <Divider sx={{ my: 1 }} />
-                        <Typography variant="overline" color="text.secondary">2. połowa</Typography>
-                        {secondHalf.map((de) => renderDisplayEvent(de, sortedEvents))}
-                    </>
-                )}
-                {extraTime.length > 0 && (
-                    <>
-                        <Divider sx={{ my: 1 }} />
-                        <Typography variant="overline" color="text.secondary">Dogrywka</Typography>
-                        {extraTime.map((de) => renderDisplayEvent(de, sortedEvents))}
-                    </>
-                )}
-                {noMinute.map((de) => renderDisplayEvent(de, sortedEvents))}
-                {displayEvents.length === 0 && (
-                    <Typography variant="body2" color="text.secondary">Brak zdarzeń.</Typography>
-                )}
-            </Paper>
+                    {eventError && <Alert severity="error" sx={{ mb: 2 }}>{eventError}</Alert>}
+
+                    <Paper sx={{ p: 2 }}>
+                        {firstHalf.length > 0 && (
+                            <>
+                                <Typography variant="overline" color="text.secondary">1. połowa</Typography>
+                                {firstHalf.map((de) => renderDisplayEvent(de, sortedEvents))}
+                            </>
+                        )}
+                        {secondHalf.length > 0 && (
+                            <>
+                                <Divider sx={{ my: 1 }} />
+                                <Typography variant="overline" color="text.secondary">2. połowa</Typography>
+                                {secondHalf.map((de) => renderDisplayEvent(de, sortedEvents))}
+                            </>
+                        )}
+                        {extraTime.length > 0 && (
+                            <>
+                                <Divider sx={{ my: 1 }} />
+                                <Typography variant="overline" color="text.secondary">Dogrywka</Typography>
+                                {extraTime.map((de) => renderDisplayEvent(de, sortedEvents))}
+                            </>
+                        )}
+                        {noMinute.map((de) => renderDisplayEvent(de, sortedEvents))}
+                        {displayEvents.length === 0 && (
+                            <Typography variant="body2" color="text.secondary">Brak zdarzeń.</Typography>
+                        )}
+                    </Paper>
+                </>
+            )}
 
             <Dialog open={eventOpen} onClose={onCloseEvent} fullWidth maxWidth="xs">
                 <Box component="form" onSubmit={onAddEvent}>
