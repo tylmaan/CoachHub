@@ -1,12 +1,13 @@
+using CoachHub.Api.DTOs;
 using CoachHub.Api.Models;
 
 namespace CoachHub.Api.Services;
 
 public interface ITacticalSchemeService
 {
-    Task<TacticalScheme> CreateTacticalSchemeAsync (TacticalScheme tacticalScheme);
-    Task<TacticalScheme?> GetTacticalSchemeByIdAsync(int id);
-    Task<IEnumerable<TacticalScheme>> GetTacticalSchemesByTeamIdAsync(int teamId);
-    Task<bool> UpdateTacticalSchemeAsync(int id, TacticalScheme tacticalScheme);
-    Task<bool> DeleteTacticalSchemeAsync(int id);
+    Task<List<TacticalSchemeSummary>> GetByMatchIdAsync(int matchId);
+    Task<TacticalSchemeSummary?> GetByIdAsync(int id);
+    Task<TacticalSchemeSummary> CreateAsync(TacticalScheme tacticalScheme);
+    Task<bool> UpdateAsync(int id, TacticalSchemeRequest request);
+    Task<bool> DeleteAsync(int id);
 }

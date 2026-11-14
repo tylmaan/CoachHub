@@ -335,10 +335,6 @@ namespace CoachHub.Api.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("CanvasData")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
@@ -346,18 +342,25 @@ namespace CoachHub.Api.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("Data")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("MatchId")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("TeamId")
-                        .HasColumnType("INTEGER");
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
                     b.HasIndex("CreatedByUserId");
 
-                    b.HasIndex("TeamId");
+                    b.HasIndex("MatchId");
 
                     b.ToTable("TacticalSchemes");
                 });
@@ -688,15 +691,15 @@ namespace CoachHub.Api.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("CoachHub.Api.Models.Team", "Team")
+                    b.HasOne("CoachHub.Api.Models.Match", "Match")
                         .WithMany("TacticalSchemes")
-                        .HasForeignKey("TeamId")
+                        .HasForeignKey("MatchId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("CreatedByUser");
 
-                    b.Navigation("Team");
+                    b.Navigation("Match");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -757,6 +760,8 @@ namespace CoachHub.Api.Migrations
                     b.Navigation("Events");
 
                     b.Navigation("Reports");
+
+                    b.Navigation("TacticalSchemes");
                 });
 
             modelBuilder.Entity("CoachHub.Api.Models.Player", b =>
@@ -777,8 +782,6 @@ namespace CoachHub.Api.Migrations
                     b.Navigation("Reports");
 
                     b.Navigation("StaffMembers");
-
-                    b.Navigation("TacticalSchemes");
                 });
 #pragma warning restore 612, 618
         }

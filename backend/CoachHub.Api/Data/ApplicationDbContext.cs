@@ -61,6 +61,12 @@ base(options)
             .HasForeignKey(rr => rr.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        modelBuilder.Entity<TacticalScheme>()
+            .HasOne(ts => ts.Match)
+            .WithMany(m => m.TacticalSchemes)
+            .HasForeignKey(ts => ts.MatchId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         modelBuilder.Entity<MatchAppearance>()
             .HasOne(a => a.Player)
             .WithMany(p => p.MatchAppearances)

@@ -1,5 +1,6 @@
 using CoachHub.Api.Models;
 using CoachHub.Api.Data;
+using CoachHub.Api.DTOs;
 using Microsoft.EntityFrameworkCore;
 
 namespace CoachHub.Api.Services;
@@ -13,43 +14,55 @@ public class TacticalSchemeService : ITacticalSchemeService
         _context = context;
     }
 
-    public async Task<TacticalScheme> CreateTacticalSchemeAsync(TacticalScheme tacticalScheme)
+    private static TacticalSchemeSummary ToSummary(TacticalScheme ts) => new()
+    {
+        Id = ts.Id,
+        Name = ts.Name,
+        Data = ts.Data,
+        MatchId = ts.MatchId,
+        CreatedAt = ts.CreatedAt,
+        UpdatedAt = ts.UpdatedAt
+    };
+
+    public async Task<List<TacticalSchemeSummary>> GetByMatchIdAsync(int matchId)
+    {
+        var schemes = await _context.TacticalSchemes
+            .AsNoTracking()
+            .Where(ts => ts.MatchId == matchId)
+            .OrderBy(ts => ts.CreatedAt)
+            .ToListAsync();
+        return schemes.Select(ToSummary).ToList();
+    }
+
+    public async Task<TacticalSchemeSummary?> GetByIdAsync(int id)
+    {
+        var scheme = await _context.TacticalSchemes
+            .AsNoTracking()
+            .FirstOrDefaultAsync(ts => ts.Id == id);
+        return scheme is null ? null : ToSummary(scheme);
+    }
+
+    public async Task<TacticalSchemeSummary> CreateAsync(TacticalScheme tacticalScheme)
     {
         _context.TacticalSchemes.Add(tacticalScheme);
         await _context.SaveChangesAsync();
-        return tacticalScheme;
+        return ToSummary(tacticalScheme);
     }
 
-    public async Task<TacticalScheme?> GetTacticalSchemeByIdAsync(int id)
-    {
-        return await _context.TacticalSchemes
-            .AsNoTracking()
-            .Include(ts => ts.Team)
-            .FirstOrDefaultAsync(ts => ts.Id == id);
-    }
-
-    public async Task<IEnumerable<TacticalScheme>> GetTacticalSchemesByTeamIdAsync(int teamId)
-    {
-        return await _context.TacticalSchemes
-            .AsNoTracking()
-            .Where(ts => ts.TeamId == teamId)
-            .Include(ts => ts.Team)
-            .ToListAsync();
-    }
-
-    public async Task<bool> UpdateTacticalSchemeAsync(int id, TacticalScheme tacticalScheme)
+    public async Task<bool> UpdateAsync(int id, TacticalSchemeRequest request)
     {
         var existing = await _context.TacticalSchemes.FindAsync(id);
         if (existing is null) return false;
         
-        existing.Name = tacticalScheme.Name;
-        existing.CanvasData = tacticalScheme.CanvasData;
-        
+        existing.Name = request.Name;
+        existing.Data = request.Data;
+        existing.UpdatedAt = DateTime.UtcNow;
+
         await _context.SaveChangesAsync();
         return true;
     }
 
-    public async Task<bool> DeleteTacticalSchemeAsync(int id)
+    public async Task<bool> DeleteAsync(int id)
     {
         var existing = await _context.TacticalSchemes.FindAsync(id);
         if (existing is null) return false;
