@@ -36,6 +36,11 @@ export interface BoardText {
     text: string;
 }
 
+export interface BoardPoint {
+    x: number;
+    y: number;
+}
+
 export type BoardObject = BoardPlayer | BoardArrow | BoardZone | BoardText;
 
 export interface TacticalBoardData {

@@ -1,16 +1,12 @@
 import type { PointerEventHandler, Ref } from "react";
 import { Pitch } from "../Pitch";
 import type { BoardObject, BoardSide, TacticalBoardData } from "../../types/tacticalBoard";
+import { SIDE_COLORS } from "../../constants/tacticalBoard";
 
 const PITCH_WIDTH = 68;
 const PITCH_HEIGHT = 105;
 const INSET_Y = PITCH_HEIGHT * 0.03;
 const SELECTION_COLOR = "#fac775";
-
-const SIDE_COLORS: Record<BoardSide, { fill: string; arrow: string }> = {
-    own: { fill: "#7c3aed", arrow: "#ddd6fe" },
-    opponent: { fill: "#dc2626", arrow: "#fecaca" },
-};
 
 const LAYER: Record<BoardObject["type"], number> = { zone: 0, arrow: 1, player: 2, text: 3 };
 
@@ -126,7 +122,7 @@ export function TacticalBoard({
                                         x2={x2}
                                         y2={y2}
                                         stroke="transparent"
-                                        strokeWidth={4}
+                                        strokeWidth={3}
                                     />
                                     <line
                                         x1={x1}

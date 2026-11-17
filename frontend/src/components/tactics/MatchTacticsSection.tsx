@@ -142,6 +142,7 @@ export function MatchTacticsSection({ matchId }: MatchTacticsSectionProps) {
                 <TacticalBoardEditor 
                     key={editing.id}
                     scheme={editing}
+                    canEdit={canEdit}
                     onClose={() => setEditing(null)}
                 />
             )}
