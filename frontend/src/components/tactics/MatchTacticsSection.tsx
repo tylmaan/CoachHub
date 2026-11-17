@@ -16,6 +16,7 @@ import AddIcon from '@mui/icons-material/Add';
 import { useAuth } from '../../context/AuthContext';
 import { ConfirmDeleteDialog } from '../ConfirmDeleteDialog';
 import { TacticalBoardTile } from './TacticalBoardTile';
+import { TacticalBoardEditor } from './TacticalBoardEditor';
 import { createTacticalScheme, deleteTacticalScheme, getTacticalSchemes } from '../../api/tacticalSchemesApi';
 import { EMPTY_BOARD } from '../../types/tacticalBoard';
 import type { TacticalScheme } from '../../types/tacticalScheme';
@@ -28,7 +29,7 @@ export function MatchTacticsSection({ matchId }: MatchTacticsSectionProps) {
     const { roles } = useAuth();
     const canEdit = !!roles?.some((r) => r === "Coach" || r === "AssistantCoach");
     const canDelete = !!roles?.some((r) => r === "Coach");
-
+    const [editing, setEditing] = useState<TacticalScheme | null>(null);
     const [schemes, setSchemes] = useState<TacticalScheme[]>([]);
     const [error, setError] = useState<string | null>(null);
     const [createOpen, setCreateOpen] = useState(false);
@@ -85,6 +86,7 @@ export function MatchTacticsSection({ matchId }: MatchTacticsSectionProps) {
                         key={scheme.id}
                         scheme={scheme}
                         canDelete={canDelete}
+                        onOpen={setEditing}
                         onDelete={setDeleteTarget}
                     />
                 ))}
@@ -135,7 +137,15 @@ export function MatchTacticsSection({ matchId }: MatchTacticsSectionProps) {
                     </DialogActions>
                 </form>
             </Dialog>
-
+            
+            {editing && (
+                <TacticalBoardEditor 
+                    key={editing.id}
+                    scheme={editing}
+                    onClose={() => setEditing(null)}
+                />
+            )}
+            
             <ConfirmDeleteDialog
                 open={deleteTarget !== null}
                 title="Usunąć tablicę?"
