@@ -16,13 +16,13 @@ public static class DbSeeder
         }
     }
 
-    public static async Task SeedAdminUserAsync(UserManager<ApplicationUser> userManager)
+    public static async Task SeedAdminUserAsync(UserManager<ApplicationUser> userManager, string? adminPassword)
     {
         const string adminEmail = "admin@coachhub.local";
 
-        if (await userManager.FindByEmailAsync(adminEmail) is not null)
+        if (string.IsNullOrEmpty(adminPassword) || await userManager.FindByEmailAsync(adminEmail) is not null)
         {
-            return; 
+            return;
         }
 
         var admin = new ApplicationUser
@@ -32,7 +32,7 @@ public static class DbSeeder
             EmailConfirmed = true
         };
 
-        var result = await userManager.CreateAsync(admin, "Admin123!");
+        var result = await userManager.CreateAsync(admin, adminPassword);
         if (result.Succeeded)
         {
             await userManager.AddToRoleAsync(admin, Roles.Admin);

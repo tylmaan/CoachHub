@@ -9,11 +9,14 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<CoachHub.Api.Data.ApplicationDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:5173") 
+        policy.WithOrigins(allowedOrigins) 
                 .AllowAnyHeader()
                 .AllowAnyMethod();
     });
@@ -69,8 +72,14 @@ using (var scope = app.Services.CreateScope())
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<Microsoft.AspNetCore.Identity.IdentityRole>>();
     await CoachHub.Api.Data.DbSeeder.SeedRolesAsync(roleManager);
 
+    var adminPassword = builder.Configuration["Seed:AdminPassword"];
+    if (string.IsNullOrEmpty(adminPassword))
+    {
+        app.Logger.LogWarning("Seed:AdminPassword is not set. The admin user was not seeded.");
+    }
+
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<CoachHub.Api.Models.ApplicationUser>>();
-    await CoachHub.Api.Data.DbSeeder.SeedAdminUserAsync(userManager);
+    await CoachHub.Api.Data.DbSeeder.SeedAdminUserAsync(userManager, adminPassword);
 }
 
 if (app.Environment.IsDevelopment())
