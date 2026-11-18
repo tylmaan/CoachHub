@@ -1,7 +1,11 @@
 import axios from "axios";
 
+const configuredOrigin: string | undefined = import.meta.env.VITE_BACKEND_ORIGIN;
+
+export const BACKEND_ORIGIN = configuredOrigin ?? `http://${window.location.hostname}:5006`;
+
 const axiosInstance = axios.create({
-    baseURL: "http://localhost:5006/api",
+    baseURL: `${BACKEND_ORIGIN}/api`,
 });
 
 axiosInstance.interceptors.request.use((config) => {
@@ -13,5 +17,3 @@ axiosInstance.interceptors.request.use((config) => {
 });
 
 export default axiosInstance;
-
-export const BACKEND_ORIGIN = "http://localhost:5006";
