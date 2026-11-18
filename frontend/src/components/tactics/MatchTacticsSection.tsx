@@ -49,6 +49,13 @@ export function MatchTacticsSection({ matchId }: MatchTacticsSectionProps) {
         setCreateError(null);
     }
 
+    function closeEditor() {
+        setEditing(null);
+        getTacticalSchemes(matchId)
+            .then(setSchemes)
+            .catch(() => setError("Nie udało się odświeżyć tablic."));
+    }
+
     async function handleCreate(e: React.SyntheticEvent) {
         e.preventDefault();
         const name = newName.trim();
@@ -143,7 +150,7 @@ export function MatchTacticsSection({ matchId }: MatchTacticsSectionProps) {
                     key={editing.id}
                     scheme={editing}
                     canEdit={canEdit}
-                    onClose={() => setEditing(null)}
+                    onClose={closeEditor}
                 />
             )}
             

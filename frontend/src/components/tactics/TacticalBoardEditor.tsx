@@ -35,7 +35,9 @@ import {
     type Tool 
 } from "../../types/boardEditing";
 import { useHistory } from "../../hooks/useHistory";
-import { OBJECT_LABELS, SIDE_COLORS, SIDE_LABELS, ARROW_STYLE_LABELS } from "../../constants/tacticalBoard";
+import { useAutosave } from "../../hooks/useAutosave";
+import { updateTacticalScheme } from "../../api/tacticalSchemesApi";
+import { OBJECT_LABELS, SIDE_COLORS, SIDE_LABELS, ARROW_STYLE_LABELS, SAVE_STATUS_LABELS } from "../../constants/tacticalBoard";
 import { 
     parseBoardData, 
     type TacticalBoardData,
@@ -117,7 +119,13 @@ export function TacticalBoardEditor({
     const [tool, setTool] = useState<Tool>("select");
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [draft, setDraft] = useState<TacticalBoardData | null>(null);
+    const [name, setName] = useState(scheme.name);
 
+    const { status, flush, retry } = useAutosave(
+        { name, data: present },
+        (value) => updateTacticalScheme(scheme.id, { name: value.name, data: JSON.stringify(value.data) }),
+        canEdit
+    );
     const shown = draft ?? present;
     const selected = shown.objects.find((o) => o.id === selectedId) ?? null;
 
@@ -151,6 +159,10 @@ export function TacticalBoardEditor({
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, [canEdit, undo, redo, deleteSelected]);
+
+    async function handleClose() {
+        if (await flush()) onClose();
+    }
 
     function replaceObject(next: BoardObject) {
         commit({ ...present, objects: present.objects.map((o) => o.id === next.id ? next : o) });
@@ -232,8 +244,25 @@ export function TacticalBoardEditor({
     }
 
     return (
-        <Dialog open onClose={onClose} fullWidth maxWidth="lg">
-            <DialogTitle>{scheme.name}</DialogTitle>
+        <Dialog open onClose={handleClose} fullWidth maxWidth="lg">
+            <DialogTitle>
+                {canEdit ? (
+                    <TextField
+                        key={name}
+                        variant="standard"
+                        fullWidth
+                        defaultValue={name}
+                        slotProps={{ 
+                            htmlInput: { maxLength: 100, "aria-label": "Nazwa tablicy" },
+                            input: { sx: { fontSize: "1.25rem", fontWeight: 600 } }
+                        }}
+                        onKeyDown={blurOnEnter}
+                        onBlur={(e) => handleFieldBlur(e, name, setName)}
+                    />
+                ) : (
+                    scheme.name
+                )}
+            </DialogTitle>
             <DialogContent>
                 <Box
                     sx={{
@@ -408,7 +437,19 @@ export function TacticalBoardEditor({
                 </Box>
             </DialogContent>
             <DialogActions>
-                <Button onClick={onClose}>Zamknij</Button>
+                {canEdit && (
+                    <Typography variant="body2" color={status === "error" ? "error" : "text.secondary"} sx={{ mr: "auto", ml: 1 }}>
+                        {SAVE_STATUS_LABELS[status]}
+                    </Typography>
+                )}
+                {status === "error" && <Button onClick={retry}>Ponów</Button>}
+                <Button
+                    color={status === "error" ? "error" : "primary"}
+                    onClick={status === "error" ? onClose : handleClose}
+                    disabled={status === "saving"}
+                >
+                    {status === "error" ? "Zamknij bez zapisu" : "Zamknij"}
+                </Button>
             </DialogActions>
         </Dialog>
     );
