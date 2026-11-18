@@ -33,6 +33,8 @@ import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import SwapVertIcon from "@mui/icons-material/SwapVert";
 import AdjustIcon from "@mui/icons-material/Adjust";
 import { Jersey } from "../components/Jersey";
+import { Pitch } from "../components/Pitch";
+import { MatchTacticsSection } from "../components/tactics/MatchTacticsSection";
 import type { Kit } from "../types/kit";
 import type { Match } from "../types/match";
 import type { Player } from "../types/player";
@@ -40,6 +42,7 @@ import type { MatchAppearance } from "../types/matchAppearance";
 import type { MatchEvent } from "../types/matchEvent";
 import type { DropTarget } from "../types/lineupDrag";
 import type { PickerOption } from "../types/pickerOption";
+import type { BoardLineupSlot } from "../types/tacticalBoard";
 import { EVENT_TYPE_LABELS, POSITION_GROUPS } from "../constants/labels";
 import { FORMATIONS, FORMATION_LABELS, type FormationSlot } from "../constants/formations";
 import { CATEGORY_COLORS, CATEGORY_LABELS, categoryOfMatch } from "../constants/competitions";
@@ -238,6 +241,10 @@ export function MatchDetailPageView({
 
     const competitionName = match.matchType === "League" ? teamLeague : match.competition;
     const pitchSlots = buildPitchSlots(formation);
+    const boardLineup: BoardLineupSlot[] = pitchSlots.map((slot) => {
+        const player = players.find((p) => p.id === slot.appearance?.playerId);
+        return { label: player?.jerseyNumber?.toString() ?? slot.pos, x: slot.x / 100, y: slot.y / 100 };
+    });
     const benchAppearances = appearances.filter((a) => !a.isStarting);
     const benchTiles = Array.from({ length: BENCH_SIZE }, (_, i) => benchAppearances[i] ?? null);
     const category = categoryOfMatch(match.matchType, match.competition);
@@ -410,9 +417,11 @@ export function MatchDetailPageView({
                     </Typography>
                 </Box>
                 <Box sx={{ flexGrow: 1 }} />
-                <Typography variant="h4">
-                    {match.scoreFor ?? "-"} : {match.scoreAgainst ?? "-"}
-                </Typography>
+                {match.status === "Played" && (
+                    <Typography variant="h4">
+                        {match.scoreFor ?? "-"} : {match.scoreAgainst ?? "-"}
+                    </Typography>
+                )}
             </Paper>
 
             <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
@@ -433,54 +442,42 @@ export function MatchDetailPageView({
 
             {rosterError && <Alert severity="error" sx={{ mb: 2 }}>{rosterError}</Alert>}
 
-            <Box
-                sx={{
-                    position: "relative",
-                    width: "100%",
-                    aspectRatio: "7 / 5",
-                    borderRadius: 2,
-                    border: "0.5px solid rgba(255,255,255,0.2)",
-                    overflow: "hidden",
-                    background: "repeating-linear-gradient(0deg, rgba(99,153,34,0.18) 0 10%, rgba(99,153,34,0.08) 10% 20%), #3b6d11",
-                    mb: 2,
-                }}
-            >
-                <Box sx={{ position: "absolute", top: "50%", left: 0, right: 0, height: "1px", bgcolor: "rgba(255,255,255,0.5)" }} />
-                <Box sx={{ position: "absolute", left: "50%", top: "50%", width: "15%", aspectRatio: "1 / 1", border: "1px solid rgba(255,255,255,0.5)", borderRadius: "50%", transform: "translate(-50%,-50%)" }} />
-                <Box sx={{ position: "absolute", inset: "3%", border: "1px solid rgba(255,255,255,0.4)", borderRadius: 1 }} />
-                {pitchSlots.map((slot, i) => {
-                    const player = slot.appearance ? playerFor(slot.appearance) : undefined;
-                    return (
-                        <Box
-                            key={i}
-                            onClick={() => onOpenPitchPicker(slot.pos, slot.slotKey, slot.appearance)}
-                            {...dragProps(slot.appearance)}
-                            {...dropProps(slot.slotKey, { kind: "pitch", slotKey: slot.slotKey })}
-                            sx={{
-                                position: "absolute",
-                                left: `${slot.x}%`,
-                                top: `${slot.y}%`,
-                                transform: "translate(-50%, -50%)",
-                                cursor: "pointer",
-                                display: "flex",
-                                flexDirection: "column",
-                                alignItems: "center",
-                                width: 92,
-                                opacity: slot.appearance && dragId === slot.appearance.id ? 0.4 : 1,
-                                outline: overKey === slot.slotKey ? "2px dashed #fff" : "none",
-                                borderRadius: 1,
-                            }}
-                        >
-                            <Jersey number={player?.jerseyNumber ?? null} muted={!player} kit={kitFor(player)} />
-                            <Typography
-                                variant="caption"
-                                sx={{ color: "#fff", mt: 0.5, textAlign: "center", maxWidth: 92, fontSize: 14, lineHeight: 1.15,  }}
+            <Box sx={{ mb: 2 }}>
+                <Pitch>
+                    {pitchSlots.map((slot, i) => {
+                        const player = slot.appearance ? playerFor(slot.appearance) : undefined;
+                        return (
+                            <Box
+                                key={i}
+                                onClick={() => onOpenPitchPicker(slot.pos, slot.slotKey, slot.appearance)}
+                                {...dragProps(slot.appearance)}
+                                {...dropProps(slot.slotKey, { kind: "pitch", slotKey: slot.slotKey })}
+                                sx={{
+                                    position: "absolute",
+                                    left: `${slot.x}%`,
+                                    top: `${slot.y}%`,
+                                    transform: "translate(-50%, -50%)",
+                                    cursor: "pointer",
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    alignItems: "center",
+                                    width: 92,
+                                    opacity: slot.appearance && dragId === slot.appearance.id ? 0.4 : 1,
+                                    outline: overKey === slot.slotKey ? "2px dashed #fff" : "none",
+                                    borderRadius: 1,
+                                }}
                             >
-                                {player ? player.lastName : slot.pos}
-                            </Typography>
-                        </Box>
-                    );
-                })}
+                                <Jersey number={player?.jerseyNumber ?? null} muted={!player} kit={kitFor(player)} />
+                                <Typography
+                                    variant="caption"
+                                    sx={{ color: "#fff", mt: 0.5, textAlign: "center", maxWidth: 92, fontSize: 14, lineHeight: 1.15,  }}
+                                >
+                                    {player ? player.lastName : slot.pos}
+                                </Typography>
+                            </Box>
+                        );
+                    })}
+                </Pitch>
             </Box>
 
             <Typography variant="subtitle2" sx={{ mb: 1 }}>Ławka rezerwowych</Typography>
@@ -600,41 +597,47 @@ export function MatchDetailPageView({
                 </DialogActions>
             </Dialog>
 
-            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2, mt: 4 }}>
-                <Typography variant="h6">Zdarzenia meczowe</Typography>
-                <Button variant="contained" onClick={onOpenEvent}>
-                    Dodaj zdarzenie
-                </Button>
-            </Box>
+            {match.status === "Planned" && <MatchTacticsSection matchId={match.id} lineup={boardLineup} />}
 
-            {eventError && <Alert severity="error" sx={{ mb: 2 }}>{eventError}</Alert>}
+            {match.status === "Played" && (
+                <>
+                    <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2, mt: 4 }}>
+                        <Typography variant="h6">Zdarzenia meczowe</Typography>
+                        <Button variant="contained" onClick={onOpenEvent}>
+                            Dodaj zdarzenie
+                        </Button>
+                    </Box>
 
-                        <Paper sx={{ p: 2 }}>
-                {firstHalf.length > 0 && (
-                    <>
-                        <Typography variant="overline" color="text.secondary">1. połowa</Typography>
-                        {firstHalf.map((de) => renderDisplayEvent(de, sortedEvents))}
-                    </>
-                )}
-                {secondHalf.length > 0 && (
-                    <>
-                        <Divider sx={{ my: 1 }} />
-                        <Typography variant="overline" color="text.secondary">2. połowa</Typography>
-                        {secondHalf.map((de) => renderDisplayEvent(de, sortedEvents))}
-                    </>
-                )}
-                {extraTime.length > 0 && (
-                    <>
-                        <Divider sx={{ my: 1 }} />
-                        <Typography variant="overline" color="text.secondary">Dogrywka</Typography>
-                        {extraTime.map((de) => renderDisplayEvent(de, sortedEvents))}
-                    </>
-                )}
-                {noMinute.map((de) => renderDisplayEvent(de, sortedEvents))}
-                {displayEvents.length === 0 && (
-                    <Typography variant="body2" color="text.secondary">Brak zdarzeń.</Typography>
-                )}
-            </Paper>
+                    {eventError && <Alert severity="error" sx={{ mb: 2 }}>{eventError}</Alert>}
+
+                    <Paper sx={{ p: 2 }}>
+                        {firstHalf.length > 0 && (
+                            <>
+                                <Typography variant="overline" color="text.secondary">1. połowa</Typography>
+                                {firstHalf.map((de) => renderDisplayEvent(de, sortedEvents))}
+                            </>
+                        )}
+                        {secondHalf.length > 0 && (
+                            <>
+                                <Divider sx={{ my: 1 }} />
+                                <Typography variant="overline" color="text.secondary">2. połowa</Typography>
+                                {secondHalf.map((de) => renderDisplayEvent(de, sortedEvents))}
+                            </>
+                        )}
+                        {extraTime.length > 0 && (
+                            <>
+                                <Divider sx={{ my: 1 }} />
+                                <Typography variant="overline" color="text.secondary">Dogrywka</Typography>
+                                {extraTime.map((de) => renderDisplayEvent(de, sortedEvents))}
+                            </>
+                        )}
+                        {noMinute.map((de) => renderDisplayEvent(de, sortedEvents))}
+                        {displayEvents.length === 0 && (
+                            <Typography variant="body2" color="text.secondary">Brak zdarzeń.</Typography>
+                        )}
+                    </Paper>
+                </>
+            )}
 
             <Dialog open={eventOpen} onClose={onCloseEvent} fullWidth maxWidth="xs">
                 <Box component="form" onSubmit={onAddEvent}>
