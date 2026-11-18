@@ -1,9 +1,17 @@
 import type { BoardObject, BoardPoint, BoardSide } from "./tacticalBoard";
 
+export type PointTool = "ownPlayer" | "opponentPlayer" | "text";
+export type DrawTool = "run" | "pass" | "zone";
+export type Tool = PointTool | DrawTool | "select";
+
 const POINT_MARGIN_X = 0.065;
 const POINT_MARGIN_Y = 0.045;
+const MIN_ARROW_LENGTH = 0.03;
+const MIN_ZONE_SIZE = 0.02;
 
-export type Tool = "select" | "ownPlayer" | "opponentPlayer" | "text";
+export function isDrawTool(tool: Tool): tool is DrawTool {
+    return tool === "run" || tool === "pass" || tool === "zone";
+}
 
 function round(value: number) {
     return Math.round(value * 10000) / 10000;
@@ -80,7 +88,7 @@ function nextLabel(objects: BoardObject[], side: BoardSide) {
     return String(n);
 }
 
-export function createObject(tool: Exclude<Tool, "select">, point: BoardPoint, objects: BoardObject[]): BoardObject {
+export function createObject(tool: PointTool, point: BoardPoint, objects: BoardObject[]): BoardObject {
     const p = keepInside(point);
 
     if (tool === "text") {
@@ -101,4 +109,30 @@ export function createObject(tool: Exclude<Tool, "select">, point: BoardPoint, o
         y: p.y,
         label: nextLabel(objects, side)
     };
+}
+
+export function createShape(tool: DrawTool, id: string, from: BoardPoint, to: BoardPoint): BoardObject {
+    if (tool === "zone") {
+        return {
+            id,
+            type: "zone",
+            x: Math.min(from.x, to.x),
+            y: Math.min(from.y, to.y),
+            width: round(Math.abs(to.x - from.x)),
+            height: round(Math.abs(to.y - from.y)),
+            label: "Strefa"
+        };
+    }
+    return { id, type: "arrow", side: "own", style: tool, from, to };
+}
+
+export function isTooSmall(object: BoardObject) {
+    switch (object.type) {
+        case "zone":
+            return object.width < MIN_ZONE_SIZE || object.height < MIN_ZONE_SIZE;
+        case "arrow":
+            return Math.hypot(object.to.x - object.from.x, object.to.y - object.from.y) < MIN_ARROW_LENGTH;
+        default:
+            return false;
+    }
 }

@@ -1,4 +1,4 @@
-import type { BoardObject, BoardSide } from "../types/tacticalBoard";
+import type { BoardArrow, BoardObject, BoardSide } from "../types/tacticalBoard";
 
 export const SIDE_COLORS: Record<BoardSide, { fill: string; arrow: string }> = {
     own: { fill: "#7c3aed", arrow: "#ddd6fe" },
@@ -8,6 +8,11 @@ export const SIDE_COLORS: Record<BoardSide, { fill: string; arrow: string }> = {
 export const SIDE_LABELS: Record<BoardSide, string> = {
     own: "Nasz",
     opponent: "Rywal"
+};
+
+export const ARROW_STYLE_LABELS: Record<BoardArrow["style"], string> = {
+    run: "Bieg",
+    pass: "Podanie",
 };
 
 export const OBJECT_LABELS: Record<BoardObject["type"], string> = {

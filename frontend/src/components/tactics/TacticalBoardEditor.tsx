@@ -19,16 +19,30 @@ import NearMeIcon from "@mui/icons-material/NearMe";
 import RedoIcon from "@mui/icons-material/Redo";
 import TextFieldsIcon from "@mui/icons-material/TextFields";
 import UndoIcon from "@mui/icons-material/Undo";
+import CropSquareIcon from "@mui/icons-material/CropSquare";
+import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
+import TrendingFlatIcon from "@mui/icons-material/TrendingFlat";
 import { TacticalBoard } from "./TacticalBoard";
-import { createObject, moveObject, toBoardPoint, type Tool } from "../../types/boardEditing";
+import { 
+    createObject,
+    createShape,
+    isDrawTool,
+    isTooSmall, 
+    moveObject,
+    newId,
+    toBoardPoint,
+    type DrawTool, 
+    type Tool 
+} from "../../types/boardEditing";
 import { useHistory } from "../../hooks/useHistory";
-import { OBJECT_LABELS, SIDE_COLORS, SIDE_LABELS } from "../../constants/tacticalBoard";
+import { OBJECT_LABELS, SIDE_COLORS, SIDE_LABELS, ARROW_STYLE_LABELS } from "../../constants/tacticalBoard";
 import { 
     parseBoardData, 
     type TacticalBoardData,
     type BoardObject,
     type BoardSide,
-    type BoardPoint
+    type BoardPoint,
+    type BoardArrow
 } from "../../types/tacticalBoard";
 import type { TacticalScheme } from "../../types/tacticalScheme";
 
@@ -39,10 +53,33 @@ interface Drag {
     start: BoardPoint;
 }
 
+interface Draw {
+    id: string;
+    tool: DrawTool;
+    start: BoardPoint;
+}
+
 interface TacticalBoardEditorProps {
     scheme: TacticalScheme;
     canEdit: boolean;
     onClose: () => void;
+}
+
+function SideToggle({ value, onChange }: { value: BoardSide; onChange: (side: BoardSide) => void }) {
+    return (
+        <ToggleButtonGroup
+            exclusive
+            fullWidth
+            size="small"
+            value={value}
+            onChange={(_, side: BoardSide | null) => {
+                if (side) onChange(side);
+            }}
+        >
+            <ToggleButton value="own">{SIDE_LABELS.own}</ToggleButton>
+            <ToggleButton value="opponent">{SIDE_LABELS.opponent}</ToggleButton>
+        </ToggleButtonGroup>
+    );
 }
 
 function Dot({ color }: { color: string }) {
@@ -76,6 +113,7 @@ export function TacticalBoardEditor({
     const { present, commit, undo, redo, canUndo, canRedo } = useHistory<TacticalBoardData>(parseBoardData(scheme.data));
     const svgRef = useRef<SVGSVGElement>(null);
     const dragRef = useRef<Drag | null>(null);
+    const drawRef = useRef<Draw | null>(null);
     const [tool, setTool] = useState<Tool>("select");
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [draft, setDraft] = useState<TacticalBoardData | null>(null);
@@ -124,9 +162,8 @@ export function TacticalBoardEditor({
         const point = toBoardPoint(e, svg);
         
         const objectId = (e.target as Element).closest("[data-object-id]")?.getAttribute("data-object-id");
-        if (objectId) {
-            const object = present.objects.find((o) => o.id === objectId);
-            if (!object) return;
+        const object = present.objects.find((o) => o.id === objectId);
+        if (object && (tool === "select" || object.type !== "zone")) {
             setSelectedId(object.id);
             dragRef.current = { object, start: point };
             svg.setPointerCapture(e.pointerId);
@@ -138,28 +175,55 @@ export function TacticalBoardEditor({
             return;
         }
 
+        if (isDrawTool(tool)) {
+            drawRef.current = { id: newId(), tool, start: point };
+            setSelectedId(null);
+            svg.setPointerCapture(e.pointerId);
+            return;
+        }
+
         const created = createObject(tool, point, present.objects);
         commit({ ...present, objects: [...present.objects, created] });
         setSelectedId(created.id);
     }
 
     function handlePointerMove(e: React.PointerEvent<SVGSVGElement>) {
-        const drag = dragRef.current;
         const svg = svgRef.current;
-        if (!drag || !svg) return;
+        if (!svg) return;
         const point = toBoardPoint(e, svg);
+
+        const draw = drawRef.current;
+        if (draw) {
+            const shape = createShape(draw.tool, draw.id, draw.start, point);
+            setDraft({ ...present, objects: [...present.objects, shape] });
+            return;
+        }
+
+        const drag = dragRef.current;
+        if (!drag) return;
         const moved = moveObject(drag.object, point.x - drag.start.x, point.y - drag.start.y);
         setDraft({ ...present, objects: present.objects.map((o) => o.id === moved.id ? moved : o) });
     }
 
     function handlePointerUp(e: React.PointerEvent<SVGSVGElement>) {
-        const drag = dragRef.current;
         const svg = svgRef.current;
+        const drag = dragRef.current;
+        const draw = drawRef.current;
         dragRef.current = null;
+        drawRef.current = null;
         setDraft(null);
-        if (!drag || !svg) return;
-
+        if (!svg) return;
         const point = toBoardPoint(e, svg);
+
+        if (draw) {
+            const shape = createShape(draw.tool, draw.id, draw.start, point);
+            if (isTooSmall(shape)) return;
+            commit({ ...present, objects: [...present.objects, shape] });
+            setSelectedId(shape.id);
+            return;
+        }
+
+        if (!drag) return;
         const dx = point.x - drag.start.x;
         const dy = point.y - drag.start.y;
         if (Math.hypot(dx, dy) < MIN_DRAG_DISTANCE) return;
@@ -207,6 +271,18 @@ export function TacticalBoardEditor({
                                     <TextFieldsIcon fontSize="small" sx={{ mr: 1 }} />
                                     Tekst
                                 </ToggleButton>
+                                <ToggleButton value="run" sx={{ justifyContent: "flex-start" }}>
+                                    <TrendingFlatIcon fontSize="small" sx={{ mr: 1 }} />
+                                    Bieg
+                                </ToggleButton>
+                                <ToggleButton value="pass" sx={{ justifyContent: "flex-start" }}>
+                                    <MoreHorizIcon fontSize="small" sx={{ mr: 1 }} />
+                                    Podanie
+                                </ToggleButton>
+                                <ToggleButton value="zone" sx={{ justifyContent: "flex-start" }}>
+                                    <CropSquareIcon fontSize="small" sx={{ mr: 1 }} />
+                                    Strefa
+                                </ToggleButton>
                             </ToggleButtonGroup>
 
                             <Box sx={{ display: "flex", gap: 1 }}>
@@ -253,18 +329,7 @@ export function TacticalBoardEditor({
 
                                     {selected.type === "player" && (
                                         <>
-                                            <ToggleButtonGroup
-                                                exclusive
-                                                fullWidth
-                                                size="small"
-                                                value={selected.side}
-                                                onChange={(_, side: BoardSide | null) => {
-                                                    if (side) replaceObject({ ...selected, side });
-                                                }}
-                                            >
-                                                <ToggleButton value="own">{SIDE_LABELS.own}</ToggleButton>
-                                                <ToggleButton value="opponent">{SIDE_LABELS.opponent}</ToggleButton>
-                                            </ToggleButtonGroup>
+                                            <SideToggle value={selected.side} onChange={(side) => replaceObject({ ...selected, side })} />
                                             <TextField
                                                 key={`${selected.id}:${selected.label}`}
                                                 size="small"
@@ -293,6 +358,38 @@ export function TacticalBoardEditor({
                                                 handleFieldBlur(e, selected.text, (text) =>
                                                     replaceObject({ ...selected, text }),
                                                 )
+                                            }
+                                        />
+                                    )}
+
+                                    {selected.type === "arrow" && (
+                                        <>
+                                            <SideToggle value={selected.side} onChange={(side) => replaceObject({ ...selected, side })} />
+                                            <ToggleButtonGroup
+                                                exclusive
+                                                fullWidth
+                                                size="small"
+                                                value={selected.style}
+                                                onChange={(_, style: BoardArrow["style"] | null) => {
+                                                    if (style) replaceObject({ ...selected, style });
+                                                }}
+                                            >
+                                                <ToggleButton value="run">{ARROW_STYLE_LABELS.run}</ToggleButton>
+                                                <ToggleButton value="pass">{ARROW_STYLE_LABELS.pass}</ToggleButton>
+                                            </ToggleButtonGroup>
+                                        </>
+                                    )}
+
+                                    {selected.type === "zone" && (
+                                        <TextField
+                                            key={`${selected.id}:${selected.label}`}
+                                            size="small"
+                                            label="Nazwa"
+                                            defaultValue={selected.label}
+                                            slotProps={{ htmlInput: { maxLength: 30 } }}
+                                            onKeyDown={blurOnEnter}
+                                            onBlur={(e) =>
+                                                handleFieldBlur(e, selected.label, (label) => replaceObject({ ...selected, label }))
                                             }
                                         />
                                     )}
