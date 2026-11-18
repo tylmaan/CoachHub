@@ -72,8 +72,14 @@ using (var scope = app.Services.CreateScope())
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<Microsoft.AspNetCore.Identity.IdentityRole>>();
     await CoachHub.Api.Data.DbSeeder.SeedRolesAsync(roleManager);
 
+    var adminPassword = builder.Configuration["Seed:AdminPassword"];
+    if (string.IsNullOrEmpty(adminPassword))
+    {
+        app.Logger.LogWarning("Seed:AdminPassword is not set. The admin user was not seeded.");
+    }
+
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<CoachHub.Api.Models.ApplicationUser>>();
-    await CoachHub.Api.Data.DbSeeder.SeedAdminUserAsync(userManager);
+    await CoachHub.Api.Data.DbSeeder.SeedAdminUserAsync(userManager, adminPassword);
 }
 
 if (app.Environment.IsDevelopment())
