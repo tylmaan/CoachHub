@@ -22,6 +22,7 @@ import UndoIcon from "@mui/icons-material/Undo";
 import CropSquareIcon from "@mui/icons-material/CropSquare";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import TrendingFlatIcon from "@mui/icons-material/TrendingFlat";
+import GroupsIcon from "@mui/icons-material/Groups";
 import { TacticalBoard } from "./TacticalBoard";
 import { 
     createObject,
@@ -31,8 +32,9 @@ import {
     moveObject,
     newId,
     toBoardPoint,
+    lineupToPlayers,
     type DrawTool, 
-    type Tool 
+    type Tool,
 } from "../../types/boardEditing";
 import { useHistory } from "../../hooks/useHistory";
 import { useAutosave } from "../../hooks/useAutosave";
@@ -44,7 +46,8 @@ import {
     type BoardObject,
     type BoardSide,
     type BoardPoint,
-    type BoardArrow
+    type BoardArrow,
+    type BoardLineupSlot
 } from "../../types/tacticalBoard";
 import type { TacticalScheme } from "../../types/tacticalScheme";
 
@@ -64,6 +67,7 @@ interface Draw {
 interface TacticalBoardEditorProps {
     scheme: TacticalScheme;
     canEdit: boolean;
+    lineup: BoardLineupSlot[];
     onClose: () => void;
 }
 
@@ -110,6 +114,7 @@ function handleFieldBlur(
 export function TacticalBoardEditor({ 
     scheme,
     canEdit,
+    lineup,
     onClose
 }: TacticalBoardEditorProps) {
     const { present, commit, undo, redo, canUndo, canRedo } = useHistory<TacticalBoardData>(parseBoardData(scheme.data));
@@ -162,6 +167,12 @@ export function TacticalBoardEditor({
 
     async function handleClose() {
         if (await flush()) onClose();
+    }
+
+    function insertLineup() {
+        const others = present.objects.filter((o) => !(o.type === "player" && o.side === "own"));
+        commit({ ...present, objects: [...others, ...lineupToPlayers(lineup)] });
+        setSelectedId(null);
     }
 
     function replaceObject(next: BoardObject) {
@@ -330,6 +341,11 @@ export function TacticalBoardEditor({
                                     </span>
                                 </Tooltip>
                             </Box>
+                            <Tooltip title="Zastępuje naszych zawodników na tablicy planowanym składem">
+                                <Button variant="outlined" startIcon={<GroupsIcon />} onClick={insertLineup}>
+                                    Wstaw skład
+                                </Button>
+                            </Tooltip>
                         </Box>
                     )}
 

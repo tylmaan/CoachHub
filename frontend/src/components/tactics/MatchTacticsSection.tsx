@@ -20,12 +20,14 @@ import { TacticalBoardEditor } from './TacticalBoardEditor';
 import { createTacticalScheme, deleteTacticalScheme, getTacticalSchemes } from '../../api/tacticalSchemesApi';
 import { EMPTY_BOARD } from '../../types/tacticalBoard';
 import type { TacticalScheme } from '../../types/tacticalScheme';
+import type { BoardLineupSlot } from '../../types/tacticalBoard';
 
 interface MatchTacticsSectionProps {
     matchId: number;
+    lineup: BoardLineupSlot[];
 }
 
-export function MatchTacticsSection({ matchId }: MatchTacticsSectionProps) {
+export function MatchTacticsSection({ matchId, lineup }: MatchTacticsSectionProps) {
     const { roles } = useAuth();
     const canEdit = !!roles?.some((r) => r === "Coach" || r === "AssistantCoach");
     const canDelete = !!roles?.some((r) => r === "Coach");
@@ -150,6 +152,7 @@ export function MatchTacticsSection({ matchId }: MatchTacticsSectionProps) {
                     key={editing.id}
                     scheme={editing}
                     canEdit={canEdit}
+                    lineup={lineup}
                     onClose={closeEditor}
                 />
             )}

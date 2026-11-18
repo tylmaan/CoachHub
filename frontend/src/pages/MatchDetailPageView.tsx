@@ -42,6 +42,7 @@ import type { MatchAppearance } from "../types/matchAppearance";
 import type { MatchEvent } from "../types/matchEvent";
 import type { DropTarget } from "../types/lineupDrag";
 import type { PickerOption } from "../types/pickerOption";
+import type { BoardLineupSlot } from "../types/tacticalBoard";
 import { EVENT_TYPE_LABELS, POSITION_GROUPS } from "../constants/labels";
 import { FORMATIONS, FORMATION_LABELS, type FormationSlot } from "../constants/formations";
 import { CATEGORY_COLORS, CATEGORY_LABELS, categoryOfMatch } from "../constants/competitions";
@@ -240,6 +241,10 @@ export function MatchDetailPageView({
 
     const competitionName = match.matchType === "League" ? teamLeague : match.competition;
     const pitchSlots = buildPitchSlots(formation);
+    const boardLineup: BoardLineupSlot[] = pitchSlots.map((slot) => {
+        const player = players.find((p) => p.id === slot.appearance?.playerId);
+        return { label: player?.jerseyNumber?.toString() ?? slot.pos, x: slot.x / 100, y: slot.y / 100 };
+    });
     const benchAppearances = appearances.filter((a) => !a.isStarting);
     const benchTiles = Array.from({ length: BENCH_SIZE }, (_, i) => benchAppearances[i] ?? null);
     const category = categoryOfMatch(match.matchType, match.competition);
@@ -592,7 +597,7 @@ export function MatchDetailPageView({
                 </DialogActions>
             </Dialog>
 
-            {match.status === "Planned" && <MatchTacticsSection matchId={match.id} />}
+            {match.status === "Planned" && <MatchTacticsSection matchId={match.id} lineup={boardLineup} />}
 
             {match.status === "Played" && (
                 <>

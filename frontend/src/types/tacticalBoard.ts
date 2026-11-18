@@ -41,6 +41,12 @@ export interface BoardPoint {
     y: number;
 }
 
+export interface BoardLineupSlot {
+    label: string;
+    x: number;
+    y: number;
+}
+
 export type BoardObject = BoardPlayer | BoardArrow | BoardZone | BoardText;
 
 export interface TacticalBoardData {

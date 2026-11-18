@@ -1,4 +1,4 @@
-import type { BoardObject, BoardPoint, BoardSide } from "./tacticalBoard";
+import type { BoardLineupSlot, BoardObject, BoardPlayer, BoardPoint, BoardSide } from "./tacticalBoard";
 
 export type PointTool = "ownPlayer" | "opponentPlayer" | "text";
 export type DrawTool = "run" | "pass" | "zone";
@@ -135,4 +135,15 @@ export function isTooSmall(object: BoardObject) {
         default:
             return false;
     }
+}
+
+export function lineupToPlayers(lineup: BoardLineupSlot[]): BoardPlayer[] {
+    return lineup.map((slot) => ({
+        id: newId(),
+        type: "player",
+        side: "own",
+        x: slot.x,
+        y: slot.y,
+        label: slot.label
+    }));
 }
