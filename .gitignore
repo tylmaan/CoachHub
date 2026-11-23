@@ -497,3 +497,5 @@ to_do.txt
 
 backend/CoachHub.Api/wwwroot/uploads/*
 !backend/CoachHub.Api/wwwroot/uploads/.gitkeep
+
+cloudflared.exe
