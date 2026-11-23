@@ -95,6 +95,14 @@ public class ReportService : IReportService
             .FirstOrDefaultAsync();
     }
 
+    public async Task<bool> IsInTeamAsync(int reportId, int teamId)
+    {
+        return await _context.Reports
+            .AsNoTracking()
+            .AnyAsync(r => r.Id == reportId 
+                && (r.TeamId == teamId || (r.Player != null && r.Player.TeamId == teamId)));
+    }
+
     public async Task<ReportPage> GetPageAsync(int teamId, string userId, ReportQuery query)
     {
         var all = _context.Reports
