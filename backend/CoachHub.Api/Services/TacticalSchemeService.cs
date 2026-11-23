@@ -19,7 +19,7 @@ public class TacticalSchemeService : ITacticalSchemeService
         Id = ts.Id,
         Name = ts.Name,
         Data = ts.Data,
-        MatchId = ts.MatchId,
+        MatchId = ts.MatchId!.Value,
         CreatedAt = ts.CreatedAt,
         UpdatedAt = ts.UpdatedAt
     };

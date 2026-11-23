@@ -19,4 +19,6 @@ public class Report
 
     public required string CreatedByUserId { get; set; }
     public ApplicationUser? CreatedByUser { get; set; }
+
+    public ICollection<TacticalScheme> TacticalSchemes { get; set; } = new List<TacticalScheme>();
 }
