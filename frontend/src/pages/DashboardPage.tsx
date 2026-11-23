@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { getTeams } from '../api/teamsApi';
+import { getMatches } from '../api/matchesApi';
 import type { TeamSummary } from '../types/team';
+import type { Match } from '../types/match';
+import { nextMatches } from "../types/matchSchedule";
 import ShieldOutlinedIcon from '@mui/icons-material/ShieldOutlined';
 import GroupsOutlinedIcon from '@mui/icons-material/GroupsOutlined';
 import SportsSoccerOutlinedIcon from '@mui/icons-material/SportsSoccerOutlined';
@@ -15,13 +18,19 @@ export function DashboardPage() {
     const { roles } = useAuth();
     const isAdmin = roles?.includes('Admin');
     const [team, setTeam] = useState<TeamSummary | null>(null);
+    const [matches, setMatches] = useState<Match[]>([]);
 
     useEffect(() => {
         if (isAdmin) return;
         getTeams()
             .then((teams) => setTeam(teams[0] ?? null))
             .catch(() => {});
+        getMatches()
+            .then(setMatches)
+            .catch(() => {});
     }, [isAdmin]);
+
+    const upcoming = nextMatches(matches, 3);
 
     const tiles: Tile[] = isAdmin 
         ?[
@@ -35,5 +44,9 @@ export function DashboardPage() {
             { label: 'Raporty', path: '/reports', icon: <AssignmentOutlinedIcon sx={{ fontSize: 32 }} /> }
         ];
 
-    return <DashboardPageView tiles={tiles} team={team} />;
+    return <DashboardPageView 
+        tiles={tiles} 
+        team={team} 
+        upcoming={upcoming} 
+    />;
 } 
