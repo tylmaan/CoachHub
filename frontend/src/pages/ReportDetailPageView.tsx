@@ -1,5 +1,6 @@
 import { Link as RouterLink } from "react-router-dom";
 import { Alert, Box, Button, Chip, Paper, Typography } from "@mui/material";
+import { TacticalBoardSection } from "../components/tactics/TacticalBoardSection";
 import { ReportAvatar } from "../components/reports/ReportAvatar";
 import type { Report } from "../types/report";
 import { REPORT_KIND_LABELS, REPORT_PRIORITY_LABELS, reportKind, reportSubject } from "../types/report";
@@ -60,6 +61,14 @@ export function ReportDetailPageView({
             <Typography sx={{ whiteSpace: "pre-line", lineHeight: 1.7, mb: 3 }}>
                 {report.content}
             </Typography>
+
+            <Box sx={{ mb: 3 }}>
+                <TacticalBoardSection
+                    owner={{ kind: "report", id: report.id }}
+                    canEdit={report.canEdit}
+                    canDelete={report.canEdit}
+                />
+            </Box>
 
             {(report.canEdit || canDelete) && (
                 <Box sx={{ display: "flex", gap: 1 }}>
