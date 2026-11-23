@@ -17,6 +17,7 @@ import {
     ToggleButtonGroup,
 } from "@mui/material";
 import type { Match } from "../types/match";
+import { countdownLabel, daysUntil, matchTypeLabel } from "../types/matchSchedule";
 import { MATCH_TYPE_LABELS } from "../constants/labels";
 import { CATEGORY_COLORS, categoryOfMatch } from "../constants/competitions";
 import { BACKEND_ORIGIN } from "../api/axiosInstance";
@@ -186,13 +187,6 @@ export function MatchesPageView({
     onCancelFinish,
     onConfirmFinish,
 }: MatchesPageViewProps) {
-    function typeChipLabel(match: Match): string {
-        if (match.matchType === "League") return teamLeague ?? MATCH_TYPE_LABELS.League;
-        if (match.matchType === "Cup") return match.competition ?? MATCH_TYPE_LABELS.Cup;
-        if (match.matchType) return MATCH_TYPE_LABELS[match.matchType] ?? match.matchType;
-        return "-";
-    }
-
     function renderCompetitionOptions() {
         return competitionGroups.flatMap((group) => [
             <ListSubheader 
@@ -209,16 +203,6 @@ export function MatchesPageView({
                 <MenuItem key={name} value={name}>{name}</MenuItem>
             )),
         ]);
-    }
-
-    function planningLabel(date: string): string {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const days = Math.round((new Date(date).getTime() - today.getTime()) / 864e5);
-        if (days < 0) return "po terminie";
-        if (days === 0) return "dzisiaj";
-        if (days === 1) return "jutro";
-        return `za ${days} dni`;
     }
 
     function resultStyle(match: Match) {
@@ -259,7 +243,7 @@ export function MatchesPageView({
                     </Typography>
                 </Box>
                 <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
-                    {match.matchType && <Chip size="small" label={typeChipLabel(match)} sx={{ bgcolor: colors.bg, color: colors.fg }} />}
+                    {match.matchType && <Chip size="small" label={matchTypeLabel(match, teamLeague)} sx={{ bgcolor: colors.bg, color: colors.fg }} />}
                     {match.round && <Chip size="small" label={match.round} variant="outlined" />}
                 </Box>
                 {match.status === "Played" ? (
@@ -268,7 +252,7 @@ export function MatchesPageView({
                     </Typography>
                 ) : (
                     <Typography variant="body2" color="text.secondary" sx={{ minWidth: 80, textAlign: "center" }}>
-                        {planningLabel(match.date)}
+                        {countdownLabel(daysUntil(match.date))}
                     </Typography>
                 )}
                 <Box sx={{ display: "flex", gap: 1, flexShrink: 0 }}>
