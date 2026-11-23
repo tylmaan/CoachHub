@@ -11,6 +11,7 @@ public interface IReportService
     Task<IEnumerable<Report>> GetReportsByTeamIdAsync(int teamId);
     Task<IEnumerable<Report>> GetReportsByUserIdAsync(string userId);
     Task<ReportSummary?> GetSummaryByIdAsync(int id, string userId);
+    Task<bool> IsInTeamAsync(int reportId, int teamId);
     Task<ReportPage> GetPageAsync(int teamId, string userId, ReportQuery query);
     Task MarkAsReadAsync(int reportId, string userId);
     Task<bool> UpdateReportAsync(int id, Report report);

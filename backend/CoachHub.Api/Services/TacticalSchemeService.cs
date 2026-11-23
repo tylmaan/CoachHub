@@ -20,6 +20,7 @@ public class TacticalSchemeService : ITacticalSchemeService
         Name = ts.Name,
         Data = ts.Data,
         MatchId = ts.MatchId,
+        ReportId = ts.ReportId,
         CreatedAt = ts.CreatedAt,
         UpdatedAt = ts.UpdatedAt
     };
@@ -33,6 +34,16 @@ public class TacticalSchemeService : ITacticalSchemeService
             .ToListAsync();
         return schemes.Select(ToSummary).ToList();
     }
+
+    public async Task<List<TacticalSchemeSummary>> GetByReportIdAsync(int reportId)
+    {
+        var schemes = await _context.TacticalSchemes
+            .AsNoTracking()
+            .Where(ts => ts.ReportId == reportId)
+            .OrderBy(ts => ts.CreatedAt)
+            .ToListAsync();
+        return schemes.Select(ToSummary).ToList();
+    }    
 
     public async Task<TacticalSchemeSummary?> GetByIdAsync(int id)
     {

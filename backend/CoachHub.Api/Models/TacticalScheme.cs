@@ -8,8 +8,11 @@ public class TacticalScheme
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 
-    public int MatchId { get; set; }
+    public int? MatchId { get; set; }
     public Match? Match { get; set; }
+
+    public int? ReportId { get; set; }
+    public Report? Report { get; set; }
 
     public required string CreatedByUserId { get; set; }
     public ApplicationUser? CreatedByUser { get; set; }

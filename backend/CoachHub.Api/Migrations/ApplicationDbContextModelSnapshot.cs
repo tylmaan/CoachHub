@@ -346,12 +346,15 @@ namespace CoachHub.Api.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<int>("MatchId")
+                    b.Property<int?>("MatchId")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT");
+
+                    b.Property<int?>("ReportId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("TEXT");
@@ -361,6 +364,8 @@ namespace CoachHub.Api.Migrations
                     b.HasIndex("CreatedByUserId");
 
                     b.HasIndex("MatchId");
+
+                    b.HasIndex("ReportId");
 
                     b.ToTable("TacticalSchemes");
                 });
@@ -694,12 +699,18 @@ namespace CoachHub.Api.Migrations
                     b.HasOne("CoachHub.Api.Models.Match", "Match")
                         .WithMany("TacticalSchemes")
                         .HasForeignKey("MatchId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("CoachHub.Api.Models.Report", "Report")
+                        .WithMany("TacticalSchemes")
+                        .HasForeignKey("ReportId")
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.Navigation("CreatedByUser");
 
                     b.Navigation("Match");
+
+                    b.Navigation("Report");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -771,6 +782,11 @@ namespace CoachHub.Api.Migrations
                     b.Navigation("MatchEvents");
 
                     b.Navigation("Reports");
+                });
+
+            modelBuilder.Entity("CoachHub.Api.Models.Report", b =>
+                {
+                    b.Navigation("TacticalSchemes");
                 });
 
             modelBuilder.Entity("CoachHub.Api.Models.Team", b =>

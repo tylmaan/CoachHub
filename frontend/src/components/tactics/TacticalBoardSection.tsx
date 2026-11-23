@@ -13,24 +13,27 @@ import {
     Typography,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import { useAuth } from '../../context/AuthContext';
 import { ConfirmDeleteDialog } from '../ConfirmDeleteDialog';
 import { TacticalBoardTile } from './TacticalBoardTile';
 import { TacticalBoardEditor } from './TacticalBoardEditor';
-import { createTacticalScheme, deleteTacticalScheme, getTacticalSchemes } from '../../api/tacticalSchemesApi';
+import { createSchemeForOwner, deleteTacticalScheme, getSchemesByOwner } from '../../api/tacticalSchemesApi';
 import { EMPTY_BOARD } from '../../types/tacticalBoard';
-import type { TacticalScheme } from '../../types/tacticalScheme';
+import type { TacticalScheme, TacticalBoardOwner } from '../../types/tacticalScheme';
 import type { BoardLineupSlot } from '../../types/tacticalBoard';
 
-interface MatchTacticsSectionProps {
-    matchId: number;
-    lineup: BoardLineupSlot[];
+interface TacticalBoardSectionProps {
+    owner: TacticalBoardOwner;
+    canEdit: boolean;
+    canDelete: boolean;
+    lineup?: BoardLineupSlot[];
 }
 
-export function MatchTacticsSection({ matchId, lineup }: MatchTacticsSectionProps) {
-    const { roles } = useAuth();
-    const canEdit = !!roles?.some((r) => r === "Coach" || r === "AssistantCoach");
-    const canDelete = !!roles?.some((r) => r === "Coach");
+export function TacticalBoardSection({ 
+    owner, 
+    canEdit,
+    canDelete,
+    lineup 
+}: TacticalBoardSectionProps) {
     const [editing, setEditing] = useState<TacticalScheme | null>(null);
     const [schemes, setSchemes] = useState<TacticalScheme[]>([]);
     const [error, setError] = useState<string | null>(null);
@@ -40,10 +43,10 @@ export function MatchTacticsSection({ matchId, lineup }: MatchTacticsSectionProp
     const [deleteTarget, setDeleteTarget] = useState<TacticalScheme | null>(null);
 
     useEffect(() => {
-        getTacticalSchemes(matchId)
+        getSchemesByOwner(owner.kind, owner.id)
             .then(setSchemes)
             .catch(() => setError("Nie udało się pobrać tablic taktycznych."));
-    }, [matchId]);
+    }, [owner.kind, owner.id]);
 
     function closeCreate() {
         setCreateOpen(false);
@@ -53,7 +56,7 @@ export function MatchTacticsSection({ matchId, lineup }: MatchTacticsSectionProp
 
     function closeEditor() {
         setEditing(null);
-        getTacticalSchemes(matchId)
+        getSchemesByOwner(owner.kind, owner.id)
             .then(setSchemes)
             .catch(() => setError("Nie udało się odświeżyć tablic."));
     }
@@ -63,7 +66,7 @@ export function MatchTacticsSection({ matchId, lineup }: MatchTacticsSectionProp
         const name = newName.trim();
         if (!name) return;
         try {
-            const created = await createTacticalScheme(matchId, { name, data: JSON.stringify(EMPTY_BOARD) });
+            const created = await createSchemeForOwner(owner.kind, owner.id, { name, data: JSON.stringify(EMPTY_BOARD) });
             setSchemes((prev) => [...prev, created]);
             closeCreate();
         } catch {

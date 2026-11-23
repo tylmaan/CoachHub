@@ -34,7 +34,7 @@ import SwapVertIcon from "@mui/icons-material/SwapVert";
 import AdjustIcon from "@mui/icons-material/Adjust";
 import { Jersey } from "../components/Jersey";
 import { Pitch } from "../components/Pitch";
-import { MatchTacticsSection } from "../components/tactics/MatchTacticsSection";
+import { TacticalBoardSection } from "../components/tactics/TacticalBoardSection";
 import type { Kit } from "../types/kit";
 import type { Match } from "../types/match";
 import type { Player } from "../types/player";
@@ -108,6 +108,8 @@ interface MatchDetailPageViewProps {
     addedTimeEnabled: boolean;
     canDrag: boolean;
     dragId: number | null;
+    canEditBoards: boolean;
+    canDeleteBoards: boolean;
     overKey: string | null;
     onDragStart: (appearanceId: number) => void;
     onDragEnd: () => void;
@@ -189,6 +191,8 @@ export function MatchDetailPageView({
     addedTimeEnabled,
     canDrag,
     dragId,
+    canEditBoards,
+    canDeleteBoards,
     overKey,
     onDragStart,
     onDragEnd,
@@ -597,7 +601,12 @@ export function MatchDetailPageView({
                 </DialogActions>
             </Dialog>
 
-            {match.status === "Planned" && <MatchTacticsSection matchId={match.id} lineup={boardLineup} />}
+            {match.status === "Planned" && <TacticalBoardSection 
+                owner={{ kind: "match", id: match.id }}
+                canEdit={canEditBoards}
+                canDelete={canDeleteBoards}
+                lineup={boardLineup}
+            />}
 
             {match.status === "Played" && (
                 <>

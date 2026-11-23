@@ -67,7 +67,7 @@ interface Draw {
 interface TacticalBoardEditorProps {
     scheme: TacticalScheme;
     canEdit: boolean;
-    lineup: BoardLineupSlot[];
+    lineup?: BoardLineupSlot[];
     onClose: () => void;
 }
 
@@ -170,6 +170,7 @@ export function TacticalBoardEditor({
     }
 
     function insertLineup() {
+        if (!lineup) return;
         const others = present.objects.filter((o) => !(o.type === "player" && o.side === "own"));
         commit({ ...present, objects: [...others, ...lineupToPlayers(lineup)] });
         setSelectedId(null);
@@ -341,11 +342,13 @@ export function TacticalBoardEditor({
                                     </span>
                                 </Tooltip>
                             </Box>
-                            <Tooltip title="Zastępuje naszych zawodników na tablicy planowanym składem">
-                                <Button variant="outlined" startIcon={<GroupsIcon />} onClick={insertLineup}>
-                                    Wstaw skład
-                                </Button>
-                            </Tooltip>
+                            {lineup && (
+                                <Tooltip title="Zastępuje naszych zawodników na tablicy planowanym składem">
+                                    <Button variant="outlined" startIcon={<GroupsIcon />} onClick={insertLineup}>
+                                        Wstaw skład
+                                    </Button>
+                                </Tooltip>
+                            )}
                         </Box>
                     )}
 
