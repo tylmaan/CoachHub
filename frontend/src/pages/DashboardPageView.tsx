@@ -2,7 +2,9 @@ import { Box, Typography, Paper, Avatar } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import { Jersey } from "../components/Jersey";
 import type { TeamSummary } from '../types/team';
+import type { Match } from '../types/match';
 import { BACKEND_ORIGIN } from '../api/axiosInstance';
+import { NextMatchesStrip } from '../components/dashboard/NextMatchesStrip';
 
 export interface Tile {
     label: string;
@@ -13,9 +15,10 @@ export interface Tile {
 interface DashboardPageViewProps {
     tiles: Tile[];
     team: TeamSummary | null;
+    upcoming: Match[];
 }
 
-export function DashboardPageView({ tiles, team }: DashboardPageViewProps) {
+export function DashboardPageView({ tiles, team, upcoming }: DashboardPageViewProps) {
     return (
         <Box>
             {team && (
@@ -42,6 +45,8 @@ export function DashboardPageView({ tiles, team }: DashboardPageViewProps) {
                     </Box>
                 </Paper>
             )}
+
+            {team && <NextMatchesStrip matches={upcoming} teamLeague={team.league} />}
 
             <Box
                 sx={{

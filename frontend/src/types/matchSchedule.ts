@@ -28,3 +28,13 @@ export function matchTypeLabel(match: Match, teamLeague: string | null): string 
     if (match.matchType) return MATCH_TYPE_LABELS[match.matchType] ?? match.matchType;
     return "-";
 }
+
+export function parseMatchDate(date: string): Date {
+    const [year, month, day] = date.split("-").map(Number);
+    return new Date(year, month - 1, day);
+}
+
+export function roundLabel(match: Match): string | null {
+    if (!match.round) return null;
+    return match.matchType === "League" ? `kolejka ${match.round}` : match.round;
+}
