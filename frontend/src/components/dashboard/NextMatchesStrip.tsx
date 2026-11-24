@@ -35,15 +35,25 @@ export function NextMatchesStrip({
     const fullDate = now.toLocaleDateString('pl-PL', { day: 'numeric', month: 'long', year: 'numeric' });
 
     return (
-        <Box sx={{ display: "flex", gap: 2, alignItems: "stretch", mb: 3 }}>
-            <Box sx={{ width: 150, flexShrink: 0, display: "flex", flexDirection: "column", justifyContent: "center" }}>
+        <Box sx={{ display: "flex", flexDirection: { xs: "column", sm: "row" }, gap: 2, alignItems: "stretch", mb: 3 }}>
+            <Box sx={{ width: { xs: "100%", sm: 150 }, flexShrink: 0, display: "flex", flexDirection: "column", justifyContent: "center" }}>
                 <Typography variant="caption" color="text.secondary">Dziś</Typography>
                 <Typography variant="h6">{weekday}</Typography>
                 <Typography variant="body2" color="text.secondary">{fullDate}</Typography>
             </Box>
 
             {matches.length > 0 && (
-                <Box sx={{ flex: 1, display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 2 }}>
+                <Box 
+                    sx={{ 
+                        flex: { xs: "none", sm: 1 },
+                        minWidth: 0, 
+                        display: { xs: "flex", sm: "grid" }, 
+                        gridTemplateColumns: "repeat(3, minmax(0, 1fr))", 
+                        gap: 2,
+                        overflowX: { xs: "auto", sm: "visible" },
+                        scrollSnapType: { xs: "x mandatory", sm: "none" },
+                        pb: { xs: 1, sm: 0 } 
+                    }}>
                     {matches.map((match, index) => {
                         const isNext = index === 0;
                         const round = roundLabel(match);
@@ -63,6 +73,9 @@ export function NextMatchesStrip({
                                     display: "flex",
                                     flexDirection: "column",
                                     gap: 0.75,
+                                    minWidth: { xs: 220, sm: 0 },
+                                    flexShrink: 0,
+                                    scrollSnapAlign: "start",
                                     textDecoration: "none",
                                     color: "inherit",
                                     border: isNext ? "2px solid" : "1px solid",

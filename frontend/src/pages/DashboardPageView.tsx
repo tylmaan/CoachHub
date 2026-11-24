@@ -22,14 +22,14 @@ export function DashboardPageView({ tiles, team, upcoming }: DashboardPageViewPr
     return (
         <Box>
             {team && (
-                <Paper sx={{ p: 2, mb: 3, display: 'flex', alignItems: 'center', gap: 2 }}>
+                <Paper sx={{ p: 2, mb: 3, display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 2 }}>
                     {team.logoUrl ? (
                         <Avatar src={`${BACKEND_ORIGIN}${team.logoUrl}`} variant="rounded" sx={{ width: 52, height: 52 }} />
                     ) : (
                         <Avatar variant="rounded" sx={{ width: 52, height: 52 }}>{team.name[0]}</Avatar>
                     )}
                     <Typography variant="h6" sx={{ flex: 1 }}>{team.name}</Typography>
-                    <Box sx={{ display: 'flex', gap: 2 }}>
+                    <Box sx={{ display: 'flex', gap: 2, width: { xs: '100%', sm: 'auto' }, justifyContent: { xs: 'space-around', sm: 'flex-start' } }}>
                         {[
                             { label: 'Domowa', kit: team.homeKit },
                             { label: 'Wyjazdowa', kit: team.awayKit },
