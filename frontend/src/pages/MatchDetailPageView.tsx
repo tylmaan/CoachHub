@@ -34,6 +34,7 @@ import BlockIcon from "@mui/icons-material/Block";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import SwapVertIcon from "@mui/icons-material/SwapVert";
 import AdjustIcon from "@mui/icons-material/Adjust";
+import { useTouchDrag, COARSE_POINTER } from "../hooks/useTouchDrag";
 import { Jersey } from "../components/Jersey";
 import { Pitch } from "../components/Pitch";
 import { TacticalBoardSection } from "../components/tactics/TacticalBoardSection";
@@ -44,6 +45,7 @@ import type { Player } from "../types/player";
 import type { MatchAppearance } from "../types/matchAppearance";
 import type { MatchEvent } from "../types/matchEvent";
 import type { DropTarget } from "../types/lineupDrag";
+import { targetFromKey } from "../types/lineupDrag";
 import type { PickerOption } from "../types/pickerOption";
 import type { BoardLineupSlot } from "../types/tacticalBoard";
 import { EVENT_TYPE_LABELS, POSITION_GROUPS } from "../constants/labels";
@@ -209,6 +211,13 @@ export function MatchDetailPageView({
 }: MatchDetailPageViewProps) {
     const theme = useTheme();
     const compact = useMediaQuery(theme.breakpoints.down("sm"));
+    const touchDrag = useTouchDrag(canDrag, {
+        onStart: onDragStart,
+        onOver: onDragOverTarget,
+        onLeave: onDragLeaveTarget,
+        onDrop: (key) => onDropOn(targetFromKey(key)),
+        onEnd: onDragEnd,
+    });
 
     function playerFor(appearance: MatchAppearance): Player | undefined {
         return players.find((p) => p.id === appearance.playerId);
@@ -221,18 +230,21 @@ export function MatchDetailPageView({
     function dragProps(appearance: MatchAppearance | null) {
         if (!canDrag || !appearance) return {};
         return {
-            draggable: true,
+            draggable: !COARSE_POINTER,
             onDragStart: (e: React.DragEvent) => {
                 e.dataTransfer.effectAllowed = "move";
                 onDragStart(appearance.id);
             },
             onDragEnd,
+            style: { userSelect: "none" as const, WebkitUserDrag: "none" as const, WebkitTouchCallout: "none" as const },
+            ...touchDrag.bind(appearance.id),
         };
     }
 
     function dropProps(key: string, target: DropTarget) {
         if (!canDrag) return {};
         return {
+            "data-drop-key": key,
             onDragOver: (e: React.DragEvent) => {
                 e.preventDefault();
                 onDragOverTarget(key);
@@ -464,7 +476,10 @@ export function MatchDetailPageView({
                         return (
                             <Box
                                 key={i}
-                                onClick={() => onOpenPitchPicker(slot.pos, slot.slotKey, slot.appearance)}
+                                onClick={() => {
+                                    if (touchDrag.consumeClick()) return;
+                                    onOpenPitchPicker(slot.pos, slot.slotKey, slot.appearance);
+                                }}
                                 {...dragProps(slot.appearance)}
                                 {...dropProps(slot.slotKey, { kind: "pitch", slotKey: slot.slotKey })}
                                 sx={{
@@ -523,7 +538,10 @@ export function MatchDetailPageView({
                     return (
                         <Box
                             key={i}
-                            onClick={() => onOpenBenchPicker(appearance)}
+                            onClick={() => {
+                                if (touchDrag.consumeClick()) return;
+                                onOpenBenchPicker(appearance);
+                            }}
                             {...dragProps(appearance)}
                             sx={{ 
                                 cursor: "pointer", 
