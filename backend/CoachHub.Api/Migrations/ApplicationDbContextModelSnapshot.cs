@@ -108,6 +108,9 @@ namespace CoachHub.Api.Migrations
                     b.Property<string>("Formation")
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("GamePlan")
+                        .HasColumnType("TEXT");
+
                     b.Property<bool?>("IsHome")
                         .HasColumnType("INTEGER");
 
@@ -119,6 +122,9 @@ namespace CoachHub.Api.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("OpponentLogoUrl")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("OpponentNotes")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Round")
