@@ -15,6 +15,8 @@ public class Match
     public string? Round { get; set; }
     public string? Formation { get; set; }
     public string? OpponentLogoUrl { get; set; }
+    public string? GamePlan { get; set; }
+    public string? OpponentNotes { get; set; }
 
     public int TeamId { get; set; }
     public Team? Team { get; set; }

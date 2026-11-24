@@ -61,6 +61,29 @@ public class MatchService : IMatchService
         return true;
     }
 
+    public async Task<bool> UpdateNoteAsync(int id, string field, string? text)
+    {
+        var existing = await _context.Matches.FindAsync(id);
+        if (existing is null) return false;
+
+        var value = string.IsNullOrWhiteSpace(text) ? null : text;
+
+        switch (field)
+        {
+            case nameof(Match.GamePlan):
+                existing.GamePlan = value;
+                break;
+            case nameof(Match.OpponentNotes):
+                existing.OpponentNotes = value;
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(field));
+        }
+
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
     public async Task<bool> DeleteAsync(int id)
     {
         var existing = await _context.Matches.FindAsync(id);

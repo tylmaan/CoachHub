@@ -1,4 +1,5 @@
 using CoachHub.Api.Data;
+using CoachHub.Api.DTOs;
 using CoachHub.Api.Models;
 using CoachHub.Api.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -37,6 +38,26 @@ public class MatchesController : ControllerBase
         return null;
     }
 
+    private async Task<IActionResult> UpdateNote(int id, string field, MatchNoteRequest request)
+    {
+        var existing = await _matchservice.GetByIdAsync(id);
+        if (existing is null) return NotFound();
+
+        var callerTeamId = User.FindFirstValue("teamId");
+        if (callerTeamId is null || int.Parse(callerTeamId) != existing.TeamId) return Forbid();
+
+        if (existing.Status != "Planned")
+            return BadRequest(new[] { "Notatki można edytować tylko w zaplanowanych meczach." });
+        
+        if (request.Text?.Length > 4000)
+            return BadRequest(new[] { "Notatka jest za długa (max. 4000 znaków)." });
+
+        var success = await _matchservice.UpdateNoteAsync(id, field, request.Text);
+        if (!success) return NotFound();
+
+        return NoContent();
+    }
+
     [HttpGet]
     public async Task<ActionResult<List<Match>>> GetAll()
     {
@@ -69,6 +90,9 @@ public class MatchesController : ControllerBase
         var statusError = ValidateStatus(match);
         if (statusError is not null) return BadRequest(new[] { statusError });
 
+        match.GamePlan = null;
+        match.OpponentNotes = null;
+
         var created = await _matchservice.CreateAsync(match);
         return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
     }
@@ -90,6 +114,15 @@ public class MatchesController : ControllerBase
         if (!success) return NotFound();
         return NoContent();
     }
+
+    [HttpPut("{id}/game-plan")]
+    [Authorize(Roles = $"{Roles.Coach}, {Roles.AssistantCoach}")]
+    public Task<IActionResult> UpdateGamePlan(int id, MatchNoteRequest request)
+        => UpdateNote(id, nameof(Match.GamePlan), request);
+
+    [HttpPut("{id}/opponent-notes")]
+    public Task<IActionResult> UpdateOpponentNotes(int id, MatchNoteRequest request)
+        => UpdateNote(id, nameof(Match.OpponentNotes), request);
 
     [HttpDelete("{id}")]
     [Authorize(Roles = Roles.Coach)]
