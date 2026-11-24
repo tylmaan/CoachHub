@@ -31,6 +31,7 @@ import { BACKEND_ORIGIN } from '../api/axiosInstance';
 import { ConfirmDeleteDialog } from '../components/ConfirmDeleteDialog';
 
 const FEET = ["Left", "Right", "Both"];
+const HIDE_ON_PHONE = { display: { xs: "none", sm: "table-cell" } };
 
 interface PlayersPageViewProps {
     players: Player[];
@@ -237,19 +238,20 @@ export function PlayersPageView({
 }: PlayersPageViewProps) {
     return (
         <>
-            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 2, mb: 2 }}>
                 <Typography variant="h4">
                     Zawodnicy
                 </Typography>
-                <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+                <Box sx={{ display: "flex", gap: 2, alignItems: "center", flexWrap: "wrap", width: { xs: "100%", sm: "auto" } }}>
                     <TextField
                         size="small"
                         placeholder="Szukaj zawodnika..."
                         value={search}
                         onChange={(e) => onSearchChange(e.target.value)}
+                        sx={{ flex: { xs: "1 1 100%", sm: "0 1 auto" } }}
                     />
                     {canCreate && view === "active" && (
-                        <Button variant="contained" onClick={onOpenCreate}>
+                        <Button variant="contained" onClick={onOpenCreate} sx={{ width: { xs: "100%", sm: "auto" } }}>
                             Dodaj zawodnika
                         </Button>
                     )}
@@ -454,7 +456,7 @@ export function PlayersPageView({
                 <Table 
                     sx={{ 
                         "& .MuiTableCell-root": { px: 1 },
-                        "& .MuiTableCell-root:first-of-type": { pr: 6 },
+                        "& .MuiTableCell-root:first-of-type": { pr: { xs: 2, sm: 6 } },
                     }}>
                     <TableHead>
                         <TableRow>
@@ -469,8 +471,8 @@ export function PlayersPageView({
                                     Nazwisko
                                 </TableSortLabel>
                             </TableCell>
-                            <TableCell>Narodowość</TableCell>
-                            <TableCell sx={{ whiteSpace: "nowrap" }}>
+                            <TableCell sx={HIDE_ON_PHONE}>Narodowość</TableCell>
+                            <TableCell sx={{ ...HIDE_ON_PHONE, whiteSpace: "nowrap" }}>
                                 <TableSortLabel
                                     active={sortField === "age"}
                                     direction={sortAsc ? "asc" : "desc"}
@@ -488,7 +490,7 @@ export function PlayersPageView({
                                     Pozycja
                                 </TableSortLabel>
                             </TableCell>
-                            <TableCell>Wzrost</TableCell>
+                            <TableCell sx={HIDE_ON_PHONE}>Wzrost</TableCell>
                             <TableCell>
                                 <TableSortLabel
                                     active={sortField === "jerseyNumber"}
@@ -498,7 +500,7 @@ export function PlayersPageView({
                                     Numer
                                 </TableSortLabel>
                             </TableCell>
-                            <TableCell>Noga</TableCell>
+                            <TableCell sx={HIDE_ON_PHONE}>Noga</TableCell>
                             {view === "archived" && <TableCell>W archiwum od</TableCell>}
                             {(canEdit || canDelete) && <TableCell>Akcje</TableCell>}
                         </TableRow>
@@ -524,7 +526,7 @@ export function PlayersPageView({
                                 </TableCell>
                                 <TableCell>{player.firstName}</TableCell>
                                 <TableCell>{player.lastName}</TableCell>
-                                <TableCell>
+                                <TableCell sx={HIDE_ON_PHONE}>
                                     {player.nationality ? (
                                         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                                             <span className={`fi fi-${player.nationality}`} />
@@ -532,7 +534,7 @@ export function PlayersPageView({
                                         </Box>
                                     ) : "-"}
                                 </TableCell>
-                                <TableCell sx={{ whiteSpace: "nowrap" }}>{player.dateOfBirth} ({calculateAge(player.dateOfBirth)})</TableCell>
+                                <TableCell sx={{ ...HIDE_ON_PHONE, whiteSpace: "nowrap" }}>{player.dateOfBirth} ({calculateAge(player.dateOfBirth)})</TableCell>
                                 <TableCell>
                                     <Chip
                                         label={POSITION_LABELS[player.position] ?? player.position}
@@ -540,9 +542,9 @@ export function PlayersPageView({
                                         sx={{ bgcolor: positionChipStyle(player.position).bg, color: positionChipStyle(player.position).color }}
                                     />                                        
                                 </TableCell>
-                                <TableCell>{player.heightCm ?? "-"}</TableCell>
+                                <TableCell sx={HIDE_ON_PHONE}>{player.heightCm ?? "-"}</TableCell>
                                 <TableCell><JerseyNumber number={player.jerseyNumber} /></TableCell>
-                                <TableCell>{renderFoot(player.preferredFoot)}</TableCell>
+                                <TableCell sx={HIDE_ON_PHONE}>{renderFoot(player.preferredFoot)}</TableCell>
                                 {view === "archived" && <TableCell>{player.archivedAt}</TableCell>}
                                 {(canEdit || canDelete) && (
                                     <TableCell>
