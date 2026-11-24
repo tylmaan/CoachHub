@@ -3,6 +3,7 @@ import { Outlet, useLocation, Link as RouterLink } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { ROLE_LABELS } from "../constants/labels";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import LogoutIcon from "@mui/icons-material/Logout";
 import { Logo } from "./Logo";
 
 const PAGE_TITLES: Record<string, string> = {
@@ -33,7 +34,7 @@ export function Layout() {
     return (
         <Box>
             <AppBar position="static">
-                <Toolbar sx={{ gap: 2 }}>
+                <Toolbar sx={{ gap: { xs: 1, sm: 2 } }}>
                     {parentPath && (
                         <IconButton
                             color="inherit"
@@ -56,22 +57,33 @@ export function Layout() {
                                 CoachHub
                             </Typography>
                         {pageTitle && (
-                            <Typography variant="body2" sx={{ opacity: 0.8, pl: 1.5, borderLeft: "1px solid", borderColor: "divider"}}>
+                            <Typography variant="body2" sx={{ display: { xs: "none", sm: "block" }, opacity: 0.8, pl: 1.5, borderLeft: "1px solid", borderColor: "divider"}}>
                                 {pageTitle}
                             </Typography>
                         )}
                     </Box>
                     <Box sx={{ flexGrow: 1 }} />
-                    <Typography variant="body2">{email}</Typography>
+                    <Typography variant="body2" sx={{ display: { xs: "none", sm: "block" } }}>
+                        {email}
+                    </Typography>
                     {roles?.map((role) => (
-                        <Chip key={role} label={ROLE_LABELS[role] ?? role} size="small" color="secondary" />
+                        <Chip key={role} label={ROLE_LABELS[role] ?? role} size="small" color="secondary" sx={{ display: { xs: "none", sm: "inline-flex" } }} />
                     ))}
-                    <Button color="inherit" onClick={logout}>
+                    <Button color="inherit" onClick={logout} sx={{ display: { xs: "none", sm: "inline-flex" } }}>
                         Wyloguj się
                     </Button>
+                    <IconButton
+                        color="inherit"
+                        edge="end"
+                        onClick={logout}
+                        aria-label="Wyloguj się"
+                        sx={{ display: { xs: "inline-flex", sm: "none" } }}
+                    >
+                        <LogoutIcon />
+                    </IconButton>
                 </Toolbar>
             </AppBar>
-            <Box sx={{ p: 3, maxWidth: "1200px", mx: "auto" }}>
+            <Box sx={{ p: { xs: 2, sm: 3 }, maxWidth: "1200px", mx: "auto" }}>
                 <Outlet />
             </Box>
         </Box>
