@@ -22,6 +22,8 @@ import {
     Checkbox,
     FormControlLabel,
     Chip,
+    useTheme,
+    useMediaQuery,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import SportsSoccerIcon from "@mui/icons-material/SportsSoccer";
@@ -205,6 +207,9 @@ export function MatchDetailPageView({
     onDragLeaveTarget,
     onDropOn,
 }: MatchDetailPageViewProps) {
+    const theme = useTheme();
+    const compact = useMediaQuery(theme.breakpoints.down("sm"));
+
     function playerFor(appearance: MatchAppearance): Player | undefined {
         return players.find((p) => p.id === appearance.playerId);
     }
@@ -427,7 +432,7 @@ export function MatchDetailPageView({
                 </Box>
                 <Box sx={{ flexGrow: 1 }} />
                 {match.status === "Played" && (
-                    <Typography variant="h4">
+                    <Typography variant="h4" sx={{ whiteSpace: "nowrap", flexShrink: 0 }}>
                         {match.scoreFor ?? "-"} : {match.scoreAgainst ?? "-"}
                     </Typography>
                 )}
@@ -452,9 +457,10 @@ export function MatchDetailPageView({
             {rosterError && <Alert severity="error" sx={{ mb: 2 }}>{rosterError}</Alert>}
 
             <Box sx={{ mb: 2 }}>
-                <Pitch>
+                <Pitch aspectRatio={compact ? "3 / 4" : undefined}>
                     {pitchSlots.map((slot, i) => {
                         const player = slot.appearance ? playerFor(slot.appearance) : undefined;
+                        const slotWidth = compact ? 64 : 92;
                         return (
                             <Box
                                 key={i}
@@ -476,10 +482,20 @@ export function MatchDetailPageView({
                                     borderRadius: 1,
                                 }}
                             >
-                                <Jersey number={player?.jerseyNumber ?? null} muted={!player} kit={kitFor(player)} />
+                                <Jersey 
+                                    number={player?.jerseyNumber ?? null} 
+                                    muted={!player} 
+                                    kit={kitFor(player)}
+                                    size={compact ? 48 : 56} />
                                 <Typography
                                     variant="caption"
-                                    sx={{ color: "#fff", mt: 0.5, textAlign: "center", maxWidth: 92, fontSize: 14, lineHeight: 1.15,  }}
+                                    sx={{ 
+                                        color: "#fff", 
+                                        mt: 0.5, 
+                                        textAlign: "center", 
+                                        maxWidth: slotWidth, 
+                                        fontSize: compact ? 12 : 14, 
+                                        lineHeight: 1.15,  }}
                                 >
                                     {player ? player.lastName : slot.pos}
                                 </Typography>
