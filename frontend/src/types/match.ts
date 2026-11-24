@@ -13,4 +13,6 @@ export interface Match {
     round: string | null;
     formation: string | null;
     opponentLogoUrl: string | null;
+    gamePlan: string | null;
+    opponentNotes: string | null;
 }

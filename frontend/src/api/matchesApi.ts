@@ -11,13 +11,21 @@ export const getMatch = async (id: number): Promise<Match> => {
     return response.data;
 }
 
-export async function createMatch(match: Omit<Match, "id">): Promise<Match> {
+export async function createMatch(match: Omit<Match, "id" | "gamePlan" | "opponentNotes">): Promise<Match> {
     const response = await axiosInstance.post<Match>('/matches', match);
     return response.data;
 }
 
-export async function updateMatch(id: number, match: Omit<Match, "id">): Promise<void> {
+export async function updateMatch(id: number, match: Omit<Match, "id" | "gamePlan" | "opponentNotes">): Promise<void> {
     await axiosInstance.put(`/matches/${id}`, match);
+}
+
+export async function updateGamePlan(id: number, text: string | null): Promise<void> {
+    await axiosInstance.put(`/matches/${id}/game-plan`, { text });
+}
+
+export async function updateOpponentNotes(id: number, text: string | null): Promise<void> {
+    await axiosInstance.put(`/matches/${id}/opponent-notes`, { text });
 }
 
 export async function deleteMatch(id: number): Promise<void> {

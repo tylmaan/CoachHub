@@ -60,6 +60,8 @@ export function MatchDetailPage() {
     const canDrag = !!roles?.some((r) => r === "Coach" || r === "AssistantCoach");
     const canEditBoards = !!roles?.some((r) => r === "Coach" || r === "AssistantCoach");
     const canDeleteBoards = !!roles?.includes("Coach");
+    const canEditGamePlan = !!roles?.some((r) => r === "Coach" || r === "AssistantCoach");
+    const canEditOpponentNotes = !!roles?.some((r) => r === "Coach" || r === "AssistantCoach" || r === "Analyst");
     const [dragId, setDragId] = useState<number | null>(null);
     const [overKey, setOverKey] = useState<string | null>(null);
 
@@ -425,6 +427,8 @@ export function MatchDetailPage() {
             dragId={dragId}
             canEditBoards={canEditBoards}
             canDeleteBoards={canDeleteBoards}
+            canEditGamePlan={canEditGamePlan}
+            canEditOpponentNotes={canEditOpponentNotes}
             overKey={overKey}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}

@@ -35,6 +35,7 @@ import AdjustIcon from "@mui/icons-material/Adjust";
 import { Jersey } from "../components/Jersey";
 import { Pitch } from "../components/Pitch";
 import { TacticalBoardSection } from "../components/tactics/TacticalBoardSection";
+import { MatchNotesSection } from "../components/matches/MatchNotesSection";
 import type { Kit } from "../types/kit";
 import type { Match } from "../types/match";
 import type { Player } from "../types/player";
@@ -110,6 +111,8 @@ interface MatchDetailPageViewProps {
     dragId: number | null;
     canEditBoards: boolean;
     canDeleteBoards: boolean;
+    canEditGamePlan: boolean;
+    canEditOpponentNotes: boolean;
     overKey: string | null;
     onDragStart: (appearanceId: number) => void;
     onDragEnd: () => void;
@@ -193,6 +196,8 @@ export function MatchDetailPageView({
     dragId,
     canEditBoards,
     canDeleteBoards,
+    canEditGamePlan,
+    canEditOpponentNotes,
     overKey,
     onDragStart,
     onDragEnd,
@@ -600,6 +605,14 @@ export function MatchDetailPageView({
                     <Button onClick={onClosePicker}>Zamknij</Button>
                 </DialogActions>
             </Dialog>
+
+            {match.status === "Planned" && (
+                <MatchNotesSection
+                    match={match}
+                    canEditGamePlan={canEditGamePlan}
+                    canEditOpponentNotes={canEditOpponentNotes}
+                />
+            )}
 
             {match.status === "Planned" && <TacticalBoardSection 
                 owner={{ kind: "match", id: match.id }}
