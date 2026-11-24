@@ -26,13 +26,15 @@ interface TacticalBoardSectionProps {
     canEdit: boolean;
     canDelete: boolean;
     lineup?: BoardLineupSlot[];
+    title?: string;
 }
 
 export function TacticalBoardSection({ 
     owner, 
     canEdit,
     canDelete,
-    lineup 
+    lineup,
+    title = "Taktyka"
 }: TacticalBoardSectionProps) {
     const [editing, setEditing] = useState<TacticalScheme | null>(null);
     const [schemes, setSchemes] = useState<TacticalScheme[]>([]);
@@ -88,7 +90,7 @@ export function TacticalBoardSection({
 
     return (
         <Box sx={{ mt: 4 }}>
-            <Typography variant="h6" sx={{ mb: 2 }}>Taktyka</Typography>
+            <Typography variant="h6" sx={{ mb: 2 }}>{title}</Typography>
 
             {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 

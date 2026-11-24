@@ -67,6 +67,7 @@ export function ReportDetailPageView({
                     owner={{ kind: "report", id: report.id }}
                     canEdit={report.canEdit}
                     canDelete={report.canEdit}
+                    title="Tablice taktyczne"
                 />
             </Box>
 
