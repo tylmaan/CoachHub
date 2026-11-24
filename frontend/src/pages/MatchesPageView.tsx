@@ -21,9 +21,9 @@ import { countdownLabel, daysUntil, matchTypeLabel } from "../types/matchSchedul
 import { MATCH_TYPE_LABELS } from "../constants/labels";
 import { CATEGORY_COLORS, categoryOfMatch } from "../constants/competitions";
 import { BACKEND_ORIGIN } from "../api/axiosInstance";
-import { Link as RouterLink} from "react-router-dom";
 import type { CompetitionGroup } from "../constants/competitions";
 import { ConfirmDeleteDialog } from "../components/ConfirmDeleteDialog";
+import { MatchRowAction } from "../components/matches/MatchRowAction";
 
 const MATCH_TYPES = ["League", "Cup", "Friendly"];
 
@@ -219,8 +219,10 @@ export function MatchesPageView({
             <Box
                 key={match.id}
                 sx={{
+                    position: "relative",
                     display: "flex",
-                    alignItems: "center",
+                    flexDirection: { xs: "column", sm: "row" },
+                    alignItems: { xs: "stretch", sm: "center" },
                     gap: 2,
                     px: 2,
                     py: 1.5,
@@ -231,16 +233,18 @@ export function MatchesPageView({
                     "&:last-of-type": { borderBottom: "none" },
                 }}
             >
-                {match.opponentLogoUrl ? (
-                    <Avatar src={`${BACKEND_ORIGIN}${match.opponentLogoUrl}`} variant="rounded" />
-                ) : (
-                    <Avatar variant="rounded">{match.opponent[0]}</Avatar>
-                )}
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography variant="body2">{match.opponent}</Typography>
-                    <Typography variant="caption" color="text.secondary">
-                        {match.date}{match.isHome !== null && ` · ${match.isHome ? "Dom" : "Wyjazd"}`}
-                    </Typography>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 2, flex: 1, minWidth: 0, pr: { xs: 5, sm: 0 } }}>    
+                    {match.opponentLogoUrl ? (
+                        <Avatar src={`${BACKEND_ORIGIN}${match.opponentLogoUrl}`} variant="rounded" />
+                    ) : (
+                        <Avatar variant="rounded">{match.opponent[0]}</Avatar>
+                    )}
+                    <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography variant="body2">{match.opponent}</Typography>
+                        <Typography variant="caption" color="text.secondary" sx={{ whiteSpace: "nowrap" }}>
+                            {match.date}{match.isHome !== null && ` · ${match.isHome ? "Dom" : "Wyjazd"}`}
+                        </Typography>
+                    </Box>
                 </Box>
                 <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
                     {match.matchType && <Chip size="small" label={matchTypeLabel(match, teamLeague)} sx={{ bgcolor: colors.bg, color: colors.fg }} />}
@@ -255,14 +259,14 @@ export function MatchesPageView({
                         {countdownLabel(daysUntil(match.date))}
                     </Typography>
                 )}
-                <Box sx={{ display: "flex", gap: 1, flexShrink: 0 }}>
-                    <Button size="small" component={RouterLink} to={`/matches/${match.id}`}>Szczegóły</Button>
-                    {match.status === "Planned" && canEdit && (
-                        <Button size="small" onClick={() => onRequestFinish(match.id)}>Zakończ mecz</Button>
-                    )}
-                    {canEdit && <Button size="small" onClick={() => onStartEdit(match)}>Edytuj</Button>}
-                    {canDelete && <Button size="small" color="error" onClick={() => onRequestDelete(match.id)}>Usuń</Button>}
-                </Box>
+                <MatchRowAction
+                    match={match}
+                    canEdit={canEdit}
+                    canDelete={canDelete}
+                    onFinish={onRequestFinish}
+                    onEdit={onStartEdit}
+                    onDelete={onRequestDelete}
+                />
             </Box>
         );
     }
@@ -271,7 +275,7 @@ export function MatchesPageView({
             <>
             <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 2, mb: 2 }}>
                 <Typography variant="h4">Mecze</Typography>
-                <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                <Box sx={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 2 }}>
                     <ToggleButtonGroup
                         exclusive
                         size="small"

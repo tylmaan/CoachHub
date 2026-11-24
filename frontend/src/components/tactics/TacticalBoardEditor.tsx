@@ -13,6 +13,8 @@ import {
     ToggleButtonGroup,
     Tooltip,
     Typography,
+    useTheme,
+    useMediaQuery
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import NearMeIcon from "@mui/icons-material/NearMe";
@@ -121,6 +123,10 @@ export function TacticalBoardEditor({
     const svgRef = useRef<SVGSVGElement>(null);
     const dragRef = useRef<Drag | null>(null);
     const drawRef = useRef<Draw | null>(null);
+
+    const theme = useTheme();
+    const wide = useMediaQuery(theme.breakpoints.up("md"));
+
     const [tool, setTool] = useState<Tool>("select");
     const [selectedId, setSelectedId] = useState<string | null>(null);
     const [draft, setDraft] = useState<TacticalBoardData | null>(null);
@@ -256,7 +262,7 @@ export function TacticalBoardEditor({
     }
 
     return (
-        <Dialog open onClose={handleClose} fullWidth maxWidth="lg">
+        <Dialog open onClose={handleClose} fullWidth maxWidth="lg" fullScreen={!wide}>
             <DialogTitle>
                 {canEdit ? (
                     <TextField
@@ -279,17 +285,17 @@ export function TacticalBoardEditor({
                 <Box
                     sx={{
                         display: "grid",
-                        gridTemplateColumns: canEdit ? "190px 1fr 250px" : "1fr",
+                        gridTemplateColumns: { xs: "1fr", md: canEdit ? "190px 1fr 250px" : "1fr" },
                         gap: 2,
                         alignItems: "start",
                     }}
                 >
                     {canEdit && (
-                        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+                        <Box sx={{ display: "flex", flexDirection: "column", gap: 2, minWidth: 0, maxWidth: "100%", overflowX: "auto" }}>
                             <ToggleButtonGroup
-                                orientation="vertical"
+                                orientation={wide ? "vertical" : "horizontal"}
                                 exclusive
-                                fullWidth
+                                fullWidth={wide}
                                 size="small"
                                 value={tool}
                                 onChange={(_, value: Tool | null) => {
@@ -300,7 +306,7 @@ export function TacticalBoardEditor({
                                     <NearMeIcon fontSize="small" sx={{ mr: 1 }} />
                                     Zaznacz
                                 </ToggleButton>
-                                <ToggleButton value="ownPlayer" sx={{ justifyContent: "flex-start" }}>
+                                <ToggleButton value="ownPlayer" sx={{ justifyContent: "flex-start", whiteSpace: "nowrap" }}>
                                     <Dot color={SIDE_COLORS.own.fill} />
                                     Nasz zawodnik
                                 </ToggleButton>
@@ -326,29 +332,31 @@ export function TacticalBoardEditor({
                                 </ToggleButton>
                             </ToggleButtonGroup>
 
-                            <Box sx={{ display: "flex", gap: 1 }}>
-                                <Tooltip title="Cofnij (Ctrl+Z)">
-                                    <span>
-                                        <IconButton onClick={undo} disabled={!canUndo} aria-label="Cofnij">
-                                            <UndoIcon />
-                                        </IconButton>
-                                    </span>
-                                </Tooltip>
-                                <Tooltip title="Ponów (Ctrl+Y)">
-                                    <span>
-                                        <IconButton onClick={redo} disabled={!canRedo} aria-label="Ponów">
-                                            <RedoIcon />
-                                        </IconButton>
-                                    </span>
-                                </Tooltip>
+                            <Box sx={{ display: "flex", flexDirection: { xs: "row", md: "column" }, alignItems: { xs: "center", md: "stretch" }, gap: 1 }}>
+                                <Box sx={{ display: "flex", gap: 1 }}>
+                                    <Tooltip title="Cofnij (Ctrl+Z)">
+                                        <span>
+                                            <IconButton onClick={undo} disabled={!canUndo} aria-label="Cofnij">
+                                                <UndoIcon />
+                                            </IconButton>
+                                        </span>
+                                    </Tooltip>
+                                    <Tooltip title="Ponów (Ctrl+Y)">
+                                        <span>
+                                            <IconButton onClick={redo} disabled={!canRedo} aria-label="Ponów">
+                                                <RedoIcon />
+                                            </IconButton>
+                                        </span>
+                                    </Tooltip>
+                                </Box>
+                                {lineup && (
+                                    <Tooltip title="Zastępuje naszych zawodników na tablicy planowanym składem">
+                                        <Button variant="outlined" startIcon={<GroupsIcon />} onClick={insertLineup}>
+                                            Wstaw skład
+                                        </Button>
+                                    </Tooltip>
+                                )}
                             </Box>
-                            {lineup && (
-                                <Tooltip title="Zastępuje naszych zawodników na tablicy planowanym składem">
-                                    <Button variant="outlined" startIcon={<GroupsIcon />} onClick={insertLineup}>
-                                        Wstaw skład
-                                    </Button>
-                                </Tooltip>
-                            )}
                         </Box>
                     )}
 

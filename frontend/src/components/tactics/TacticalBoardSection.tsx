@@ -94,7 +94,14 @@ export function TacticalBoardSection({
 
             {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
 
-            <Box sx={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(180px, 1fr))", gap: 2 }}>
+            <Box sx={{ 
+                display: "grid", 
+                gridTemplateColumns: {
+                    xs: "repeat(auto-fill, minmax(140px, 1fr))",
+                    sm: "repeat(auto-fill, minmax(180px, 1fr))",
+                },
+                gap: 2 
+            }}>
                 {schemes.map((scheme) => (
                     <TacticalBoardTile
                         key={scheme.id}

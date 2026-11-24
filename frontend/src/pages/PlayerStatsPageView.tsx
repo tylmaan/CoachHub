@@ -59,7 +59,7 @@ export function PlayerStatsPageView({
 }: PlayerStatsPageViewProps) {
     return (
         <>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2, mb: 2 }}>
                 <Typography variant="h4">
                     Statystyki zawodników
                 </Typography>
@@ -69,7 +69,7 @@ export function PlayerStatsPageView({
                     label="Sezon"
                     value={season}
                     onChange={(e) => onSeasonChange(e.target.value)}
-                    sx={{ minWidth: 160 }}
+                    sx={{ minWidth: 160, width: { xs: "100%", sm: "auto" } }}
                 >
                     {seasons.map((s) => (
                         <MenuItem key={s} value={s}>
