@@ -1,17 +1,9 @@
 import {
-    Table,
-    TableBody,
-    TableCell,
-    TableContainer,
-    TableHead,
-    TableRow,
-    TableSortLabel,
     Paper,
     Typography,
     Alert,
     Button,
     MenuItem,
-    Select,
     Box,
     TextField,
     Avatar,
@@ -19,31 +11,37 @@ import {
     DialogTitle,
     DialogContent,
     DialogActions,
+    useTheme,
+    useMediaQuery,
 } from "@mui/material";
 import type { UserSummary } from "../types/user";
 import type { Team } from "../types/team";
 import { ROLE_LABELS } from "../constants/labels";
 import { BACKEND_ORIGIN } from "../api/axiosInstance";
 import { ConfirmDeleteDialog } from "../components/ConfirmDeleteDialog";
+import { UserList } from "../components/users/UserList";
+import { UserListFilters } from "../components/users/UserListFilters";
+import { UserEditPanel } from "../components/users/UserEditPanel";
+import type { RoleFilter, UserGroup } from "../types/userDirectory";
 
-type SortField = "email" | "roles" | "teamId" | "fullName";
-const ROLES = ["Coach", "AssistantCoach", "Analyst"];
 const REGISTER_ROLES = ["Admin", "Coach", "AssistantCoach", "Analyst"];
 
 interface UsersPageViewProps {
-    users: UserSummary[];
     teams: Team[];
-    sortField: SortField;
-    sortAsc: boolean;
-    onSort: (field: SortField) => void;
     actionError: string | null;
-
-    editingId: string | null;
+    groups: UserGroup[];
+    counts: Record<string, number>;
+    roleFilter: RoleFilter;
+    onRoleFilterChange: (value: RoleFilter) => void;
+    query: string;
+    onQueryChange: (value: string) => void;
+    selectedUser: UserSummary | null;
+    onSelectUser: (user: UserSummary) => void;
+    onDeselectUser: () => void;
     editRole: string;
     editTeamId: number;
     editFullName: string;
     editPhotoUrl: string | null;
-    onStartEdit: (user: UserSummary) => void;
     onEditFullNameChange: (value: string) => void;
     onEditRoleChange: (value: string) => void;
     onEditTeamIdChange: (value: number) => void;
@@ -75,18 +73,21 @@ interface UsersPageViewProps {
 }
 
 export function UsersPageView({
-    users,
     teams,
-    sortField,
-    sortAsc,
-    onSort,
+    groups,
+    counts,
+    roleFilter,
+    onRoleFilterChange,
+    query,
+    onQueryChange,
+    selectedUser,
+    onSelectUser,
+    onDeselectUser,
     actionError,
-    editingId,
     editRole,
     editTeamId,
     editFullName,
     editPhotoUrl,
-    onStartEdit,
     onEditFullNameChange,
     onEditRoleChange,
     onEditTeamIdChange,
@@ -114,14 +115,32 @@ export function UsersPageView({
     onNewRoleChange,
     onNewTeamIdChange,
     onRegisterSubmit
-}: UsersPageViewProps) {
-    function teamName(teamId: number | null) {
-        return teams.find((t) => t.id == teamId)?.name ?? "-";
-    }
+}: UsersPageViewProps) {    
+    const theme = useTheme();
+    const wide = useMediaQuery(theme.breakpoints.up("md"));
+
+    const panel = selectedUser && (
+        <UserEditPanel
+            user={selectedUser}
+            teams={teams}
+            fullName={editFullName}
+            role={editRole}
+            teamId={editTeamId}
+            photoUrl={editPhotoUrl}
+            onFullNameChange={onEditFullNameChange}
+            onRoleChange={onEditRoleChange}
+            onTeamIdChange={onEditTeamIdChange}
+            onPhotoSelect={onEditPhotoSelect}
+            onSave={() => onSaveEdit(selectedUser.id)}
+            onCancel={onCancelEdit}
+            onClose={onDeselectUser}
+            onDelete={() => onRequestDelete(selectedUser.id)}
+        />
+    );
     
     return (
         <>
-            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+            <Box sx={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
                 <Typography variant="h4">
                     Użytkownicy
                 </Typography>
@@ -130,116 +149,30 @@ export function UsersPageView({
                 </Button>
             </Box>
             {actionError && <Alert severity="error" sx={{ mb: 2 }}>{actionError}</Alert>}
-            <TableContainer component={Paper}>
-                <Table>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell>Zdjęcie</TableCell>
-                            <TableCell>
-                                <TableSortLabel
-                                    active={sortField === "email"}
-                                    direction={sortAsc ? "asc" : "desc"}
-                                    onClick={() => onSort("email")}
-                                >
-                                    Email
-                                </TableSortLabel>
-                            </TableCell>
-                            <TableCell>
-                                <TableSortLabel
-                                    active={sortField === "fullName"}
-                                    direction={sortAsc ? "asc" : "desc"} 
-                                    onClick={() => onSort("fullName")}
-                                >
-                                    Imię i Nazwisko
-                                </TableSortLabel>
-                            </TableCell>
-                            <TableCell>
-                                <TableSortLabel
-                                    active={sortField === "roles"}
-                                    direction={sortAsc ? "asc" : "desc"}
-                                    onClick={() => onSort("roles")}
-                                >
-                                    Rola
-                                </TableSortLabel>
-                            </TableCell>
-                            <TableCell>
-                                <TableSortLabel
-                                    active={sortField === "teamId"}
-                                    direction={sortAsc ? "asc" : "desc"}
-                                    onClick={() => onSort("teamId")}
-                                >
-                                    Drużyna
-                                </TableSortLabel>
-                            </TableCell>
-                            <TableCell>
-                                Akcje
-                            </TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {users.map((user) => (
-                            <TableRow key={user.id}>
-                                <TableCell>{user.email}</TableCell>
-                                {editingId === user.id ? (
-                                    <>
-                                        <TableCell>
-                                            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                                                {editPhotoUrl && <Avatar src={`${BACKEND_ORIGIN}${editPhotoUrl}`} />}
-                                                <Button component="label" size="small">
-                                                    Zmień
-                                                    <input type="file" accept="image/png,image/jpeg" hidden onChange={onEditPhotoSelect} />
-                                                </Button>
-                                            </Box>
-                                        </TableCell>
-                                        <TableCell>
-                                            <TextField size="small" value={editFullName} onChange={(e) => onEditFullNameChange(e.target.value)} />
-                                        </TableCell>
-                                        <TableCell>
-                                            <Select value={editRole} onChange={(e) => onEditRoleChange(e.target.value)} size="small">
-                                                {ROLES.map((r) => (
-                                                    <MenuItem key={r} value={r}>{ROLE_LABELS[r]}</MenuItem>
-                                                ))}
-                                            </Select>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Select value={editTeamId} onChange={(e) => onEditTeamIdChange(Number(e.target.value))} size="small">
-                                                {teams.map((t) => (
-                                                    <MenuItem key={t.id} value={t.id}>{t.name}</MenuItem>
-                                                ))}
-                                            </Select>
-                                        </TableCell>
-                                        <TableCell>
-                                            <Box sx={{ display: "flex", gap: 1 }}>
-                                                <Button size="small" variant="contained" onClick={() => onSaveEdit(user.id)}>Zapisz</Button>
-                                                <Button size="small" onClick={onCancelEdit}>Anuluj</Button>
-                                            </Box>
-                                        </TableCell>
-                                    </>
-                                ) : (
-                                    <>
-                                        <TableCell>
-                                            {user.photoUrl ? (
-                                                <Avatar src={`${BACKEND_ORIGIN}${user.photoUrl}`} />
-                                            ) : (
-                                                <Avatar>{(user.fullName ?? user.email)[0]}</Avatar>
-                                            )}
-                                        </TableCell>
-                                        <TableCell>{user.fullName ?? "-"}</TableCell>
-                                        <TableCell>{user.roles.map((r) => ROLE_LABELS[r] ?? r).join(", ")}</TableCell>
-                                        <TableCell>{teamName(user.teamId)}</TableCell>
-                                        <TableCell>
-                                            <Box sx={{ display: "flex", gap: 1 }}>
-                                                <Button size="small" onClick={() => onStartEdit(user)}>Edytuj</Button>
-                                                <Button size="small" color="error" onClick={() => onRequestDelete(user.id)}>Usuń</Button>
-                                            </Box>
-                                        </TableCell>
-                                    </>
-                                )}
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </TableContainer>
+            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "minmax(0, 1fr)", md: "minmax(0, 5fr) minmax(0, 6fr)" }, gap: 2, alignItems: "start" }}>
+                <Box>
+                    <UserListFilters
+                        query={query}
+                        onQueryChange={onQueryChange}
+                        role={roleFilter}
+                        onRoleChange={onRoleFilterChange}
+                        counts={counts}
+                    />
+                    <UserList groups={groups} selectedId={selectedUser?.id ?? null} onSelect={onSelectUser} />
+                </Box>
+                {wide && (
+                    panel ?? (
+                        <Paper variant="outlined" sx={{ p: 3}}>
+                            <Typography color="text.secondary">Wybierz osobę z listy.</Typography>
+                        </Paper>
+                    )
+                )}
+            </Box>
+            {!wide && (
+                <Dialog open={selectedUser !== null} onClose={onDeselectUser} fullScreen sx={{ "& .MuiDialog-paper": { backgroundImage: "none" } }}>
+                    {panel}
+                </Dialog>
+            )}
             <Dialog open={registerOpen} onClose={onCloseRegisterDialog} fullWidth maxWidth="xs">
                 <Box component="form" onSubmit={onRegisterSubmit}>
                     <DialogTitle>Nowe konto</DialogTitle>
