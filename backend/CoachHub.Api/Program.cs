@@ -98,4 +98,6 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.Run(); 
+app.Run();
+
+public partial class Program { }
