@@ -1,8 +1,25 @@
+import type { RoleFilter } from "../types/userDirectory";
+
 export const ROLE_LABELS: Record<string, string> = {
     Admin: "Administrator",
     Coach: "Trener",
     AssistantCoach: "Asystent trenera",
     Analyst: "Analityk",
+};
+
+export const ROLE_FILTERS: RoleFilter[] = ["ALL", "Coach", "AssistantCoach", "Analyst"];
+
+export const ROLE_FILTER_LABELS: Record<RoleFilter, string> = {
+    ALL: "Wszyscy",
+    Coach: "Trenerzy",
+    AssistantCoach: "Asystenci",
+    Analyst: "Analitycy",
+};
+
+export const ROLE_CHIP_COLORS: Record<string, "primary" | "success" | "warning" | "default"> = {
+    Coach: "primary",
+    AssistantCoach: "success",
+    Analyst: "warning",
 };
 
 export const FOOT_LABELS: Record<string, string> = {
@@ -56,3 +73,4 @@ export const EVENT_TYPE_LABELS: Record<string, string> = {
     PenaltyGoal: "Gol z rzutu karnego",
     PenaltyMissed: "Niewykorzystany rzut karny",
 };
+
