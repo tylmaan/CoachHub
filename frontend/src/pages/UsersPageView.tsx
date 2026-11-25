@@ -11,6 +11,8 @@ import {
     DialogTitle,
     DialogContent,
     DialogActions,
+    useTheme,
+    useMediaQuery,
 } from "@mui/material";
 import type { UserSummary } from "../types/user";
 import type { Team } from "../types/team";
@@ -35,6 +37,7 @@ interface UsersPageViewProps {
     onQueryChange: (value: string) => void;
     selectedUser: UserSummary | null;
     onSelectUser: (user: UserSummary) => void;
+    onDeselectUser: () => void;
     editRole: string;
     editTeamId: number;
     editFullName: string;
@@ -79,6 +82,7 @@ export function UsersPageView({
     onQueryChange,
     selectedUser,
     onSelectUser,
+    onDeselectUser,
     actionError,
     editRole,
     editTeamId,
@@ -112,9 +116,31 @@ export function UsersPageView({
     onNewTeamIdChange,
     onRegisterSubmit
 }: UsersPageViewProps) {    
+    const theme = useTheme();
+    const wide = useMediaQuery(theme.breakpoints.up("md"));
+
+    const panel = selectedUser && (
+        <UserEditPanel
+            user={selectedUser}
+            teams={teams}
+            fullName={editFullName}
+            role={editRole}
+            teamId={editTeamId}
+            photoUrl={editPhotoUrl}
+            onFullNameChange={onEditFullNameChange}
+            onRoleChange={onEditRoleChange}
+            onTeamIdChange={onEditTeamIdChange}
+            onPhotoSelect={onEditPhotoSelect}
+            onSave={() => onSaveEdit(selectedUser.id)}
+            onCancel={onCancelEdit}
+            onClose={onDeselectUser}
+            onDelete={() => onRequestDelete(selectedUser.id)}
+        />
+    );
+    
     return (
         <>
-            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+            <Box sx={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
                 <Typography variant="h4">
                     Użytkownicy
                 </Typography>
@@ -123,7 +149,7 @@ export function UsersPageView({
                 </Button>
             </Box>
             {actionError && <Alert severity="error" sx={{ mb: 2 }}>{actionError}</Alert>}
-            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "minmax(0, 5fr) minmax(0, 6fr)" }, gap: 2, alignItems: "start" }}>
+            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "minmax(0, 1fr)", md: "minmax(0, 5fr) minmax(0, 6fr)" }, gap: 2, alignItems: "start" }}>
                 <Box>
                     <UserListFilters
                         query={query}
@@ -134,28 +160,19 @@ export function UsersPageView({
                     />
                     <UserList groups={groups} selectedId={selectedUser?.id ?? null} onSelect={onSelectUser} />
                 </Box>
-                {selectedUser ? (
-                    <UserEditPanel
-                        user={selectedUser}
-                        teams={teams}
-                        fullName={editFullName}
-                        role={editRole}
-                        teamId={editTeamId}
-                        photoUrl={editPhotoUrl}
-                        onFullNameChange={onEditFullNameChange}
-                        onRoleChange={onEditRoleChange}
-                        onTeamIdChange={onEditTeamIdChange}
-                        onPhotoSelect={onEditPhotoSelect}
-                        onSave={() => onSaveEdit(selectedUser.id)}
-                        onCancel={onCancelEdit}
-                        onDelete={() => onRequestDelete(selectedUser.id)}
-                    />
-                ) : (
-                    <Paper variant="outlined" sx={{ p: 3 }}>
-                        <Typography color="text.secondary">Wybierz osobę z listy.</Typography>
-                    </Paper>
+                {wide && (
+                    panel ?? (
+                        <Paper variant="outlined" sx={{ p: 3}}>
+                            <Typography color="text.secondary">Wybierz osobę z listy.</Typography>
+                        </Paper>
+                    )
                 )}
             </Box>
+            {!wide && (
+                <Dialog open={selectedUser !== null} onClose={onDeselectUser} fullScreen sx={{ "& .MuiDialog-paper": { backgroundImage: "none" } }}>
+                    {panel}
+                </Dialog>
+            )}
             <Dialog open={registerOpen} onClose={onCloseRegisterDialog} fullWidth maxWidth="xs">
                 <Box component="form" onSubmit={onRegisterSubmit}>
                     <DialogTitle>Nowe konto</DialogTitle>

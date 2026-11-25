@@ -28,6 +28,7 @@ interface UserEditPanelProps {
     onPhotoSelect: (e: React.ChangeEvent<HTMLInputElement>) => void;
     onSave: () => void;
     onCancel: () => void;
+    onClose: () => void;
     onDelete: () => void;
 }
 
@@ -44,6 +45,7 @@ export function UserEditPanel({
     onPhotoSelect,
     onSave,
     onCancel,
+    onClose,
     onDelete,
 }: UserEditPanelProps) {
     return (
@@ -82,6 +84,7 @@ export function UserEditPanel({
             <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 3 }}>
                 <Button variant="contained" onClick={onSave}>Zapisz</Button>
                 <Button onClick={onCancel}>Anuluj</Button>
+                <Button onClick={onClose} sx={{ display: { xs: "inline-flex", md: "none" } }}>Zamknij</Button>
                 <Button component="label">
                     Zmień zdjęcie
                     <input type="file" accept="image/png,image/jpeg" hidden onChange={onPhotoSelect} />

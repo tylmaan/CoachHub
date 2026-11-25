@@ -177,6 +177,7 @@ export function UsersPage() {
             onQueryChange={setQuery}
             selectedUser={selectedUser}
             onSelectUser={selectUser}
+            onDeselectUser={() => setSelectedId(null)}
             editRole={editRole}
             editTeamId={editTeamId}
             editFullName={editFullName}
