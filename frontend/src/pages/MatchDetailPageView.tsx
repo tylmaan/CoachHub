@@ -111,7 +111,7 @@ interface MatchDetailPageViewProps {
     onAddEvent: (e: React.SyntheticEvent) => void;
     onRemoveEvent: (eventId: number) => void;
     addedTimeEnabled: boolean;
-    canDrag: boolean;
+    canEditMatch: boolean;
     dragId: number | null;
     canEditBoards: boolean;
     canDeleteBoards: boolean;
@@ -196,7 +196,7 @@ export function MatchDetailPageView({
     onAddEvent,
     onRemoveEvent,
     addedTimeEnabled,
-    canDrag,
+    canEditMatch,
     dragId,
     canEditBoards,
     canDeleteBoards,
@@ -211,7 +211,7 @@ export function MatchDetailPageView({
 }: MatchDetailPageViewProps) {
     const theme = useTheme();
     const compact = useMediaQuery(theme.breakpoints.down("sm"));
-    const touchDrag = useTouchDrag(canDrag, {
+    const touchDrag = useTouchDrag(canEditMatch, {
         onStart: onDragStart,
         onOver: onDragOverTarget,
         onLeave: onDragLeaveTarget,
@@ -228,7 +228,7 @@ export function MatchDetailPageView({
     }
 
     function dragProps(appearance: MatchAppearance | null) {
-        if (!canDrag || !appearance) return {};
+        if (!canEditMatch || !appearance) return {};
         return {
             draggable: !COARSE_POINTER,
             onDragStart: (e: React.DragEvent) => {
@@ -242,7 +242,7 @@ export function MatchDetailPageView({
     }
 
     function dropProps(key: string, target: DropTarget) {
-        if (!canDrag) return {};
+        if (!canEditMatch) return {};
         return {
             "data-drop-key": key,
             onDragOver: (e: React.DragEvent) => {

@@ -57,7 +57,7 @@ export function MatchDetailPage() {
     const [eventError, setEventError] = useState<string | null>(null);
 
     const addedTimeEnabled = newEventMinute !== "" && STOPPAGE_MINUTES.includes(Number(newEventMinute));
-    const canDrag = !!roles?.some((r) => r === "Coach" || r === "AssistantCoach");
+    const canEditMatch = !!roles?.some((r) => r === "Coach" || r === "AssistantCoach");
     const canEditBoards = !!roles?.some((r) => r === "Coach" || r === "AssistantCoach");
     const canDeleteBoards = !!roles?.includes("Coach");
     const canEditGamePlan = !!roles?.some((r) => r === "Coach" || r === "AssistantCoach");
@@ -423,7 +423,7 @@ export function MatchDetailPage() {
             onAddEvent={handleAddEvent}
             onRemoveEvent={handleRemoveEvent}
             addedTimeEnabled={addedTimeEnabled}
-            canDrag={canDrag}
+            canEditMatch={canEditMatch}
             dragId={dragId}
             canEditBoards={canEditBoards}
             canDeleteBoards={canDeleteBoards}
