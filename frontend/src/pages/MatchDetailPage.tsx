@@ -58,6 +58,7 @@ export function MatchDetailPage() {
 
     const addedTimeEnabled = newEventMinute !== "" && STOPPAGE_MINUTES.includes(Number(newEventMinute));
     const canEditMatch = !!roles?.some((r) => r === "Coach" || r === "AssistantCoach");
+    const canDeleteMatchData = !!roles?.includes("Coach");
     const canEditBoards = !!roles?.some((r) => r === "Coach" || r === "AssistantCoach");
     const canDeleteBoards = !!roles?.includes("Coach");
     const canEditGamePlan = !!roles?.some((r) => r === "Coach" || r === "AssistantCoach");
@@ -424,6 +425,7 @@ export function MatchDetailPage() {
             onRemoveEvent={handleRemoveEvent}
             addedTimeEnabled={addedTimeEnabled}
             canEditMatch={canEditMatch}
+            canDeleteMatchData={canDeleteMatchData}
             dragId={dragId}
             canEditBoards={canEditBoards}
             canDeleteBoards={canDeleteBoards}
