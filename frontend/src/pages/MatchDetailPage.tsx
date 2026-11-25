@@ -150,15 +150,17 @@ export function MatchDetailPage() {
         if (!id) return;
         setRosterError(null);
         try {
-            if (pickerAppearanceId) {
-                await deleteMatchAppearance(pickerAppearanceId);
-            }
-            await createMatchAppearance({
+            const appearance = {
                 matchId: Number(id),
                 playerId,
                 isStarting: pickerIsStarting,
                 position: pickerIsStarting ? pickerSlotKey : null,
-            });
+            };
+            if (pickerAppearanceId) {
+                await updateMatchAppearance(pickerAppearanceId, appearance);
+            } else {
+                await createMatchAppearance(appearance);
+            }
             closePicker();
             loadAppearances(Number(id));
         } catch {
