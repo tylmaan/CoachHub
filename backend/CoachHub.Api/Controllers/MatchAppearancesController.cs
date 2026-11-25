@@ -62,6 +62,15 @@ public class MatchAppearancesController: ControllerBase
         var callerTeamId = User.FindFirstValue("teamId");
         if (match is null || callerTeamId is null || int.Parse(callerTeamId) != match.TeamId) return Forbid();
 
+        if (appearance.PlayerId != existing.PlayerId)
+        {
+            var player = await _playerService.GetByIdAsync(appearance.PlayerId);
+            if (player is null || player.TeamId != match.TeamId)
+                return BadRequest(new[] { "Nie znaleziono zawodnika w drużynie tego meczu." });
+            if (player.ArchivedAt is not null)
+                return BadRequest(new[] { "Zawodnik z archiwum nie może zostać dodany do składu." });
+        }
+
         var success = await _appearanceService.UpdateAsync(id, appearance);
         if (!success) return NotFound();
         return NoContent();

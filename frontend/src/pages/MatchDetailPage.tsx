@@ -57,7 +57,8 @@ export function MatchDetailPage() {
     const [eventError, setEventError] = useState<string | null>(null);
 
     const addedTimeEnabled = newEventMinute !== "" && STOPPAGE_MINUTES.includes(Number(newEventMinute));
-    const canDrag = !!roles?.some((r) => r === "Coach" || r === "AssistantCoach");
+    const canEditMatch = !!roles?.some((r) => r === "Coach" || r === "AssistantCoach");
+    const canDeleteMatchData = !!roles?.includes("Coach");
     const canEditBoards = !!roles?.some((r) => r === "Coach" || r === "AssistantCoach");
     const canDeleteBoards = !!roles?.includes("Coach");
     const canEditGamePlan = !!roles?.some((r) => r === "Coach" || r === "AssistantCoach");
@@ -149,15 +150,17 @@ export function MatchDetailPage() {
         if (!id) return;
         setRosterError(null);
         try {
-            if (pickerAppearanceId) {
-                await deleteMatchAppearance(pickerAppearanceId);
-            }
-            await createMatchAppearance({
+            const appearance = {
                 matchId: Number(id),
                 playerId,
                 isStarting: pickerIsStarting,
                 position: pickerIsStarting ? pickerSlotKey : null,
-            });
+            };
+            if (pickerAppearanceId) {
+                await updateMatchAppearance(pickerAppearanceId, appearance);
+            } else {
+                await createMatchAppearance(appearance);
+            }
             closePicker();
             loadAppearances(Number(id));
         } catch {
@@ -423,7 +426,8 @@ export function MatchDetailPage() {
             onAddEvent={handleAddEvent}
             onRemoveEvent={handleRemoveEvent}
             addedTimeEnabled={addedTimeEnabled}
-            canDrag={canDrag}
+            canEditMatch={canEditMatch}
+            canDeleteMatchData={canDeleteMatchData}
             dragId={dragId}
             canEditBoards={canEditBoards}
             canDeleteBoards={canDeleteBoards}

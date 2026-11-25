@@ -111,7 +111,8 @@ interface MatchDetailPageViewProps {
     onAddEvent: (e: React.SyntheticEvent) => void;
     onRemoveEvent: (eventId: number) => void;
     addedTimeEnabled: boolean;
-    canDrag: boolean;
+    canEditMatch: boolean;
+    canDeleteMatchData: boolean;
     dragId: number | null;
     canEditBoards: boolean;
     canDeleteBoards: boolean;
@@ -196,7 +197,8 @@ export function MatchDetailPageView({
     onAddEvent,
     onRemoveEvent,
     addedTimeEnabled,
-    canDrag,
+    canEditMatch,
+    canDeleteMatchData,
     dragId,
     canEditBoards,
     canDeleteBoards,
@@ -211,7 +213,7 @@ export function MatchDetailPageView({
 }: MatchDetailPageViewProps) {
     const theme = useTheme();
     const compact = useMediaQuery(theme.breakpoints.down("sm"));
-    const touchDrag = useTouchDrag(canDrag, {
+    const touchDrag = useTouchDrag(canEditMatch, {
         onStart: onDragStart,
         onOver: onDragOverTarget,
         onLeave: onDragLeaveTarget,
@@ -228,7 +230,7 @@ export function MatchDetailPageView({
     }
 
     function dragProps(appearance: MatchAppearance | null) {
-        if (!canDrag || !appearance) return {};
+        if (!canEditMatch || !appearance) return {};
         return {
             draggable: !COARSE_POINTER,
             onDragStart: (e: React.DragEvent) => {
@@ -242,7 +244,7 @@ export function MatchDetailPageView({
     }
 
     function dropProps(key: string, target: DropTarget) {
-        if (!canDrag) return {};
+        if (!canEditMatch) return {};
         return {
             "data-drop-key": key,
             onDragOver: (e: React.DragEvent) => {
@@ -391,15 +393,17 @@ export function MatchDetailPageView({
                         maxWidth: "80%",
                     }}
                 >
-                    <IconButton
-                        size="small"
-                        onClick={() => {
-                            onRemoveEvent(de.primary.id);
-                            if (de.secondary) onRemoveEvent(de.secondary.id);
-                        }}
-                    >
-                        <DeleteIcon fontSize="small" />
-                    </IconButton>
+                    {canDeleteMatchData && (
+                        <IconButton
+                            size="small"
+                            onClick={() => {
+                                onRemoveEvent(de.primary.id);
+                                if (de.secondary) onRemoveEvent(de.secondary.id);
+                            }}
+                        >
+                            <DeleteIcon fontSize="small" />
+                        </IconButton>
+                    )}
                     {eventTypeIcon(de.primary.eventType === "SubstitutionOff" && de.secondary ? "Substitution" : de.primary.eventType, second)}
                     <Box sx={{ textAlign: isOpponent ? "right" : "left" }}>
                         <Typography variant="body2">
@@ -459,6 +463,7 @@ export function MatchDetailPageView({
                     value={formation}
                     onChange={(e) => onFormationChange(e.target.value)}
                     sx={{ width: 160 }}
+                    disabled={!canDeleteMatchData}
                 >
                     {Object.keys(FORMATIONS).map((code) => (
                         <MenuItem key={code} value={code}>{FORMATION_LABELS[code]}</MenuItem>
@@ -476,10 +481,10 @@ export function MatchDetailPageView({
                         return (
                             <Box
                                 key={i}
-                                onClick={() => {
+                                onClick={canEditMatch ? () => {
                                     if (touchDrag.consumeClick()) return;
                                     onOpenPitchPicker(slot.pos, slot.slotKey, slot.appearance);
-                                }}
+                                } : undefined}
                                 {...dragProps(slot.appearance)}
                                 {...dropProps(slot.slotKey, { kind: "pitch", slotKey: slot.slotKey })}
                                 sx={{
@@ -487,7 +492,7 @@ export function MatchDetailPageView({
                                     left: `${slot.x}%`,
                                     top: `${slot.y}%`,
                                     transform: "translate(-50%, -50%)",
-                                    cursor: "pointer",
+                                    cursor: canEditMatch ? "pointer" : "default",
                                     display: "flex",
                                     flexDirection: "column",
                                     alignItems: "center",
@@ -538,13 +543,13 @@ export function MatchDetailPageView({
                     return (
                         <Box
                             key={i}
-                            onClick={() => {
+                            onClick={canEditMatch ? () => {
                                 if (touchDrag.consumeClick()) return;
                                 onOpenBenchPicker(appearance);
-                            }}
+                            } : undefined}
                             {...dragProps(appearance)}
                             sx={{ 
-                                cursor: "pointer", 
+                                cursor: canEditMatch ? "pointer" : "default",
                                 display: "flex", 
                                 flexDirection: "column", 
                                 alignItems: "center", 
@@ -631,7 +636,7 @@ export function MatchDetailPageView({
                     </List>
                 </DialogContent>
                 <DialogActions>
-                    {pickerHasAppearance && (
+                    {pickerHasAppearance && canDeleteMatchData && (
                         <Button color="error" onClick={onRemoveFromPicker}>
                             Usuń z tej pozycji
                         </Button>
@@ -659,9 +664,11 @@ export function MatchDetailPageView({
                 <>
                     <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2, mt: 4 }}>
                         <Typography variant="h6">Zdarzenia meczowe</Typography>
-                        <Button variant="contained" onClick={onOpenEvent}>
-                            Dodaj zdarzenie
-                        </Button>
+                        {canEditMatch && (
+                            <Button variant="contained" onClick={onOpenEvent}>
+                                Dodaj zdarzenie
+                            </Button>
+                        )}
                     </Box>
 
                     {eventError && <Alert severity="error" sx={{ mb: 2 }}>{eventError}</Alert>}
