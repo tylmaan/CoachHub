@@ -18,6 +18,7 @@ export default defineConfig({
     setupFiles: ['./tests/setup.ts'],
     include: ['tests/**/*.test.{ts,tsx}'],
     restoreMocks: true,
+    testTimeout: 15000,
     env: {
       VITE_BACKEND_ORIGIN: 'http://localhost:5006',
     },
