@@ -41,6 +41,7 @@ public class MatchAppearanceService : IMatchAppearanceService
         var existing = await _context.MatchAppearances.FindAsync(id);
         if (existing is null) return false;
 
+        existing.PlayerId = appearance.PlayerId;
         existing.IsStarting = appearance.IsStarting;
         existing.Position = appearance.Position;
         await _context.SaveChangesAsync();
