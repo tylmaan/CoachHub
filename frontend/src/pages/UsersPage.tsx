@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { usePersistentState } from "../hooks/usePersistentState";
 import { Alert, CircularProgress } from "@mui/material";
 import axios from "axios";
 import { getUsers, updateUser, deleteUser } from "../api/usersApi";
@@ -7,20 +6,21 @@ import { getTeams } from "../api/teamsApi";
 import { register } from "../api/authApi";
 import type { UserSummary } from "../types/user";
 import type { Team } from "../types/team";
+import { countByRole, groupByTeam, matchesUser } from "../types/userDirectory";
+import type { RoleFilter } from "../types/userDirectory";
 import { uploadFile } from "../api/filesApi";
 import { UsersPageView } from "./UsersPageView";
-
-type SortField = "email" | "roles" | "teamId" | "fullName";
 
 export function UsersPage() {
     const [users, setUsers] = useState<UserSummary[]>([]);
     const [teams, setTeams] = useState<Team[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [sortField, setSortField] = usePersistentState<SortField>("users.sortField", "email");
-    const [sortAsc, setSortAsc] = usePersistentState("users.sortAsc", true);
 
-    const [editingId, setEditingId] = useState<string | null>(null);
+    const [roleFilter, setRoleFilter] = useState<RoleFilter>("ALL");
+    const [query, setQuery] = useState("");
+    const [selectedId, setSelectedId] = useState<string | null>(null);
+
     const [editRole, setEditRole] = useState("Coach");
     const [editTeamId, setEditTeamId] = useState<number>(0);
     const [editFullName, setEditFullName] = useState("");
@@ -48,15 +48,6 @@ export function UsersPage() {
         loadUsers();
         getTeams().then(setTeams).catch(() => {});
     }, []);
-
-    function handleSort(field: SortField) {
-        if (field === sortField) {
-            setSortAsc(!sortAsc);
-        } else {
-            setSortField(field);
-            setSortAsc(true);
-        }
-    }
 
     async function handleEditPhotoSelect(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0];
@@ -120,7 +111,6 @@ export function UsersPage() {
     }
 
     function startEdit(user: UserSummary) {
-        setEditingId(user.id);
         setEditRole(user.roles[0] ?? "Coach");
         setEditTeamId(user.teamId ?? teams[0]?.id ?? 0);
         setEditFullName(user.fullName ?? "");
@@ -128,11 +118,15 @@ export function UsersPage() {
         setActionError(null);
     }
 
+    function selectUser(user: UserSummary) {
+        setSelectedId(user.id);
+        startEdit(user);
+    }
+
     async function saveEdit(id: string) {
         setActionError(null)
         try {
             await updateUser(id, { role: editRole, teamId: editTeamId, fullName: editFullName, photoUrl: editPhotoUrl || null });
-            setEditingId(null);
             loadUsers();
         } catch {
             setActionError("Nie udało się zapisać zmian.");
@@ -143,6 +137,7 @@ export function UsersPage() {
         setActionError(null);
         try {
             await deleteUser(id);
+            setSelectedId(current => current === id ? null : current);
             loadUsers();
         } catch {
             setActionError("Nie udało się usunąć użytkownika.")
@@ -163,38 +158,35 @@ export function UsersPage() {
         setDeleteTargetId(null);
     }
 
-    const sortedUsers = [...users].sort((a, b) => {
-        let result = 0;
-        if (sortField === "email") result = a.email.localeCompare(b.email);
-        if (sortField === "roles") result = a.roles.join(",").localeCompare(b.roles.join(","));
-        if (sortField === "teamId") result = (a.teamId ?? 0) - (b.teamId ?? 0);
-        if (sortField === "fullName") result = (a.fullName ?? "").localeCompare(b.fullName ?? "");
-        return sortAsc ? result : - result;
-    });
+    const selectedUser = users.find(u => u.id === selectedId) ?? null;
+    const counts = countByRole(users);
+    const groups = groupByTeam(users.filter((u) => matchesUser(u, roleFilter, query)), teams);
 
     if (loading) return <CircularProgress />;
     if (error) return <Alert severity="error">{error}</Alert>
 
     return (
         <UsersPageView
-            users={sortedUsers}
             teams={teams}
-            sortField={sortField}
-            sortAsc={sortAsc}
-            onSort={handleSort}
             actionError={actionError}
-            editingId={editingId}
+            groups={groups}
+            counts={counts}
+            roleFilter={roleFilter}
+            onRoleFilterChange={setRoleFilter}
+            query={query}
+            onQueryChange={setQuery}
+            selectedUser={selectedUser}
+            onSelectUser={selectUser}
             editRole={editRole}
             editTeamId={editTeamId}
             editFullName={editFullName}
             editPhotoUrl={editPhotoUrl}
-            onStartEdit={startEdit}
             onEditFullNameChange={setEditFullName}
             onEditRoleChange={setEditRole}
             onEditTeamIdChange={setEditTeamId}
             onEditPhotoSelect={handleEditPhotoSelect}
             onSaveEdit={saveEdit}
-            onCancelEdit={() => setEditingId(null)}
+            onCancelEdit={() => selectedUser && startEdit(selectedUser)}
             deleteDialogOpen={deleteTargetId !== null}
             onRequestDelete={requestDelete}
             onCancelDelete={cancelDelete}
